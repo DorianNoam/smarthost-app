@@ -1,48 +1,81 @@
 import { useState } from 'react';
 
-export default function SmartHost() {
-  const [question, setQuestion] = useState("");
-  const [reponse, setReponse] = useState("");
+export default function Home() {
+  const [input, setInput] = useState('');
+  // On crée une liste pour stocker toute la discussion
+  const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  const demanderIA = async () => {
+  const demanderAuConcierge = async () => {
+    if (!input) return;
     setLoading(true);
+
+    // 1. On ajoute ton message à la liste locale
+    const newMessages = [...messages, { role: 'user', content: input }];
+    setMessages(newMessages);
+    setInput('');
+
     try {
+      // 2. On envoie TOUTE la liste au serveur
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question })
+        body: JSON.stringify({ messages: newMessages }),
       });
+      
       const data = await res.json();
-      setReponse(data.text);
-    } catch (e) {
-      setReponse("Erreur de connexion...");
+      
+      // 3. On ajoute la réponse de Marc à la liste
+      setMessages([...newMessages, { role: 'assistant', content: data.text }]);
+    } catch (error) {
+      console.error("Erreur:", error);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
-    <div style={{ padding: '40px', fontFamily: 'sans-serif', maxWidth: '600px', margin: 'auto', textAlign: 'center' }}>
-      <h1 style={{ color: '#0070f3' }}>SmartHost AI 🏠</h1>
-      <p>Testez votre concierge en direct :</p>
-      <input 
-        style={{ width: '100%', padding: '15px', marginBottom: '10px', borderRadius: '8px', border: '1px solid #ccc' }}
-        value={question} 
-        onChange={(e) => setQuestion(e.target.value)} 
-        placeholder="Posez une question (ex: code wifi ?)"
-      />
-      <button 
-        onClick={demanderIA} 
-        style={{ width: '100%', padding: '15px', background: '#0070f3', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
-      >
-        {loading ? "Recherche dans la base de données..." : "Demander au concierge"}
-      </button>
-      {reponse && (
-        <div style={{ marginTop: '30px', padding: '20px', background: '#f9f9f9', borderRadius: '12px', textAlign: 'left', borderLeft: '5px solid #0070f3' }}>
-          <strong>Réponse du concierge :</strong>
-          <p>{reponse}</p>
-        </div>
-      )}
+    <div style={{ maxWidth: '600px', margin: '50px auto', padding: '20px', fontFamily: 'sans-serif' }}>
+      <h1 style={{ textAlign: 'center', color: '#0070f3' }}>SmartHost AI 🏠</h1>
+      <p style={{ textAlign: 'center' }}>Votre concierge de luxe à votre service.</p>
+
+      {/* Zone de chat qui s'agrandit */}
+      <div style={{ border: '1px solid #ddd', borderRadius: '10px', padding: '15px', minHeight: '200px', marginBottom: '20px', backgroundColor: '#f9f9f9' }}>
+        {messages.length === 0 && <p style={{ color: '#888', textAlign: 'center' }}>Posez votre première question...</p>}
+        {messages.map((m, i) => (
+          <div key={i} style={{ marginBottom: '15px', textAlign: m.role === 'user' ? 'right' : 'left' }}>
+            <div style={{ 
+              display: 'inline-block', 
+              padding: '10px 15px', 
+              borderRadius: '15px', 
+              backgroundColor: m.role === 'user' ? '#0070f3' : '#fff',
+              color: m.role === 'user' ? '#fff' : '#333',
+              boxShadow: '0 2px 5px rgba(0,0,0,0.1)',
+              maxWidth: '80%'
+            }}>
+              <strong>{m.role === 'user' ? 'Vous' : 'Marc'} :</strong><br/>
+              {m.content}
+            </div>
+          </div>
+        ))}
+        {loading && <p style={{ fontStyle: 'italic', color: '#888' }}>Marc rédige sa réponse...</p>}
+      </div>
+
+      <div style={{ display: 'flex', gap: '10px' }}>
+        <input 
+          value={input} 
+          onChange={(e) => setInput(e.target.e.target.value)}
+          placeholder="Écrivez ici..."
+          style={{ flex: 1, padding: '12px', borderRadius: '5px', border: '1px solid #ccc' }}
+        />
+        <button 
+          onClick={demanderAuConcierge}
+          disabled={loading}
+          style={{ padding: '12px 20px', backgroundColor: '#0070f3', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}
+        >
+          Envoyer
+        </button>
+      </div>
     </div>
   );
 }
