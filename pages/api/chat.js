@@ -2,14 +2,12 @@ import { Mistral } from '@mistralai/mistralai';
 import { createClient } from '@supabase/supabase-js';
 
 export default async function handler(req, res) {
-  // Sécurité : On n'autorise que les requêtes de ton bouton bleu
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Méthode non autorisée' });
   }
 
   const { question } = req.body;
 
-  // Initialisation des clients avec tes variables d'environnement
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -20,7 +18,6 @@ export default async function handler(req, res) {
   });
 
   try {
-    // 1. Recherche des informations spécifiques dans ta base de données Supabase
     const { data: info, error: supabaseError } = await supabase
       .from('knowledge_base')
       .select('content')
@@ -28,12 +25,10 @@ export default async function handler(req, res) {
 
     if (supabaseError) throw supabaseError;
 
-    // Mise en forme du contexte pour l'IA
     const contexte = info && info.length > 0 
       ? info.map(i => i.content).join("\n") 
-      : "Aucune consigne particulière n'a été trouvée pour cet appartement.";
+      : "Aucune consigne particulière.";
 
-    // 2. Appel à Mistral avec la personnalité "Haut de gamme & Chaleureux"
     const chatResponse = await mistral.chat.complete({
       model: 'mistral-small-latest',
       messages: [
@@ -44,17 +39,17 @@ export default async function handler(req, res) {
           TON IDENTITÉ :
           - Tu es élégant, raffiné et extrêmement chaleureux.
           - Tu t'exprimes avec courtoisie en utilisant toujours le "vous".
-          - Ton objectif est d'offrir une expérience mémorable et sans effort.
 
           TES CONSIGNES DE RÉPONSE :
-          1. Commence par une salutation élégante (ex: "C'est un plaisir de vous renseigner").
-          2. Sois précis et concis en utilisant exclusivement ces informations : ${contexte}.
-          3. Si une information manque, ne l'invente pas. Propose de contacter l'hôte avec élégance.
-          4. Termine toujours par une note chaleureuse (ex: "Je reste à votre entière disposition pour parfaire votre séjour").
+          1. Interdiction de répondre par une seule phrase. Développe toujours tes propos pour offrir un accueil digne d'un grand hôtel.
+          2. GESTION DES DEMANDES GÉNÉRALES : Si le voyageur dit "Bonjour", "Peux-tu m'aider ?" ou reste vague, ne liste PAS les informations de l'appartement. Réponds simplement de façon chaleureuse en proposant ton aide et demande-lui ce que tu peux faire pour lui.
+          3. GESTION DES DEMANDES PRÉCISES : Utilise exclusivement ces informations pour répondre aux questions spécifiques : ${contexte}.
+          4. Si une info manque, propose de contacter l'hôte avec élégance.
+          5. Termine toujours par une note invitant au bien-être.
 
           RÈGLES D'OR : 
-          - Ne mentionne jamais que tu es une intelligence artificielle.
-          - Ne dis jamais "Je ne sais pas", mais plutôt "Cette information ne figure pas encore dans mes registres, je me renseigne immédiatement auprès de votre hôte".`
+          - Ne mentionne jamais que tu es une IA.
+          - Ne dis jamais "Je ne sais pas", mais plutôt "Je me renseigne immédiatement auprès de votre hôte".`
         },
         { 
           role: 'user', 
@@ -63,16 +58,12 @@ export default async function handler(req, res) {
       ],
     });
 
-    // Extraction de la réponse de l'IA
     const reponseIA = chatResponse.choices[0].message.content;
-    
-    // Envoi de la réponse au site
     res.status(200).json({ text: reponseIA });
 
   } catch (error) {
-    console.error("Erreur détaillée:", error);
     res.status(500).json({ 
-      text: "Toutes mes excuses, je rencontre une légère difficulté technique. Pourriez-vous reformuler votre demande dans quelques instants ?" 
+      text: "Toutes mes excuses, je rencontre une légère difficulté. Pourriez-vous reformuler votre demande ?" 
     });
   }
 }
