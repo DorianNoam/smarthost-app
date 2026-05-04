@@ -11,7 +11,7 @@ export default async function handler(req, res) {
     .select('content')
     .eq('property_id', '11111111-1111-1111-1111-111111111111');
   const contexte = info ? info.map(i => i.content).join("\n") : "Pas d'informations disponibles.";
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-8b" });
   const prompt = `Tu es le concierge de l'appartement. Voici les infos : ${contexte}. Un voyageur demande : ${question}`;
   const result = await model.generateContent(prompt);
   res.status(200).json({ text: result.response.text() });
