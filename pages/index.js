@@ -2,7 +2,7 @@ import { useState } from 'react';
 
 export default function Home() {
   const [input, setInput] = useState('');
-  // On crée une liste pour stocker toute la discussion
+  // On stocke TOUTE la conversation
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -10,23 +10,25 @@ export default function Home() {
     if (!input) return;
     setLoading(true);
 
-    // 1. On ajoute ton message à la liste locale
-    const newMessages = [...messages, { role: 'user', content: input }];
-    setMessages(newMessages);
-    setInput('');
+    // 1. Ajouter ton message à la liste
+    const currentMessages = [...messages, { role: 'user', content: input }];
+    setMessages(currentMessages);
+    setInput(''); // On vide l'entrée
 
     try {
-      // 2. On envoie TOUTE la liste au serveur
+      // 2. Envoyer TOUTE la discussion au serveur
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: newMessages }),
+        body: JSON.stringify({ messages: currentMessages }),
       });
       
       const data = await res.json();
       
-      // 3. On ajoute la réponse de Marc à la liste
-      setMessages([...newMessages, { role: 'assistant', content: data.text }]);
+      // 3. Ajouter la réponse de Marc à la liste
+      if (data.text) {
+        setMessages([...currentMessages, { role: 'assistant', content: data.text }]);
+      }
     } catch (error) {
       console.error("Erreur:", error);
     } finally {
@@ -39,9 +41,19 @@ export default function Home() {
       <h1 style={{ textAlign: 'center', color: '#0070f3' }}>SmartHost AI 🏠</h1>
       <p style={{ textAlign: 'center' }}>Votre concierge de luxe à votre service.</p>
 
-      {/* Zone de chat qui s'agrandit */}
-      <div style={{ border: '1px solid #ddd', borderRadius: '10px', padding: '15px', minHeight: '200px', marginBottom: '20px', backgroundColor: '#f9f9f9' }}>
-        {messages.length === 0 && <p style={{ color: '#888', textAlign: 'center' }}>Posez votre première question...</p>}
+      {/* Zone de chat elegante */}
+      <div style={{ 
+        border: '1px solid #ddd', 
+        borderRadius: '10px', 
+        padding: '15px', 
+        minHeight: '300px', 
+        marginBottom: '20px', 
+        backgroundColor: '#f9f9f9',
+        overflowY: 'auto', // Permet de scroller
+        maxHeight: '400px'
+      }}>
+        {messages.length === 0 && <p style={{ color: '#888', textAlign: 'center', marginTop: '100px' }}>Posez votre première question...</p>}
+        
         {messages.map((m, i) => (
           <div key={i} style={{ marginBottom: '15px', textAlign: m.role === 'user' ? 'right' : 'left' }}>
             <div style={{ 
@@ -58,14 +70,15 @@ export default function Home() {
             </div>
           </div>
         ))}
-        {loading && <p style={{ fontStyle: 'italic', color: '#888' }}>Marc rédige sa réponse...</p>}
+        {loading && <p style={{ fontStyle: 'italic', color: '#888', textAlign: 'left' }}>Marc rédige sa réponse...</p>}
       </div>
 
       <div style={{ display: 'flex', gap: '10px' }}>
         <input 
           value={input} 
-          onChange={(e) => setInput(e.target.e.target.value)}
-          placeholder="Écrivez ici..."
+          // LA CORRECTION EST ICI :
+          onChange={(e) => setInput(e.target.value)}
+          placeholder="Écrivez votre demande ici..."
           style={{ flex: 1, padding: '12px', borderRadius: '5px', border: '1px solid #ccc' }}
         />
         <button 
