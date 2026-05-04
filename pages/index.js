@@ -1,31 +1,41 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'next/navigation';
 
 export default function Home() {
+  const searchParams = useSearchParams();
   const [input, setInput] = useState('');
-  // On stocke TOUTE la conversation
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [userName, setUserName] = useState('');
+  const messagesEndRef = useRef(null);
+
+  // 1. Détection du client dans l'URL
+  useEffect(() => {
+    const client = searchParams.get('client');
+    if (client) {
+      setUserName(client.replace('_', ' '));
+    }
+  }, [searchParams]);
+
+  // 2. Auto-scroll vers le bas
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   const demanderAuConcierge = async () => {
     if (!input) return;
     setLoading(true);
-
-    // 1. Ajouter ton message à la liste
     const currentMessages = [...messages, { role: 'user', content: input }];
     setMessages(currentMessages);
-    setInput(''); // On vide l'entrée
+    setInput('');
 
     try {
-      // 2. Envoyer TOUTE la discussion au serveur
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: currentMessages }),
+        body: JSON.stringify({ messages: currentMessages, userName }),
       });
-      
       const data = await res.json();
-      
-      // 3. Ajouter la réponse de Marc à la liste
       if (data.text) {
         setMessages([...currentMessages, { role: 'assistant', content: data.text }]);
       }
@@ -37,57 +47,114 @@ export default function Home() {
   };
 
   return (
-    <div style={{ maxWidth: '600px', margin: '50px auto', padding: '20px', fontFamily: 'sans-serif' }}>
-      <h1 style={{ textAlign: 'center', color: '#0070f3' }}>SmartHost AI 🏠</h1>
-      <p style={{ textAlign: 'center' }}>Votre concierge de luxe à votre service.</p>
-
-      {/* Zone de chat elegante */}
-      <div style={{ 
-        border: '1px solid #ddd', 
-        borderRadius: '10px', 
-        padding: '15px', 
-        minHeight: '300px', 
-        marginBottom: '20px', 
-        backgroundColor: '#f9f9f9',
-        overflowY: 'auto', // Permet de scroller
-        maxHeight: '400px'
-      }}>
-        {messages.length === 0 && <p style={{ color: '#888', textAlign: 'center', marginTop: '100px' }}>Posez votre première question...</p>}
-        
-        {messages.map((m, i) => (
-          <div key={i} style={{ marginBottom: '15px', textAlign: m.role === 'user' ? 'right' : 'left' }}>
-            <div style={{ 
-              display: 'inline-block', 
-              padding: '10px 15px', 
-              borderRadius: '15px', 
-              backgroundColor: m.role === 'user' ? '#0070f3' : '#fff',
-              color: m.role === 'user' ? '#fff' : '#333',
-              boxShadow: '0 2px 5px rgba(0,0,0,0.1)',
-              maxWidth: '80%'
-            }}>
-              <strong>{m.role === 'user' ? 'Vous' : 'Marc'} :</strong><br/>
-              {m.content}
-            </div>
-          </div>
-        ))}
-        {loading && <p style={{ fontStyle: 'italic', color: '#888', textAlign: 'left' }}>Marc rédige sa réponse...</p>}
+    <div style={{ 
+      minHeight: '100vh', 
+      backgroundColor: '#f8f5f0', // Crème de luxe
+      backgroundImage: 'radial-gradient(#d4af37 0.5px, transparent 0.5px)', // Petits points or
+      backgroundSize: '20px 20px',
+      padding: '20px',
+      fontFamily: "'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+    }}>
+      
+      {/* Header de Prestige */}
+      <div style={{ textAlign: 'center', marginBottom: '30px' }}>
+        <div style={{ fontSize: '12px', letterSpacing: '3px', color: '#d4af37', fontWeight: 'bold', textTransform: 'uppercase' }}>
+          Conciergerie Privée
+        </div>
+        <h1 style={{ fontSize: '32px', color: '#1a2a6c', margin: '10px 0', fontWeight: '300' }}>
+          SmartHost <span style={{ fontWeight: 'bold' }}>AI</span>
+        </h1>
+        <div style={{ width: '40px', height: '2px', backgroundColor: '#d4af37', margin: '0 auto' }}></div>
       </div>
 
-      <div style={{ display: 'flex', gap: '10px' }}>
-        <input 
-          value={input} 
-          // LA CORRECTION EST ICI :
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Écrivez votre demande ici..."
-          style={{ flex: 1, padding: '12px', borderRadius: '5px', border: '1px solid #ccc' }}
-        />
-        <button 
-          onClick={demanderAuConcierge}
-          disabled={loading}
-          style={{ padding: '12px 20px', backgroundColor: '#0070f3', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}
-        >
-          Envoyer
-        </button>
+      {/* Carte Centrale */}
+      <div style={{ 
+        maxWidth: '800px', 
+        margin: '0 auto', 
+        backgroundColor: 'rgba(255, 255, 255, 0.9)', 
+        borderRadius: '20px', 
+        boxShadow: '0 20px 50px rgba(0,0,0,0.1)',
+        overflow: 'hidden',
+        border: '1px solid #fff'
+      }}>
+        
+        {/* Barre de bienvenue */}
+        <div style={{ padding: '15px 25px', borderBottom: '1px solid #eee', display: 'flex', alignItems: 'center', gap: '15px' }}>
+          <div style={{ width: '12px', height: '12px', backgroundColor: '#4caf50', borderRadius: '50%' }}></div>
+          <span style={{ fontSize: '14px', color: '#666' }}>
+            Marc est en ligne {userName ? `pour ${userName}` : ''}
+          </span>
+        </div>
+
+        {/* Zone de Discussion */}
+        <div style={{ height: '500px', overflowY: 'auto', padding: '25px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          {messages.length === 0 && (
+            <div style={{ textAlign: 'center', marginTop: '100px' }}>
+              <p style={{ fontSize: '18px', color: '#1a2a6c', fontWeight: '300' }}>
+                Bienvenue {userName ? `Mme/M. ${userName}` : ''}.
+              </p>
+              <p style={{ fontSize: '14px', color: '#888' }}>Comment puis-je rendre votre séjour inoubliable ?</p>
+            </div>
+          )}
+
+          {messages.map((m, i) => (
+            <div key={i} style={{ 
+              alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start',
+              maxWidth: '75%'
+            }}>
+              <div style={{ 
+                padding: '12px 18px', 
+                borderRadius: m.role === 'user' ? '20px 20px 0 20px' : '20px 20px 20px 0', 
+                backgroundColor: m.role === 'user' ? '#1a2a6c' : '#f0f2f5',
+                color: m.role === 'user' ? '#fff' : '#333',
+                fontSize: '15px',
+                lineHeight: '1.5',
+                boxShadow: '0 4px 10px rgba(0,0,0,0.05)'
+              }}>
+                {m.content}
+              </div>
+            </div>
+          ))}
+          {loading && <div style={{ fontSize: '12px', color: '#aaa', fontStyle: 'italic' }}>Marc rédige un message...</div>}
+          <div ref={messagesEndRef} />
+        </div>
+
+        {/* Input Elegant */}
+        <div style={{ padding: '20px', borderTop: '1px solid #eee', backgroundColor: '#fff' }}>
+          <div style={{ display: 'flex', gap: '15px' }}>
+            <input 
+              value={input} 
+              onChange={(e) => setInput(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && demanderAuConcierge()}
+              placeholder="Écrivez votre demande à Marc..."
+              style={{ 
+                flex: 1, 
+                padding: '15px', 
+                borderRadius: '12px', 
+                border: '1px solid #eee', 
+                outline: 'none',
+                fontSize: '15px',
+                backgroundColor: '#f9f9f9'
+              }}
+            />
+            <button 
+              onClick={demanderAuConcierge}
+              disabled={loading}
+              style={{ 
+                padding: '0 25px', 
+                backgroundColor: '#1a2a6c', 
+                color: 'white', 
+                border: 'none', 
+                borderRadius: '12px', 
+                cursor: 'pointer',
+                transition: 'all 0.3s',
+                fontWeight: '600'
+              }}
+            >
+              Envoyer
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
