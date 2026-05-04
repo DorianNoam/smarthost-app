@@ -11,6 +11,6 @@
     "react": "latest",
     "react-dom": "latest",
     "@supabase/supabase-js": "latest",
-    "@google/generative-ai": "latest"
+    "@mistralai/mistralai": "latest"
   }
 }
