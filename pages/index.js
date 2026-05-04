@@ -9,15 +9,11 @@ export default function Home() {
   const [userName, setUserName] = useState('');
   const messagesEndRef = useRef(null);
 
-  // 1. Détection du client dans l'URL
   useEffect(() => {
     const client = searchParams.get('client');
-    if (client) {
-      setUserName(client.replace('_', ' '));
-    }
+    if (client) setUserName(client.replace('_', ' '));
   }, [searchParams]);
 
-  // 2. Auto-scroll vers le bas
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -28,7 +24,6 @@ export default function Home() {
     const currentMessages = [...messages, { role: 'user', content: input }];
     setMessages(currentMessages);
     setInput('');
-
     try {
       const res = await fetch('/api/chat', {
         method: 'POST',
@@ -36,126 +31,139 @@ export default function Home() {
         body: JSON.stringify({ messages: currentMessages, userName }),
       });
       const data = await res.json();
-      if (data.text) {
-        setMessages([...currentMessages, { role: 'assistant', content: data.text }]);
-      }
-    } catch (error) {
-      console.error("Erreur:", error);
-    } finally {
-      setLoading(false);
-    }
+      if (data.text) setMessages([...currentMessages, { role: 'assistant', content: data.text }]);
+    } catch (error) { console.error(error); } finally { setLoading(false); }
   };
 
   return (
-    <div style={{ 
-      minHeight: '100vh', 
-      backgroundColor: '#f8f5f0', // Crème de luxe
-      backgroundImage: 'radial-gradient(#d4af37 0.5px, transparent 0.5px)', // Petits points or
-      backgroundSize: '20px 20px',
-      padding: '20px',
-      fontFamily: "'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
-    }}>
-      
-      {/* Header de Prestige */}
-      <div style={{ textAlign: 'center', marginBottom: '30px' }}>
-        <div style={{ fontSize: '12px', letterSpacing: '3px', color: '#d4af37', fontWeight: 'bold', textTransform: 'uppercase' }}>
-          Conciergerie Privée
-        </div>
-        <h1 style={{ fontSize: '32px', color: '#1a2a6c', margin: '10px 0', fontWeight: '300' }}>
-          SmartHost <span style={{ fontWeight: 'bold' }}>AI</span>
-        </h1>
-        <div style={{ width: '40px', height: '2px', backgroundColor: '#d4af37', margin: '0 auto' }}></div>
+    <div className="container">
+      <style jsx>{`
+        .container {
+          min-height: 100vh;
+          background-color: #f8f5f0;
+          background-image: radial-gradient(#d4af37 0.5px, transparent 0.5px);
+          background-size: 20px 20px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          padding: 10px;
+          font-family: 'Segoe UI', sans-serif;
+        }
+        .header {
+          text-align: center;
+          margin: 20px 0;
+        }
+        .header span {
+          font-size: 10px;
+          letter-spacing: 2px;
+          color: #d4af37;
+          text-transform: uppercase;
+        }
+        .header h1 {
+          font-size: 24px;
+          color: #1a2a6c;
+          margin: 5px 0;
+        }
+        .chat-card {
+          width: 100%;
+          max-width: 600px;
+          background: rgba(255, 255, 255, 0.95);
+          border-radius: 15px;
+          box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+          display: flex;
+          flex-direction: column;
+          height: 80vh; /* Hauteur dynamique selon l'écran */
+          overflow: hidden;
+        }
+        .chat-body {
+          flex: 1;
+          overflow-y: auto;
+          padding: 15px;
+          display: flex;
+          flex-direction: column;
+          gap: 15px;
+        }
+        .message {
+          max-width: 85%;
+          padding: 10px 15px;
+          font-size: 14px;
+          line-height: 1.4;
+          border-radius: 15px;
+        }
+        .user { align-self: flex-end; background: #1a2a6c; color: white; border-bottom-right-radius: 2px; }
+        .assistant { align-self: flex-start; background: #f0f2f5; color: #333; border-bottom-left-radius: 2px; }
+        
+        .input-area {
+          padding: 15px;
+          background: white;
+          border-top: 1px solid #eee;
+          display: flex;
+          gap: 10px;
+        }
+        input {
+          flex: 1;
+          padding: 12px;
+          border-radius: 8px;
+          border: 1px solid #ddd;
+          outline: none;
+          font-size: 14px;
+        }
+        button {
+          padding: 0 15px;
+          background: #1a2a6c;
+          color: white;
+          border: none;
+          border-radius: 8px;
+          font-weight: bold;
+          cursor: pointer;
+        }
+        
+        @media (max-width: 480px) {
+          .chat-card { height: 85vh; }
+          .header h1 { font-size: 20px; }
+          .message { font-size: 13px; }
+        }
+      `}</style>
+
+      <div className="header">
+        <span>Conciergerie Privée</span>
+        <h1>SmartHost <b>AI</b></h1>
       </div>
 
-      {/* Carte Centrale */}
-      <div style={{ 
-        maxWidth: '800px', 
-        margin: '0 auto', 
-        backgroundColor: 'rgba(255, 255, 255, 0.9)', 
-        borderRadius: '20px', 
-        boxShadow: '0 20px 50px rgba(0,0,0,0.1)',
-        overflow: 'hidden',
-        border: '1px solid #fff'
-      }}>
-        
-        {/* Barre de bienvenue */}
-        <div style={{ padding: '15px 25px', borderBottom: '1px solid #eee', display: 'flex', alignItems: 'center', gap: '15px' }}>
-          <div style={{ width: '12px', height: '12px', backgroundColor: '#4caf50', borderRadius: '50%' }}></div>
-          <span style={{ fontSize: '14px', color: '#666' }}>
-            Marc est en ligne {userName ? `pour ${userName}` : ''}
-          </span>
+      <div className="chat-card">
+        <div style={{ padding: '10px 15px', borderBottom: '1px solid #eee', fontSize: '12px', color: '#666' }}>
+          🟢 Marc est en ligne {userName ? `pour ${userName}` : ''}
         </div>
 
-        {/* Zone de Discussion */}
-        <div style={{ height: '500px', overflowY: 'auto', padding: '25px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <div className="chat-body">
           {messages.length === 0 && (
-            <div style={{ textAlign: 'center', marginTop: '100px' }}>
-              <p style={{ fontSize: '18px', color: '#1a2a6c', fontWeight: '300' }}>
-                Bienvenue {userName ? `Mme/M. ${userName}` : ''}.
-              </p>
-              <p style={{ fontSize: '14px', color: '#888' }}>Comment puis-je vous aider ?</p>
+            <div style={{ textAlign: 'center', marginTop: '40%' }}>
+              <p style={{ color: '#1a2a6c', fontWeight: '300' }}>Bienvenue {userName ? `Mme/M. ${userName}` : ''}.</p>
+              <p style={{ color: '#888', fontSize: '13px' }}>Comment puis-je vous aider ?</p>
             </div>
           )}
-
           {messages.map((m, i) => (
-            <div key={i} style={{ 
-              alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start',
-              maxWidth: '75%'
-            }}>
-              <div style={{ 
-                padding: '12px 18px', 
-                borderRadius: m.role === 'user' ? '20px 20px 0 20px' : '20px 20px 20px 0', 
-                backgroundColor: m.role === 'user' ? '#1a2a6c' : '#f0f2f5',
-                color: m.role === 'user' ? '#fff' : '#333',
-                fontSize: '15px',
-                lineHeight: '1.5',
-                boxShadow: '0 4px 10px rgba(0,0,0,0.05)'
-              }}>
-                {m.content}
-              </div>
+            <div key={i} className={`message ${m.role === 'user' ? 'user' : 'assistant'}`}>
+              {m.content}
             </div>
           ))}
-          {loading && <div style={{ fontSize: '12px', color: '#aaa', fontStyle: 'italic' }}>Marc rédige un message...</div>}
+          {loading && <div style={{ fontSize: '11px', color: '#aaa' }}>Marc répond...</div>}
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Input Elegant */}
-        <div style={{ padding: '20px', borderTop: '1px solid #eee', backgroundColor: '#fff' }}>
-          <div style={{ display: 'flex', gap: '15px' }}>
-            <input 
-              value={input} 
-              onChange={(e) => setInput(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && demanderAuConcierge()}
-              placeholder="Écrivez votre demande à Marc..."
-              style={{ 
-                flex: 1, 
-                padding: '15px', 
-                borderRadius: '12px', 
-                border: '1px solid #eee', 
-                outline: 'none',
-                fontSize: '15px',
-                backgroundColor: '#f9f9f9'
-              }}
-            />
-            <button 
-              onClick={demanderAuConcierge}
-              disabled={loading}
-              style={{ 
-                padding: '0 25px', 
-                backgroundColor: '#1a2a6c', 
-                color: 'white', 
-                border: 'none', 
-                borderRadius: '12px', 
-                cursor: 'pointer',
-                transition: 'all 0.3s',
-                fontWeight: '600'
-              }}
-            >
-              Envoyer
-            </button>
-          </div>
+        <div className="input-area">
+          <input 
+            value={input} 
+            onChange={(e) => setInput(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && demanderAuConcierge()}
+            placeholder="Écrivez ici..."
+          />
+          <button onClick={demanderAuConcierge} disabled={loading}>
+            Envoyer
+          </button>
         </div>
       </div>
     </div>
   );
-}
+  }
+          
