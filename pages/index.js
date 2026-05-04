@@ -93,7 +93,7 @@ export default function Home() {
               <p style={{ fontSize: '18px', color: '#1a2a6c', fontWeight: '300' }}>
                 Bienvenue {userName ? `Mme/M. ${userName}` : ''}.
               </p>
-              <p style={{ fontSize: '14px', color: '#888' }}>Comment puis-je rendre votre séjour inoubliable ?</p>
+              <p style={{ fontSize: '14px', color: '#888' }}>Comment puis-je vous aider ?</p>
             </div>
           )}
 
