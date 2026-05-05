@@ -205,7 +205,8 @@ export default function Home() {
         }
         
         .teaser-title { font-family: 'Playfair Display', serif; font-size: clamp(26px, 4vw, 36px); margin-bottom: 20px; }
-        .teaser-text { font-size: 18px; margin-bottom: 40px; opacity: 0.9; line-height: 1.6; }
+        .teaser-text { font-size: 18px; margin-bottom: 10px; opacity: 0.9; line-height: 1.6; }
+        .teaser-subtext { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 2px; color: #d4af37; margin-bottom: 40px; display: block; }
         
         .cta-teaser {
           background: #d4af37;
@@ -261,8 +262,9 @@ export default function Home() {
 
       <div className="trust-banner">
         <div className="trust-item"><span>🕒</span> Disponible 24h/24 et 7j/7</div>
+        {/* NOUVELLE MENTION ICI */}
+        <div className="trust-item"><span>🔓</span> 100% Sans Engagement</div>
         <div className="trust-item"><span>⚡</span> Réponses instantanées</div>
-        <div className="trust-item"><span>🛡️</span> Fiabilité certifiée</div>
       </div>
 
       <section className="demo-section">
@@ -328,13 +330,14 @@ export default function Home() {
         </div>
       </section>
 
-      {/* NOUVEAU BLOC TEASING TARIFS */}
+      {/* BLOC TEASING TARIFS MIS À JOUR AVEC LE "SANS ENGAGEMENT" */}
       <section className="pricing-teaser">
         <h2 className="teaser-title">La Sérénité a enfin un prix abordable</h2>
         <p className="teaser-text">
           Un Majordome disponible 24h/24 pour vos voyageurs, <br/>
           à partir de <b style={{ color: '#d4af37', fontSize: '24px' }}>24,90€ / mois</b>.
         </p>
+        <span className="teaser-subtext">Sans engagement. Annulable à tout moment.</span>
         <Link href="/pricing" className="cta-teaser">
           Découvrir nos forfaits sur-mesure
         </Link>
