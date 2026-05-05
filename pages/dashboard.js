@@ -1,216 +1,119 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/router';
+import { supabase } from '../lib/supabase';
 import Link from 'next/link';
 
 export default function Dashboard() {
-  const [activeTab, setActiveTab] = useState('logements');
+  const router = useRouter();
+  const [loading, setLoading] = useState(true);
+  const [profile, setProfile] = useState(null);
+  const [properties, setProperties] = useState([]);
+
+  useEffect(() => {
+    fetchUserData();
+  }, []);
+
+  async function fetchUserData() {
+    // 1. Vérifier si l'utilisateur est bien connecté
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      router.push('/login');
+      return;
+    }
+
+    // 2. Récupérer le nom dans la table 'profiles'
+    const { data: profileData } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id)
+      .single();
+
+    // 3. Récupérer ses logements dans la table 'properties'
+    const { data: propertiesData } = await supabase
+      .from('properties')
+      .select('*')
+      .eq('owner_id', user.id);
+
+    setProfile(profileData);
+    setProperties(propertiesData || []);
+    setLoading(false);
+  }
+
+  if (loading) return <div style={{padding: '50px', textAlign: 'center', fontFamily: 'Montserrat'}}>Chargement de votre espace...</div>;
 
   return (
     <div className="dashboard-container">
       <style jsx>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Montserrat:wght@300;400;600;700&display=swap');
-
-        .dashboard-container {
-          display: flex;
-          min-height: 100vh;
-          font-family: 'Montserrat', sans-serif;
-          background: #f4f7f9;
-        }
-
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Montserrat:wght@400;600;700&display=swap');
+        
+        .dashboard-container { display: flex; min-height: 100vh; font-family: 'Montserrat', sans-serif; background: #f8f9fa; }
+        
         /* Sidebar */
-        .sidebar {
-          width: 260px;
-          background: #1a2a6c;
-          color: white;
-          padding: 40px 20px;
-          display: flex;
-          flex-direction: column;
-        }
-
-        .logo {
-          font-family: 'Playfair Display', serif;
-          font-size: 22px;
-          margin-bottom: 50px;
-          text-align: center;
-        }
-        .gold { color: #d4af37; }
-
-        .nav-item {
-          padding: 15px 20px;
-          margin-bottom: 10px;
-          border-radius: 12px;
-          cursor: pointer;
-          transition: 0.3s;
-          font-weight: 600;
-          font-size: 14px;
-          display: flex;
-          align-items: center;
-          gap: 12px;
-        }
-
-        .nav-item:hover, .nav-item.active {
-          background: rgba(212, 175, 55, 0.15);
-          color: #d4af37;
-        }
-
-        .logout { margin-top: auto; opacity: 0.6; font-size: 13px; }
+        .sidebar { width: 260px; background: #1a2a6c; color: white; padding: 30px 20px; }
+        .logo { font-family: 'Playfair Display', serif; font-size: 24px; margin-bottom: 40px; }
+        .nav-item { padding: 15px; border-radius: 10px; margin-bottom: 5px; cursor: pointer; transition: 0.3s; color: rgba(255,255,255,0.7); font-weight: 600; }
+        .nav-item.active { background: rgba(255,255,255,0.1); color: white; }
+        .nav-item:hover { background: rgba(255,255,255,0.05); }
 
         /* Main Content */
-        .main-content {
-          flex: 1;
-          padding: 40px 5%;
-          overflow-y: auto;
-        }
+        .main { flex: 1; padding: 40px 60px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
+        h1 { font-family: 'Playfair Display', serif; color: #1a2a6c; font-size: 32px; }
+        
+        .btn-add { background: #d4af37; color: #1a2a6c; padding: 12px 25px; border-radius: 50px; font-weight: 700; text-decoration: none; font-size: 14px; }
 
-        .header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 40px;
-        }
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 40px; }
+        .stat-card { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.03); }
+        .stat-val { font-size: 28px; font-weight: 700; color: #1a2a6c; margin-top: 10px; }
 
-        h1 { font-family: 'Playfair Display', serif; color: #1a2a6c; font-size: 28px; }
+        .property-card { background: white; padding: 25px; border-radius: 20px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border: 1px solid #eee; }
+        .status-badge { padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+        .status-active { background: #e6fffa; color: #38b2ac; }
 
-        .btn-add {
-          background: #d4af37;
-          color: #1a2a6c;
-          padding: 12px 25px;
-          border-radius: 50px;
-          font-weight: 700;
-          text-decoration: none;
-          font-size: 14px;
-          transition: 0.3s;
-        }
-        .btn-add:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(212, 175, 55, 0.3); }
-
-        /* Stats Cards */
-        .stats-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-          gap: 20px;
-          margin-bottom: 40px;
-        }
-
-        .stat-card {
-          background: white;
-          padding: 25px;
-          border-radius: 20px;
-          box-shadow: 0 4px 15px rgba(0,0,0,0.03);
-        }
-
-        .stat-label { font-size: 11px; text-transform: uppercase; color: #999; font-weight: 700; letter-spacing: 1px; }
-        .stat-value { font-size: 24px; font-weight: 700; color: #1a2a6c; margin-top: 5px; }
-
-        /* List of Properties */
-        .property-card {
-          background: white;
-          border-radius: 20px;
-          padding: 30px;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          box-shadow: 0 4px 15px rgba(0,0,0,0.03);
-          margin-bottom: 20px;
-          border: 1px solid transparent;
-          transition: 0.3s;
-        }
-
-        .property-card:hover { border-color: #d4af37; }
-
-        .property-info h3 { margin: 0; color: #1a2a6c; font-size: 18px; }
-        .property-info p { margin: 5px 0 0; color: #777; font-size: 13px; }
-
-        .status-badge {
-          background: #e6fffa;
-          color: #38b2ac;
-          padding: 5px 12px;
-          border-radius: 50px;
-          font-size: 11px;
-          font-weight: 700;
-          text-transform: uppercase;
-        }
-
-        .actions { display: flex; gap: 15px; }
-        .btn-action {
-          padding: 8px 18px;
-          border-radius: 10px;
-          font-size: 13px;
-          font-weight: 600;
-          cursor: pointer;
-          border: 1px solid #eee;
-          background: white;
-          transition: 0.2s;
-        }
-        .btn-action:hover { background: #f9f9f9; border-color: #999; }
+        .empty-state { text-align: center; padding: 60px; background: white; border-radius: 20px; border: 2px dashed #eee; }
       `}</style>
 
-      {/* Sidebar de Navigation */}
-      <aside className="sidebar">
-        <div className="logo">Major<span className="gold">Marc</span></div>
-        <nav>
-          <div className={`nav-item ${activeTab === 'logements' ? 'active' : ''}`} onClick={() => setActiveTab('logements')}>
-             🏠 Mes Logements
-          </div>
-          <div className={`nav-item ${activeTab === 'abonnement' ? 'active' : ''}`} onClick={() => setActiveTab('abonnement')}>
-             💳 Mon Abonnement
-          </div>
-          <div className={`nav-item ${activeTab === 'profil' ? 'active' : ''}`} onClick={() => setActiveTab('profil')}>
-             👤 Profil & Alertes
-          </div>
-        </nav>
-        <div className="logout">Se déconnecter</div>
-      </aside>
+      <div className="sidebar">
+        <div className="logo">Major<span style={{color:'#d4af37'}}>Marc</span></div>
+        <div className="nav-item active">🏠 Mes Logements</div>
+        <div className="nav-item">💳 Mon Abonnement</div>
+        <div className="nav-item">👤 Profil & Alertes</div>
+        <div className="nav-item" onClick={() => supabase.auth.signOut().then(() => router.push('/'))} style={{marginTop: '40px', color: '#e74c3c'}}>Se déconnecter</div>
+      </div>
 
-      {/* Contenu Principal */}
-      <main className="main-content">
-        <header className="header">
-          <h1>Bienvenue, Jean</h1>
-          <Link href="/add-property" className="btn-add">
-            + Ajouter un logement
-          </Link>
-        </header>
+      <div className="main">
+        <div className="header">
+          <h1>Bienvenue, {profile?.full_name?.split(' ')[0] || 'Hôte'}</h1>
+          <Link href="/add-property" className="btn-add">+ Ajouter un logement</Link>
+        </div>
 
-        {/* Section Statistiques Rapides */}
         <div className="stats-grid">
-          <div className="stat-card">
-            <div className="stat-label">Messages gérés</div>
-            <div className="stat-value">128</div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-label">Urgences détectées</div>
-            <div className="stat-value">2</div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-label">Temps gagné</div>
-            <div className="stat-value">14h</div>
-          </div>
+          <div className="stat-card"><div>Messages gérés</div><div className="stat-val">0</div></div>
+          <div className="stat-card"><div>Urgences détectées</div><div className="stat-val">0</div></div>
+          <div className="stat-card"><div>Temps gagné</div><div className="stat-val">0h</div></div>
         </div>
 
-        {/* Liste des logements (Placeholder) */}
-        <h2 style={{fontSize: '20px', marginBottom: '20px', color: '#1a2a6c'}}>Vos propriétés</h2>
+        <h3>Vos propriétés</h3>
         
-        <div className="property-card">
-          <div className="property-info">
-            <h3>Villa Bella</h3>
-            <p>Lien concierge : <span style={{color: '#d4af37'}}>majormarc.com/villa-bella</span></p>
+        {properties.length > 0 ? (
+          properties.map(prop => (
+            <div key={prop.id} className="property-card">
+              <div>
+                <div style={{fontWeight: 700, fontSize: '18px'}}>{prop.name}</div>
+                <div style={{fontSize: '13px', color: '#888'}}>ID: {prop.id}</div>
+              </div>
+              <div className="status-badge status-active">Actif</div>
+              <Link href={`/edit-property?id=${prop.id}`} style={{color: '#1a2a6c', fontWeight: 700}}>Paramètres</Link>
+            </div>
+          ))
+        ) : (
+          <div className="empty-state">
+            <p style={{color: '#666', marginBottom: '20px'}}>Vous n'avez pas encore ajouté de logement.</p>
+            <Link href="/add-property" className="btn-add">Créer mon premier logement</Link>
           </div>
-          <div className="status-badge">Actif</div>
-          <div className="actions">
-            <button className="btn-action">Paramètres</button>
-            <button className="btn-action">Voir le chat</button>
-          </div>
-        </div>
-
-        <div className="property-card">
-          <div className="property-info">
-            <h3>Appartement Vieux-Port</h3>
-            <p>Configuration incomplète - Marc a besoin d'infos</p>
-          </div>
-          <div style={{background: '#fff5f5', color: '#e53e3e'}} className="status-badge">À configurer</div>
-          <div className="actions">
-            <button className="btn-action" style={{borderColor: '#d4af37'}}>Terminer</button>
-          </div>
-        </div>
-      </main>
+        )}
+      </div>
     </div>
   );
 }
