@@ -20,7 +20,7 @@ export default function Pricing() {
           min-height: 100vh;
         }
 
-        /* Navbar (Identique à l'accueil pour la cohérence) */
+        /* Navbar */
         nav {
           display: flex;
           justify-content: space-between;
@@ -49,7 +49,7 @@ export default function Pricing() {
 
         .gold { color: #d4af37; }
 
-        /* Header de la page Tarifs */
+        /* Header */
         .pricing-header {
           padding: 150px 20px 60px;
           text-align: center;
@@ -62,11 +62,12 @@ export default function Pricing() {
         /* Grille de prix */
         .pricing-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+          grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
           gap: 30px;
-          max-width: 1100px;
+          max-width: 1200px;
           margin: -50px auto 80px;
           padding: 0 20px;
+          align-items: start;
         }
 
         .price-card {
@@ -76,9 +77,10 @@ export default function Pricing() {
           box-shadow: 0 20px 40px rgba(0,0,0,0.05);
           text-align: center;
           border: 1px solid #eee;
-          transition: transform 0.3s ease;
+          transition: 0.3s;
           display: flex;
           flex-direction: column;
+          position: relative;
         }
 
         .price-card.featured {
@@ -87,23 +89,40 @@ export default function Pricing() {
           z-index: 2;
         }
 
-        .plan-name { font-weight: 700; text-transform: uppercase; letter-spacing: 2px; font-size: 14px; color: #d4af37; margin-bottom: 10px; }
-        .price { font-family: 'Playfair Display', serif; font-size: 48px; font-weight: 700; margin-bottom: 10px; }
-        .price span { font-size: 18px; font-weight: 400; color: #777; }
-        .billing-cycle { font-size: 12px; color: #999; margin-bottom: 30px; }
+        /* Badge Économie */
+        .savings-badge {
+          background: #d4af37;
+          color: #1a2a6c;
+          font-weight: 800;
+          font-size: 11px;
+          padding: 6px 15px;
+          border-radius: 50px;
+          position: absolute;
+          top: -15px;
+          left: 50%;
+          transform: translateX(-50%);
+          white-space: nowrap;
+          box-shadow: 0 4px 10px rgba(212, 175, 55, 0.3);
+        }
 
-        .features-list { text-align: left; margin-bottom: 40px; flex-grow: 1; }
-        .feature { margin-bottom: 15px; font-size: 14px; display: flex; align-items: center; gap: 10px; }
+        .plan-name { font-weight: 700; text-transform: uppercase; letter-spacing: 2px; font-size: 13px; color: #d4af37; margin-bottom: 10px; }
+        .price { font-family: 'Playfair Display', serif; font-size: 48px; font-weight: 700; margin-bottom: 5px; color: #1a2a6c; }
+        .price span { font-size: 16px; font-weight: 400; color: #777; }
+        .billing-cycle { font-size: 12px; color: #999; margin-bottom: 30px; font-style: italic; }
+
+        .features-list { text-align: left; margin-bottom: 40px; flex-grow: 1; border-top: 1px solid #f5f5f5; padding-top: 25px; }
+        .feature { margin-bottom: 15px; font-size: 14px; display: flex; align-items: center; gap: 12px; color: #444; }
         .check { color: #d4af37; font-weight: bold; }
 
         .cta-pricing {
           background: #1a2a6c;
           color: white;
-          padding: 15px;
+          padding: 18px;
           border-radius: 50px;
           text-decoration: none;
           font-weight: 700;
           transition: 0.3s;
+          font-size: 15px;
         }
 
         .price-card.featured .cta-pricing {
@@ -111,22 +130,22 @@ export default function Pricing() {
           color: #1a2a6c;
         }
 
-        .cta-pricing:hover { opacity: 0.9; transform: translateY(-2px); }
+        .cta-pricing:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(26, 42, 108, 0.2); }
 
-        /* Bandeau de réassurance (Fixed comme validé) */
+        /* Bandeau de réassurance */
         .trust-banner {
           background: #1a2a6c;
           color: white;
-          padding: 25px 5%;
+          padding: 30px 5%;
           display: flex;
           justify-content: center;
-          gap: 40px;
+          gap: 50px;
           flex-wrap: wrap;
-          margin-top: 50px;
         }
-        .trust-item { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 13px; }
+        .trust-item { display: flex; align-items: center; gap: 12px; font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; }
+        .trust-item span { color: #d4af37; font-size: 20px; }
 
-        footer { padding: 50px; text-align: center; background: #fdfbf7; font-size: 13px; color: #777; }
+        footer { padding: 60px 20px; text-align: center; background: #fdfbf7; font-size: 13px; color: #777; }
       `}</style>
 
       <nav>
@@ -141,68 +160,70 @@ export default function Pricing() {
       </nav>
 
       <header className="pricing-header">
-        <h1>Investissez dans votre <span className="gold">Temps Libre</span></h1>
+        <h1>Investissez dans votre <span className="gold">Sérénité</span></h1>
         <p className="subtitle">
-          Choisissez l'offre qui correspond à votre parc locatif. 
-          Aucun frais caché, une sérénité garantie pour vous et vos voyageurs.
+          Une tarification transparente adaptée à votre croissance. 
+          Déléguez la charge mentale dès aujourd'hui.
         </p>
       </header>
 
       <div className="pricing-grid">
-        {/* Offre Solo */}
+        {/* Pack Solo */}
         <div className="price-card">
           <div className="plan-name">Solo</div>
-          <div className="price">19€<span>/mois</span></div>
-          <div className="billing-cycle">Par logement</div>
+          <div className="price">24,90€<span>/mois</span></div>
+          <div className="billing-cycle">Pour 1 logement LCD</div>
           <div className="features-list">
-            <div className="feature"><span className="check">✔</span> 1 Logement LCD</div>
+            <div className="feature"><span className="check">✔</span> 1 Logement unique</div>
             <div className="feature"><span className="check">✔</span> Majordome IA 24h/24</div>
-            <div className="feature"><span className="check">✔</span> Alertes Telegram Illimitées</div>
+            <div className="feature"><span className="check">✔</span> Alertes Telegram Urgences</div>
             <div className="feature"><span className="check">✔</span> Lien de Conciergerie Privé</div>
-            <div className="feature"><span className="check">✔</span> 10 Langues supportées</div>
+            <div className="feature"><span className="check">✔</span> Configuration en 5 minutes</div>
           </div>
-          <Link href="/register?plan=solo" className="cta-pricing">Démarrer avec Solo</Link>
+          <Link href="/register?plan=solo" className="cta-pricing">Démarrer maintenant</Link>
         </div>
 
-        {/* Offre Multi (La plus populaire) */}
+        {/* Pack Multi (Économie mise en avant) */}
         <div className="price-card featured">
+          <div className="savings-badge">ÉCONOMISEZ 24,60€ / MOIS</div>
           <div className="plan-name">Multi-Prestige</div>
-          <div className="price">79€<span>/mois</span></div>
+          <div className="price">99,90€<span>/mois</span></div>
           <div className="billing-cycle">Jusqu'à 5 logements</div>
           <div className="features-list">
-            <div className="feature"><span className="check">✔</span> Jusqu'à 5 Logements</div>
+            <div className="feature"><span className="check">✔</span> Jusqu'à 5 logements</div>
             <div className="feature"><span className="check">✔</span> Tout le plan Solo</div>
-            <div className="feature"><span className="check">✔</span> Support Prioritaire</div>
-            <div className="feature"><span className="check">✔</span> Personnalisation Avancée</div>
-            <div className="feature"><span className="check">✔</span> Statistiques de satisfaction</div>
+            <div className="feature"><span className="check">✔</span> Support Hôte Prioritaire</div>
+            <div className="feature"><span className="check">✔</span> Personnalisation du Majordome</div>
+            <div className="feature"><span className="check">✔</span> Tableau de bord unifié</div>
           </div>
           <Link href="/register?plan=multi" className="cta-pricing">Choisir Multi-Prestige</Link>
         </div>
 
-        {/* Offre Conciergerie */}
+        {/* Pack Empire (Très forte économie) */}
         <div className="price-card">
-          <div className="plan-name">Empire</div>
-          <div className="price">149€<span>/mois</span></div>
+          <div className="savings-badge">ÉCONOMISEZ 148,60€ / MOIS</div>
+          <div className="plan-name">Empire LCD</div>
+          <div className="price">224,90€<span>/mois</span></div>
           <div className="billing-cycle">Jusqu'à 15 logements</div>
           <div className="features-list">
-            <div className="feature"><span className="check">✔</span> Jusqu'à 15 Logements</div>
+            <div className="feature"><span className="check">✔</span> Jusqu'à 15 logements</div>
             <div className="feature"><span className="check">✔</span> Tout le plan Multi</div>
-            <div className="feature"><span className="check">✔</span> Gestion multi-comptes</div>
-            <div className="feature"><span className="check">✔</span> Accès API (prochainement)</div>
+            <div className="feature"><span className="check">✔</span> Gestion multi-comptes (équipe)</div>
+            <div className="feature"><span className="check">✔</span> Statistiques de satisfaction</div>
             <div className="feature"><span className="check">✔</span> Account Manager Dédié</div>
           </div>
-          <Link href="/register?plan=empire" className="cta-pricing">Contacter un expert</Link>
+          <Link href="/register?plan=empire" className="cta-pricing">Lancer mon Empire</Link>
         </div>
       </div>
 
       <div className="trust-banner">
-        <div className="trust-item">🕒 24/7 Assistance</div>
-        <div className="trust-item">🛡️ Sans engagement</div>
-        <div className="trust-item">⚡ Activation instantanée</div>
+        <div className="trust-item"><span>🕒</span> Activation Immédiate</div>
+        <div className="trust-item"><span>🛡️</span> Sans Engagement</div>
+        <div className="trust-item"><span>✨</span> Majordome IA Premium</div>
       </div>
 
       <footer>
-        <p>© 2026 MajorMarc - Tarifs transparents pour une gestion sereine.</p>
+        <p>© 2026 MajorMarc - La technologie au service des hôtes d'exception.</p>
       </footer>
     </div>
   );
