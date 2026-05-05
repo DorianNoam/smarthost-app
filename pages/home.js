@@ -293,7 +293,7 @@ export default function Home() {
             <h2 style={{fontFamily: "'Playfair Display', serif", fontSize: '28px', color: '#1a2a6c'}}>
               Rencontrez Marc
             </h2>
-            <p style={{color: '#d4af37', fontWeight: '600', marginTop: '5px'}}>Votre IA Majordome</p>
+            <p style={{color: '#d4af37', fontWeight: '600', marginTop: '5px'}}>Votre Majordome</p>
           </div>
 
           <div className="marc-features">
