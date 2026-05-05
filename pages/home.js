@@ -191,31 +191,28 @@ export default function Home() {
       `}</style>
 
       <nav>
-        <Link href="/" passHref style={{ textDecoration: 'none' }}>
-          <span className="brand">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#d4af37" strokeWidth="2.5" style={{marginRight: '10px'}}>
-              <path d="M22 17H2a1 1 0 0 1-1-1v-1a2 2 0 0 1 2-2h18a2 2 0 0 1 2 2v1a1 1 0 0 1-1 1z"/><path d="M12 4a8 8 0 0 0-8 8h16a8 8 0 0 0-8-8z"/><circle cx="12" cy="3" r="1.5" fill="#d4af37"/>
-            </svg>
-            Major<span className="gold">Marc</span>
-          </span>
-        </Link>
-        <Link href="/login" passHref style={{ textDecoration: 'none' }}>
-          <span className="nav-login">Espace Hôte</span>
-        </Link>
-      </nav>
+  <Link href="/" passHref className="brand">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#d4af37" strokeWidth="2.5" style={{marginRight: '10px'}}>
+      <path d="M22 17H2a1 1 0 0 1-1-1v-1a2 2 0 0 1 2-2h18a2 2 0 0 1 2 2v1a1 1 0 0 1-1 1z"/><path d="M12 4a8 8 0 0 0-8 8h16a8 8 0 0 0-8-8z"/><circle cx="12" cy="3" r="1.5" fill="#d4af37"/>
+    </svg>
+    Major<span className="gold">Marc</span>
+  </Link>
+  
+  <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+    {/* Nouveau lien vers les Tarifs */}
+    <Link href="/pricing" style={{ color: '#1a2a6c', fontWeight: '600', textDecoration: 'none', fontSize: '14px' }}>Tarifs</Link>
+    <Link href="/login" className="nav-login">Espace Hôte</Link>
+  </div>
+</nav>
 
-      <section className="hero">
-        <div className="hero-content">
-          <h1>Retrouvez votre <span className="gold">Sérénité</span></h1>
-          <p className="subtitle">
-            MajorMarc gère vos voyageurs en location courte durée 24h/24. <br/>
-            Que vous soyez sur Airbnb, Booking, Abritel ou en direct, profitez enfin de votre temps libre.
-          </p>
-          <Link href="/register" passHref style={{ textDecoration: 'none' }}>
-            <span className="cta-main">Libérer mon esprit maintenant</span>
-          </Link>
-        </div>
-      </section>
+<section className="hero">
+  <div className="hero-content">
+    <h1>Retrouvez votre <span className="gold">Sérénité</span></h1>
+    <p className="subtitle">MajorMarc gère vos voyageurs 24h/24.</p>
+    {/* Lien actif vers l'inscription */}
+    <Link href="/register" className="cta-main">Libérer mon esprit maintenant</Link>
+  </div>
+</section>
 
       {/* BANDEAU FIXE INTÉGRÉ AU SITE */}
       <div className="trust-banner">
