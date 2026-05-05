@@ -126,10 +126,10 @@ export default function Home() {
         .msg-marc { background: white; color: #333; border: 1px solid #eee; border-bottom-left-radius: 2px; }
 
         /* Mockup Notification Téléphone */
-        .phone-notif { background: #111; border-radius: 30px; padding: 10px; width: 280px; margin: 0 auto; border: 4px solid #333; height: 350px; }
-        .notif-bubble { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); padding: 15px; border-radius: 15px; margin-top: 40px; box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
-        .notif-header { display: flex; justify-content: space-between; font-size: 10px; font-weight: 700; margin-bottom: 8px; color: #666; }
-        .notif-body { font-size: 12px; color: #333; }
+        .phone-notif { background: #111; border-radius: 30px; padding: 10px; width: 280px; margin: 0 auto; border: 4px solid #333; height: 380px; }
+        .notif-bubble { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); padding: 15px; border-radius: 15px; margin-top: 40px; box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+        .notif-header { display: flex; justify-content: space-between; font-size: 10px; font-weight: 700; margin-bottom: 12px; color: #666; }
+        .notif-body { font-size: 13px; color: #333; line-height: 1.5; }
         .notif-body b { color: #1a2a6c; }
 
         /* Section Marc & Super-pouvoirs */
@@ -139,7 +139,7 @@ export default function Home() {
         .marc-features { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; width: 100%; }
         .feature-item { background: white; padding: 25px; border-radius: 15px; border-left: 4px solid #d4af37; text-align: left; }
 
-        /* Section Témoignages (Rétablie) */
+        /* Section Témoignages */
         .testimonials { padding: 80px 5%; background: #fff; text-align: center; }
         .reviews-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; max-width: 1200px; margin: 40px auto 0; }
         .review-card { background: #fdfbf7; padding: 35px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); text-align: left; }
@@ -179,7 +179,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Section Démo Visuelle */}
+      {/* Section Démo Visuelle avec Notification Mise à jour */}
       <section className="demo-section">
         <h2 style={{fontFamily: "'Playfair Display', serif", fontSize: '32px'}}>L'expérience MajorMarc</h2>
         <div className="demo-grid">
@@ -200,8 +200,10 @@ export default function Home() {
               <div className="notif-bubble">
                 <div className="notif-header"><span>TELEGRAM</span><span>À L'INSTANT</span></div>
                 <div className="notif-body">
-                  🚨 <b>ALERTE MAJORMARC</b><br/>
-                  Le voyageur signale une <b>fuite d'eau</b>. Marc a répondu qu'il vous contactait immédiatement.
+                  🚨 <b>ALERTE MAJORMARC - Villa Bella</b><br/><br/>
+                  Problématique : <b>Fuite d'eau</b>.<br/><br/>
+                  Merci de contacter le client au plus vite.<br/><br/>
+                  Cordialement.
                 </div>
               </div>
             </div>
