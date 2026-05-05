@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { supabase } from '../lib/supabase'; // On importe ton lien vers la base
+import { supabase } from '../lib/supabase'; 
 
 export default function Register() {
   const router = useRouter();
@@ -16,38 +16,27 @@ export default function Register() {
     setLoading(true);
     setError(null);
 
-    // 1. Création du compte dans Supabase Auth
-    const { data: authData, error: authError } = await supabase.auth.signUp({
-      email,
-      password,
-    });
+    try {
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email,
+        password,
+      });
 
-    if (authError) {
-      setError(authError.message);
-      setLoading(false);
-      return;
-    }
+      if (authError) throw authError;
 
-    // 2. Création de la ligne dans ta table 'profiles'
-    if (authData.user) {
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert([
-          { 
-            id: authData.user.id, 
-            full_name: fullName,
-            email: email
-          }
-        ]);
+      if (authData.user) {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert([{ id: authData.user.id, full_name: fullName, email: email }]);
 
-      if (profileError) {
-        setError("Compte créé, mais erreur lors de la création du profil.");
-      } else {
-        // Succès ! Direction le dashboard
+        if (profileError) throw profileError;
         router.push('/dashboard');
       }
+    } catch (err) {
+      setError(err.message || "Une erreur est survenue.");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
@@ -65,37 +54,34 @@ export default function Register() {
         input { width: 100%; padding: 12px; border: 1px solid #eee; border-radius: 10px; background: #f9f9f9; outline: none; box-sizing: border-box; }
         input:focus { border-color: #d4af37; }
         .btn-register { background: #d4af37; color: #1a2a6c; border: none; padding: 15px; border-radius: 50px; font-weight: 700; cursor: pointer; margin-top: 10px; }
-        .btn-register:disabled { opacity: 0.5; cursor: not-allowed; }
-        .error-msg { color: #e74c3c; font-size: 13px; margin-top: 10px; }
+        .btn-register:disabled { opacity: 0.5; }
+        .error-msg { background: #fee2e2; color: #b91c1c; padding: 10px; border-radius: 8px; font-size: 13px; margin-bottom: 15px; }
       `}</style>
 
       <div className="register-box">
-        <h1>Devenir <span className="gold">Hôte</span></h1>
-        <p style={{color: '#666'}}>Commencez votre expérience MajorMarc.</p>
-
-        {error && <div className="error-msg">{error}</div>}
-
+        <Link href="/" legacyBehavior passHref>
+          <a style={{cursor: 'pointer'}}><h1>Major<span className="gold">Marc</span></h1></a>
+        </Link>
         <form onSubmit={handleRegister}>
+          {error && <div className="error-msg">{error}</div>}
           <div className="input-group">
             <label>Nom complet</label>
-            <input type="text" placeholder="Jean Dupont" value={fullName} onChange={(e) => setFullName(e.target.value)} required />
+            <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} required />
           </div>
           <div className="input-group">
-            <label>Email professionnel</label>
-            <input type="email" placeholder="jean@exemple.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
+            <label>Email</label>
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
           </div>
           <div className="input-group">
             <label>Mot de passe</label>
-            <input type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required />
+            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
           </div>
-
           <button type="submit" className="btn-register" disabled={loading}>
-            {loading ? 'Création en cours...' : 'Créer mon espace prestige'}
+            {loading ? 'Création...' : 'Créer mon compte'}
           </button>
         </form>
-
-        <p style={{marginTop: '20px', fontSize: '13px'}}>
-          Déjà inscrit ? <Link href="/login" style={{color: '#1a2a6c', fontWeight: '700'}}>Se connecter</Link>
+        <p style={{marginTop: '25px', fontSize: '13px'}}>
+          Déjà un compte ? <Link href="/login" style={{color: '#1a2a6c', fontWeight: '700'}}>Se connecter</Link>
         </p>
       </div>
     </div>
