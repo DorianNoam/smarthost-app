@@ -112,11 +112,11 @@ export default function Home() {
         .subtitle { font-size: clamp(16px, 3vw, 21px); margin-bottom: 35px; color: #f0f0f0; line-height: 1.6; }
 
         .cta-main {
-          background-color: #d4af37;
-          color: #1a2a6c;
+          background-color: #d4af37 !important;
+          color: #1a2a6c !important;
           padding: 20px 45px;
           border-radius: 50px;
-          text-decoration: none;
+          text-decoration: none !important;
           font-weight: 700;
           font-size: 17px;
           box-shadow: 0 10px 30px rgba(212, 175, 55, 0.4);
@@ -127,7 +127,7 @@ export default function Home() {
 
         .cta-main:hover {
           transform: translateY(-3px);
-          background-color: #fff;
+          background-color: #fff !important;
         }
 
         /* Bandeau Réassurance */
@@ -220,38 +220,45 @@ export default function Home() {
         .teaser-subtext { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 2px; color: #d4af37; margin-bottom: 40px; display: block; }
         
         .cta-teaser {
-          background-color: #d4af37;
-          color: #1a2a6c;
+          background-color: #d4af37 !important;
+          color: #1a2a6c !important;
           padding: 18px 40px;
           border-radius: 50px;
           font-weight: 700;
-          text-decoration: none;
+          text-decoration: none !important;
           display: inline-block;
           transition: 0.3s;
           box-shadow: 0 10px 25px rgba(212, 175, 55, 0.2);
           cursor: pointer;
         }
-        .cta-teaser:hover { transform: translateY(-3px); background-color: #fff; }
+        .cta-teaser:hover { transform: translateY(-3px); background-color: #fff !important; }
 
         /* Testimonials & Footer */
         .testimonials { padding: 80px 5%; background: #fff; text-align: center; }
         .reviews-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; max-width: 1200px; margin: 40px auto 0; }
         .review-card { background: #fdfbf7; padding: 35px; border-radius: 20px; text-align: left; box-shadow: 0 10px 30px rgba(0,0,0,0.03); }
-        .stars { color: #d4af37; font-size: 20px; margin-bottom: 15px; letter-spacing: 3px; }
+        .stars { color: #d4af37 !important; font-size: 20px; margin-bottom: 15px; letter-spacing: 3px; }
         .author-badge { background: #1a2a6c; color: white; font-size: 10px; padding: 3px 8px; border-radius: 10px; text-transform: uppercase; margin-left: 10px; }
 
       `}</style>
 
       <nav>
-        <Link href="/" className="brand">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#d4af37" strokeWidth="2.5" style={{marginRight: '10px'}}>
-            <path d="M22 17H2a1 1 0 0 1-1-1v-1a2 2 0 0 1 2-2h18a2 2 0 0 1 2 2v1a1 1 0 0 1-1 1z"/><path d="M12 4a8 8 0 0 0-8 8h16a8 8 0 0 0-8-8z"/><circle cx="12" cy="3" r="1.5" fill="#d4af37"/>
-          </svg>
-          Major<span className="gold">Marc</span>
+        {/* LA CORRECTION MAGIQUE : legacyBehavior + vraie balise <a> */}
+        <Link href="/" passHref legacyBehavior>
+          <a className="brand">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#d4af37" strokeWidth="2.5" style={{marginRight: '10px'}}>
+              <path d="M22 17H2a1 1 0 0 1-1-1v-1a2 2 0 0 1 2-2h18a2 2 0 0 1 2 2v1a1 1 0 0 1-1 1z"/><path d="M12 4a8 8 0 0 0-8 8h16a8 8 0 0 0-8-8z"/><circle cx="12" cy="3" r="1.5" fill="#d4af37"/>
+            </svg>
+            Major<span className="gold">Marc</span>
+          </a>
         </Link>
         <div className="nav-links">
-          <Link href="/pricing" className="nav-link">Tarifs</Link>
-          <Link href="/login" className="nav-login">Espace Hôte</Link>
+          <Link href="/pricing" passHref legacyBehavior>
+            <a className="nav-link">Tarifs</a>
+          </Link>
+          <Link href="/login" passHref legacyBehavior>
+            <a className="nav-login">Espace Hôte</a>
+          </Link>
         </div>
       </nav>
 
@@ -262,8 +269,9 @@ export default function Home() {
             MajorMarc gère vos voyageurs en location courte durée 24h/24. <br/>
             Que vous soyez sur Airbnb, Booking, Abritel ou en direct, profitez enfin de votre temps libre.
           </p>
-          <Link href="/register" className="cta-main">
-            Libérer mon esprit maintenant
+          {/* LE BOUTON DU HERO */}
+          <Link href="/register" passHref legacyBehavior>
+            <a className="cta-main">Libérer mon esprit maintenant</a>
           </Link>
         </div>
       </section>
@@ -345,8 +353,9 @@ export default function Home() {
         </p>
         <span className="teaser-subtext">Sans engagement. Annulable à tout moment.</span>
         
-        <Link href="/pricing" className="cta-teaser">
-          Découvrir nos forfaits sur-mesure
+        {/* LE BOUTON DES TARIFS */}
+        <Link href="/pricing" passHref legacyBehavior>
+          <a className="cta-teaser">Découvrir nos forfaits sur-mesure</a>
         </Link>
       </section>
 
