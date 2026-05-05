@@ -125,24 +125,41 @@ export default function Home() {
           text-transform: uppercase;
         }
 
-        .trust-item span {
-          color: #d4af37;
-          font-size: 20px;
+        .trust-item span { color: #d4af37; font-size: 20px; }
+
+        /* NOUVELLE SECTION DÉMO (Mise en page Alternée / Zig-Zag) */
+        .demo-section { padding: 80px 5%; background: white; }
+        .demo-section h2 { text-align: center; font-family: 'Playfair Display', serif; font-size: 32px; margin-bottom: 60px; }
+        
+        .demo-block {
+          display: flex;
+          flex-direction: column;
+          gap: 50px;
+          align-items: center;
+          max-width: 1200px;
+          margin: 0 auto 80px;
         }
 
-        /* Section Démo */
-        .demo-section { padding: 80px 5%; background: white; text-align: center; }
-        .demo-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 40px; max-width: 1200px; margin: 50px auto 0; }
-        .demo-box { text-align: left; }
+        .demo-text { flex: 1; text-align: left; }
         .demo-label { font-weight: 700; text-transform: uppercase; font-size: 12px; letter-spacing: 2px; color: #d4af37; margin-bottom: 15px; display: block; }
+        .demo-text h3 { font-family: 'Playfair Display', serif; font-size: 28px; margin-bottom: 20px; color: #1a2a6c; line-height: 1.2; }
+        .demo-text p { font-size: 16px; color: #555; line-height: 1.8; margin-bottom: 15px; }
 
-        /* Conversation Élaborée & Honnête (Lien web) */
+        .demo-visual { flex: 1; width: 100%; max-width: 550px; display: flex; justify-content: center; }
+
+        @media (min-width: 900px) { 
+          .demo-block { flex-direction: row; }
+          .demo-block.reverse { flex-direction: row-reverse; } /* Inverse l'ordre pour le 2eme bloc */
+        }
+
+        /* Conversation */
         .chat-mockup {
           background: #f8f9fa;
           border-radius: 20px;
           padding: 25px;
           box-shadow: 0 20px 40px rgba(0,0,0,0.05);
           border: 1px solid #eee;
+          width: 100%;
         }
 
         .message { margin-bottom: 15px; padding: 12px 18px; border-radius: 15px; font-size: 14px; line-height: 1.5; max-width: 85%; }
@@ -150,8 +167,8 @@ export default function Home() {
         .msg-marc { background: white; color: #333; border: 1px solid #eee; border-bottom-left-radius: 2px; }
 
         /* Notification Téléphone */
-        .phone-notif { background: #111; border-radius: 35px; padding: 12px; width: 300px; margin: 0 auto; border: 4px solid #333; height: 440px; position: relative; }
-        .notif-bubble { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); padding: 18px; border-radius: 18px; margin-top: 40px; box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+        .phone-notif { background: #111; border-radius: 35px; padding: 12px; width: 300px; border: 4px solid #333; height: 440px; position: relative; }
+        .notif-bubble { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); padding: 18px; border-radius: 18px; margin-top: 40px; box-shadow: 0 10px 20px rgba(0,0,0,0.2); text-align: left; }
         .notif-header { display: flex; justify-content: space-between; font-size: 10px; font-weight: 700; margin-bottom: 12px; color: #666; }
         .notif-body { font-size: 13px; color: #333; line-height: 1.6; }
         .notif-body b { color: #1a2a6c; }
@@ -167,16 +184,10 @@ export default function Home() {
         .testimonials { padding: 80px 5%; background: #fff; text-align: center; }
         .reviews-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; max-width: 1200px; margin: 40px auto 0; }
         .review-card { background: #fdfbf7; padding: 35px; border-radius: 20px; text-align: left; box-shadow: 0 10px 30px rgba(0,0,0,0.03); }
-        
-        /* Force la couleur OR sur les étoiles avec !important */
         .stars { color: #d4af37 !important; font-size: 20px; margin-bottom: 15px; letter-spacing: 3px; }
-        
         .author-badge { background: #1a2a6c; color: white; font-size: 10px; padding: 3px 8px; border-radius: 10px; text-transform: uppercase; margin-left: 10px; }
 
-        @media (min-width: 900px) { 
-          .marc-container { flex-direction: row; align-items: flex-start; } 
-          .marc-profile { position: sticky; top: 100px; } 
-        }
+        @media (min-width: 900px) { .marc-container { flex-direction: row; align-items: flex-start; } .marc-profile { position: sticky; top: 100px; } }
       `}</style>
 
       <nav>
@@ -214,12 +225,17 @@ export default function Home() {
       </div>
 
       <section className="demo-section">
-        <h2 style={{fontFamily: "'Playfair Display', serif", fontSize: '32px'}}>L'excellence en action</h2>
-        <div className="demo-grid">
-          
-          {/* Conversation Honnête avec un lien */}
-          <div className="demo-box">
+        <h2>L'excellence en action</h2>
+        
+        {/* Bloc 1 : Voyageur (Texte à gauche, Image à droite) */}
+        <div className="demo-block">
+          <div className="demo-text">
             <span className="demo-label">Côté Voyageur</span>
+            <h3>Une communication fluide et naturelle.</h3>
+            <p>MajorMarc s'intègre directement à votre messagerie (Airbnb, Booking ou canal direct). Il comprend l'intention de vos voyageurs et répond instantanément avec le ton d'un véritable concierge.</p>
+            <p>Il ne devine rien : toutes ses réponses proviennent exclusivement du livret d'accueil et des consignes que vous lui avez paramétrés. Si une question dépasse ses compétences, il prévient le voyageur que vous allez prendre le relais.</p>
+          </div>
+          <div className="demo-visual">
             <div className="chat-mockup">
               <div className="message msg-user">Bonjour ! Quel est le code Wi-Fi ?</div>
               <div className="message msg-marc">
@@ -236,9 +252,17 @@ export default function Home() {
               </div>
             </div>
           </div>
+        </div>
 
-          <div className="demo-box">
+        {/* Bloc 2 : Propriétaire (Image à gauche, Texte à droite grâce à la classe .reverse) */}
+        <div className="demo-block reverse">
+          <div className="demo-text">
             <span className="demo-label">Côté Propriétaire</span>
+            <h3>Vous gardez le contrôle, sans le stress.</h3>
+            <p>La puissance de MajorMarc réside dans sa capacité à filtrer les messages. Fini d'être réveillé en pleine nuit pour un simple code de boîte à clés ou une question sur le parking.</p>
+            <p>Cependant, en cas de problème nécessitant une action humaine (une fuite, une coupure de courant, un objet cassé), l'IA détecte l'urgence et vous envoie une alerte immédiate sur votre téléphone via Telegram. Vous n'êtes dérangé que pour l'essentiel.</p>
+          </div>
+          <div className="demo-visual">
             <div className="phone-notif">
               <div className="notif-bubble">
                 <div className="notif-header"><span>TELEGRAM</span><span>À L'INSTANT</span></div>
@@ -254,8 +278,8 @@ export default function Home() {
               </div>
             </div>
           </div>
-
         </div>
+
       </section>
 
       <section className="meet-marc">
@@ -277,7 +301,6 @@ export default function Home() {
         <h2 style={{fontFamily: "'Playfair Display', serif"}}>Ils ont délégué leur charge mentale</h2>
         <div className="reviews-grid">
           <div className="review-card">
-            {/* Etoiles avec style en ligne pour être sûr à 200% de la couleur Or */}
             <div className="stars" style={{color: '#d4af37'}}>★★★★★</div>
             <p className="review-text">"Je gère plusieurs appartements sur Booking et Airbnb. MajorMarc est devenu mon bras droit pour la communication."</p>
             <div className="author">Sophie L. <span className="author-badge">Multi-plateforme</span></div>
