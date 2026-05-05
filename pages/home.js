@@ -49,6 +49,22 @@ export default function Home() {
 
         .gold { color: #d4af37; }
 
+        .nav-links {
+          display: flex;
+          align-items: center;
+          gap: 25px;
+        }
+
+        .nav-link {
+          color: #1a2a6c;
+          font-weight: 600;
+          text-decoration: none;
+          font-size: 14px;
+          transition: 0.3s;
+        }
+
+        .nav-link:hover { color: #d4af37; }
+
         .nav-login {
           font-weight: 600;
           color: #1a2a6c !important;
@@ -103,7 +119,7 @@ export default function Home() {
           background-color: #fff !important;
         }
 
-        /* BANDEAU DE RÉASSURANCE FIXE */
+        /* Bandeau Réassurance */
         .trust-banner {
           background: #1a2a6c;
           color: white;
@@ -127,7 +143,7 @@ export default function Home() {
 
         .trust-item span { color: #d4af37; font-size: 20px; }
 
-        /* NOUVELLE SECTION DÉMO (Mise en page Alternée / Zig-Zag) */
+        /* Section Démo */
         .demo-section { padding: 80px 5%; background: white; }
         .demo-section h2 { text-align: center; font-family: 'Playfair Display', serif; font-size: 32px; margin-bottom: 60px; }
         
@@ -149,10 +165,10 @@ export default function Home() {
 
         @media (min-width: 900px) { 
           .demo-block { flex-direction: row; }
-          .demo-block.reverse { flex-direction: row-reverse; } /* Inverse l'ordre pour le 2eme bloc */
+          .demo-block.reverse { flex-direction: row-reverse; }
         }
 
-        /* Conversation */
+        /* Chat & Téléphone */
         .chat-mockup {
           background: #f8f9fa;
           border-radius: 20px;
@@ -166,7 +182,6 @@ export default function Home() {
         .msg-user { background: #1a2a6c; color: white; margin-left: auto; border-bottom-right-radius: 2px; }
         .msg-marc { background: white; color: #333; border: 1px solid #eee; border-bottom-left-radius: 2px; }
 
-        /* Notification Téléphone */
         .phone-notif { background: #111; border-radius: 35px; padding: 12px; width: 300px; border: 4px solid #333; height: 440px; position: relative; }
         .notif-bubble { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); padding: 18px; border-radius: 18px; margin-top: 40px; box-shadow: 0 10px 20px rgba(0,0,0,0.2); text-align: left; }
         .notif-header { display: flex; justify-content: space-between; font-size: 10px; font-weight: 700; margin-bottom: 12px; color: #666; }
@@ -179,6 +194,31 @@ export default function Home() {
         .marc-photo { width: 200px; height: 200px; border-radius: 50%; object-fit: cover; border: 6px solid white; box-shadow: 0 15px 35px rgba(0,0,0,0.1); margin-bottom: 20px; }
         .marc-features { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; width: 100%; }
         .feature-item { background: white; padding: 25px; border-radius: 15px; border-left: 4px solid #d4af37; text-align: left; }
+        @media (min-width: 900px) { .marc-container { flex-direction: row; align-items: flex-start; } .marc-profile { position: sticky; top: 100px; } }
+
+        /* Pricing Teaser */
+        .pricing-teaser {
+          padding: 80px 5%;
+          background: #1a2a6c;
+          color: white;
+          text-align: center;
+        }
+        
+        .teaser-title { font-family: 'Playfair Display', serif; font-size: clamp(26px, 4vw, 36px); margin-bottom: 20px; }
+        .teaser-text { font-size: 18px; margin-bottom: 40px; opacity: 0.9; line-height: 1.6; }
+        
+        .cta-teaser {
+          background: #d4af37;
+          color: #1a2a6c;
+          padding: 18px 40px;
+          border-radius: 50px;
+          font-weight: 700;
+          text-decoration: none;
+          display: inline-block;
+          transition: 0.3s;
+          box-shadow: 0 10px 25px rgba(212, 175, 55, 0.2);
+        }
+        .cta-teaser:hover { transform: translateY(-3px); background: #fff; }
 
         /* Testimonials & Footer */
         .testimonials { padding: 80px 5%; background: #fff; text-align: center; }
@@ -187,34 +227,38 @@ export default function Home() {
         .stars { color: #d4af37 !important; font-size: 20px; margin-bottom: 15px; letter-spacing: 3px; }
         .author-badge { background: #1a2a6c; color: white; font-size: 10px; padding: 3px 8px; border-radius: 10px; text-transform: uppercase; margin-left: 10px; }
 
-        @media (min-width: 900px) { .marc-container { flex-direction: row; align-items: flex-start; } .marc-profile { position: sticky; top: 100px; } }
       `}</style>
 
       <nav>
-  <Link href="/" passHref className="brand">
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#d4af37" strokeWidth="2.5" style={{marginRight: '10px'}}>
-      <path d="M22 17H2a1 1 0 0 1-1-1v-1a2 2 0 0 1 2-2h18a2 2 0 0 1 2 2v1a1 1 0 0 1-1 1z"/><path d="M12 4a8 8 0 0 0-8 8h16a8 8 0 0 0-8-8z"/><circle cx="12" cy="3" r="1.5" fill="#d4af37"/>
-    </svg>
-    Major<span className="gold">Marc</span>
-  </Link>
-  
-  <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
-    {/* Nouveau lien vers les Tarifs */}
-    <Link href="/pricing" style={{ color: '#1a2a6c', fontWeight: '600', textDecoration: 'none', fontSize: '14px' }}>Tarifs</Link>
-    <Link href="/login" className="nav-login">Espace Hôte</Link>
-  </div>
-</nav>
+        <Link href="/" passHref style={{ textDecoration: 'none' }}>
+          <span className="brand">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#d4af37" strokeWidth="2.5" style={{marginRight: '10px'}}>
+              <path d="M22 17H2a1 1 0 0 1-1-1v-1a2 2 0 0 1 2-2h18a2 2 0 0 1 2 2v1a1 1 0 0 1-1 1z"/><path d="M12 4a8 8 0 0 0-8 8h16a8 8 0 0 0-8-8z"/><circle cx="12" cy="3" r="1.5" fill="#d4af37"/>
+            </svg>
+            Major<span className="gold">Marc</span>
+          </span>
+        </Link>
+        <div className="nav-links">
+          <Link href="/pricing" className="nav-link">Tarifs</Link>
+          <Link href="/login" passHref style={{ textDecoration: 'none' }}>
+            <span className="nav-login">Espace Hôte</span>
+          </Link>
+        </div>
+      </nav>
 
-<section className="hero">
-  <div className="hero-content">
-    <h1>Retrouvez votre <span className="gold">Sérénité</span></h1>
-    <p className="subtitle">MajorMarc gère vos voyageurs 24h/24.</p>
-    {/* Lien actif vers l'inscription */}
-    <Link href="/register" className="cta-main">Libérer mon esprit maintenant</Link>
-  </div>
-</section>
+      <section className="hero">
+        <div className="hero-content">
+          <h1>Retrouvez votre <span className="gold">Sérénité</span></h1>
+          <p className="subtitle">
+            MajorMarc gère vos voyageurs en location courte durée 24h/24. <br/>
+            Que vous soyez sur Airbnb, Booking, Abritel ou en direct, profitez enfin de votre temps libre.
+          </p>
+          <Link href="/register" passHref style={{ textDecoration: 'none' }}>
+            <span className="cta-main">Libérer mon esprit maintenant</span>
+          </Link>
+        </div>
+      </section>
 
-      {/* BANDEAU FIXE INTÉGRÉ AU SITE */}
       <div className="trust-banner">
         <div className="trust-item"><span>🕒</span> Disponible 24h/24 et 7j/7</div>
         <div className="trust-item"><span>⚡</span> Réponses instantanées</div>
@@ -224,7 +268,6 @@ export default function Home() {
       <section className="demo-section">
         <h2>L'excellence en action</h2>
         
-        {/* Bloc 1 : Voyageur (Texte à gauche, Image à droite) */}
         <div className="demo-block">
           <div className="demo-text">
             <span className="demo-label">Côté Voyageur</span>
@@ -243,21 +286,16 @@ export default function Home() {
               <div className="message msg-marc">
                 Avec plaisir ! Je vous recommande vivement <b>"L'Assiette Bleue"</b> à 5 min à pied. Ils font d'excellents poissons frais. 
               </div>
-              <div className="message msg-user">Génial, on va regarder ça !</div>
-              <div className="message msg-marc">
-                Voici le lien vers leur carte si vous souhaitez réserver : <b>www.assiette-bleue.fr</b> 🔗<br/><br/>N'hésitez pas si vous avez besoin d'autre chose.
-              </div>
             </div>
           </div>
         </div>
 
-        {/* Bloc 2 : Propriétaire (Image à gauche, Texte à droite grâce à la classe .reverse) */}
         <div className="demo-block reverse">
           <div className="demo-text">
             <span className="demo-label">Côté Propriétaire</span>
             <h3>Vous gardez le contrôle, sans le stress.</h3>
             <p>La puissance de MajorMarc réside dans sa capacité à filtrer les messages. Fini d'être réveillé en pleine nuit pour un simple code de boîte à clés ou une question sur le parking.</p>
-            <p>Cependant, en cas de problème nécessitant une action humaine (une fuite, une coupure de courant, un objet cassé), l'IA détecte l'urgence et vous envoie une alerte immédiate sur votre téléphone via Telegram. Vous n'êtes dérangé que pour l'essentiel.</p>
+            <p>Cependant, en cas de problème nécessitant une action humaine (une fuite, une coupure de courant), l'IA détecte l'urgence et vous envoie une alerte immédiate sur votre téléphone via Telegram. Vous n'êtes dérangé que pour l'essentiel.</p>
           </div>
           <div className="demo-visual">
             <div className="phone-notif">
@@ -266,12 +304,8 @@ export default function Home() {
                 <div className="notif-body">
                   🚨 <b>ALERTE MAJORMARC - Villa Bella</b><br/><br/>
                   Problématique : <b>Coupure d'électricité</b>.<br/><br/>
-                  Merci de contacter le client au plus vite.<br/><br/>
-                  Cordialement.
+                  Merci de contacter le client au plus vite.
                 </div>
-              </div>
-              <div style={{textAlign: 'center', marginTop: '100px', color: '#444', fontSize: '11px', padding: '0 15px'}}>
-                Marc a rassuré le client en attendant votre intervention.
               </div>
             </div>
           </div>
@@ -294,16 +328,28 @@ export default function Home() {
         </div>
       </section>
 
+      {/* NOUVEAU BLOC TEASING TARIFS */}
+      <section className="pricing-teaser">
+        <h2 className="teaser-title">La Sérénité a enfin un prix abordable</h2>
+        <p className="teaser-text">
+          Un Majordome disponible 24h/24 pour vos voyageurs, <br/>
+          à partir de <b style={{ color: '#d4af37', fontSize: '24px' }}>24,90€ / mois</b>.
+        </p>
+        <Link href="/pricing" className="cta-teaser">
+          Découvrir nos forfaits sur-mesure
+        </Link>
+      </section>
+
       <section className="testimonials">
         <h2 style={{fontFamily: "'Playfair Display', serif"}}>Ils ont délégué leur charge mentale</h2>
         <div className="reviews-grid">
           <div className="review-card">
-            <div className="stars" style={{color: '#d4af37'}}>★★★★★</div>
+            <div className="stars">★★★★★</div>
             <p className="review-text">"Je gère plusieurs appartements sur Booking et Airbnb. MajorMarc est devenu mon bras droit pour la communication."</p>
             <div className="author">Sophie L. <span className="author-badge">Multi-plateforme</span></div>
           </div>
           <div className="review-card">
-            <div className="stars" style={{color: '#d4af37'}}>★★★★★</div>
+            <div className="stars">★★★★★</div>
             <p className="review-text">"La réactivité est le point fort. Mes notes voyageurs ont grimpé depuis que Marc répond à ma place."</p>
             <div className="author">Thomas D. <span className="author-badge">Conciergerie</span></div>
           </div>
