@@ -6,6 +6,12 @@ export default function Home() {
       <style jsx>{`
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Montserrat:wght@300;400;600;700&display=swap');
 
+        /* RESET GLOBAL DES LIENS */
+        :global(a) {
+          text-decoration: none;
+          color: inherit;
+        }
+
         :global(html), :global(body) {
           margin: 0;
           padding: 0;
@@ -43,8 +49,9 @@ export default function Home() {
           font-family: 'Playfair Display', serif;
           font-size: clamp(18px, 4vw, 24px);
           font-weight: 700;
-          color: #1a2a6c !important;
+          color: #1a2a6c;
           text-decoration: none;
+          cursor: pointer;
         }
 
         .gold { color: #d4af37; }
@@ -61,24 +68,27 @@ export default function Home() {
           text-decoration: none;
           font-size: 14px;
           transition: 0.3s;
+          cursor: pointer;
         }
 
         .nav-link:hover { color: #d4af37; }
 
         .nav-login {
           font-weight: 600;
-          color: #1a2a6c !important;
+          color: #1a2a6c;
           text-decoration: none;
           padding: 8px 22px;
           border: 2px solid #1a2a6c;
           border-radius: 50px;
           font-size: 14px;
           transition: 0.3s;
+          cursor: pointer;
+          display: inline-block;
         }
 
         .nav-login:hover {
-          background: #1a2a6c !important;
-          color: white !important;
+          background: #1a2a6c;
+          color: white;
         }
 
         /* Hero Section */
@@ -102,21 +112,22 @@ export default function Home() {
         .subtitle { font-size: clamp(16px, 3vw, 21px); margin-bottom: 35px; color: #f0f0f0; line-height: 1.6; }
 
         .cta-main {
-          background-color: #d4af37 !important;
-          color: #1a2a6c !important;
+          background-color: #d4af37;
+          color: #1a2a6c;
           padding: 20px 45px;
           border-radius: 50px;
-          text-decoration: none !important;
+          text-decoration: none;
           font-weight: 700;
           font-size: 17px;
           box-shadow: 0 10px 30px rgba(212, 175, 55, 0.4);
           display: inline-block;
           transition: 0.3s;
+          cursor: pointer;
         }
 
         .cta-main:hover {
           transform: translateY(-3px);
-          background-color: #fff !important;
+          background-color: #fff;
         }
 
         /* Bandeau Réassurance */
@@ -208,43 +219,39 @@ export default function Home() {
         .teaser-text { font-size: 18px; margin-bottom: 10px; opacity: 0.9; line-height: 1.6; }
         .teaser-subtext { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 2px; color: #d4af37; margin-bottom: 40px; display: block; }
         
-        /* CORRECTION ICI : Ajout des !important pour forcer le design par-dessus le navigateur */
         .cta-teaser {
-          background-color: #d4af37 !important;
-          color: #1a2a6c !important;
+          background-color: #d4af37;
+          color: #1a2a6c;
           padding: 18px 40px;
           border-radius: 50px;
           font-weight: 700;
-          text-decoration: none !important;
+          text-decoration: none;
           display: inline-block;
           transition: 0.3s;
           box-shadow: 0 10px 25px rgba(212, 175, 55, 0.2);
+          cursor: pointer;
         }
-        .cta-teaser:hover { transform: translateY(-3px); background-color: #fff !important; }
+        .cta-teaser:hover { transform: translateY(-3px); background-color: #fff; }
 
         /* Testimonials & Footer */
         .testimonials { padding: 80px 5%; background: #fff; text-align: center; }
         .reviews-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; max-width: 1200px; margin: 40px auto 0; }
         .review-card { background: #fdfbf7; padding: 35px; border-radius: 20px; text-align: left; box-shadow: 0 10px 30px rgba(0,0,0,0.03); }
-        .stars { color: #d4af37 !important; font-size: 20px; margin-bottom: 15px; letter-spacing: 3px; }
+        .stars { color: #d4af37; font-size: 20px; margin-bottom: 15px; letter-spacing: 3px; }
         .author-badge { background: #1a2a6c; color: white; font-size: 10px; padding: 3px 8px; border-radius: 10px; text-transform: uppercase; margin-left: 10px; }
 
       `}</style>
 
       <nav>
-        <Link href="/" passHref style={{ textDecoration: 'none' }}>
-          <span className="brand">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#d4af37" strokeWidth="2.5" style={{marginRight: '10px'}}>
-              <path d="M22 17H2a1 1 0 0 1-1-1v-1a2 2 0 0 1 2-2h18a2 2 0 0 1 2 2v1a1 1 0 0 1-1 1z"/><path d="M12 4a8 8 0 0 0-8 8h16a8 8 0 0 0-8-8z"/><circle cx="12" cy="3" r="1.5" fill="#d4af37"/>
-            </svg>
-            Major<span className="gold">Marc</span>
-          </span>
+        <Link href="/" className="brand">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#d4af37" strokeWidth="2.5" style={{marginRight: '10px'}}>
+            <path d="M22 17H2a1 1 0 0 1-1-1v-1a2 2 0 0 1 2-2h18a2 2 0 0 1 2 2v1a1 1 0 0 1-1 1z"/><path d="M12 4a8 8 0 0 0-8 8h16a8 8 0 0 0-8-8z"/><circle cx="12" cy="3" r="1.5" fill="#d4af37"/>
+          </svg>
+          Major<span className="gold">Marc</span>
         </Link>
         <div className="nav-links">
           <Link href="/pricing" className="nav-link">Tarifs</Link>
-          <Link href="/login" passHref style={{ textDecoration: 'none' }}>
-            <span className="nav-login">Espace Hôte</span>
-          </Link>
+          <Link href="/login" className="nav-login">Espace Hôte</Link>
         </div>
       </nav>
 
@@ -255,7 +262,7 @@ export default function Home() {
             MajorMarc gère vos voyageurs en location courte durée 24h/24. <br/>
             Que vous soyez sur Airbnb, Booking, Abritel ou en direct, profitez enfin de votre temps libre.
           </p>
-          <Link href="/register" passHref className="cta-main">
+          <Link href="/register" className="cta-main">
             Libérer mon esprit maintenant
           </Link>
         </div>
@@ -338,7 +345,6 @@ export default function Home() {
         </p>
         <span className="teaser-subtext">Sans engagement. Annulable à tout moment.</span>
         
-        {/* CORRECTION ICI : Le className est appliqué directement sur le Link */}
         <Link href="/pricing" className="cta-teaser">
           Découvrir nos forfaits sur-mesure
         </Link>
