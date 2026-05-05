@@ -1,128 +1,102 @@
+import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import { supabase } from '../lib/supabase'; // On importe ton lien vers la base
 
 export default function Register() {
   const router = useRouter();
-  const { plan } = router.query;
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  const planNames = {
-    solo: "Solo (1 logement)",
-    multi: "Multi-Prestige (5 logements)",
-    empire: "Empire LCD (15 logements)"
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+
+    // 1. Création du compte dans Supabase Auth
+    const { data: authData, error: authError } = await supabase.auth.signUp({
+      email,
+      password,
+    });
+
+    if (authError) {
+      setError(authError.message);
+      setLoading(false);
+      return;
+    }
+
+    // 2. Création de la ligne dans ta table 'profiles'
+    if (authData.user) {
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .insert([
+          { 
+            id: authData.user.id, 
+            full_name: fullName,
+            email: email
+          }
+        ]);
+
+      if (profileError) {
+        setError("Compte créé, mais erreur lors de la création du profil.");
+      } else {
+        // Succès ! Direction le dashboard
+        router.push('/dashboard');
+      }
+    }
+    setLoading(false);
   };
 
   return (
     <div className="container">
       <style jsx>{`
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Montserrat:wght@300;400;600;700&display=swap');
-
-        .container {
-          min-height: 100vh;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: #1a2a6c;
-          font-family: 'Montserrat', sans-serif;
-          padding: 20px;
-        }
-
-        .register-box {
-          background: white;
-          width: 100%;
-          max-width: 450px;
-          padding: 50px 40px;
-          border-radius: 30px;
-          box-shadow: 0 25px 50px rgba(0,0,0,0.2);
-          text-align: center;
-        }
-
-        h1 { font-family: 'Playfair Display', serif; color: #1a2a6c; margin-bottom: 10px; font-size: 28px; }
+        :global(a) { text-decoration: none; color: inherit; }
+        .container { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #1a2a6c; font-family: 'Montserrat', sans-serif; padding: 20px; }
+        .register-box { background: white; width: 100%; max-width: 450px; padding: 50px 40px; border-radius: 30px; box-shadow: 0 25px 50px rgba(0,0,0,0.2); text-align: center; }
+        h1 { font-family: 'Playfair Display', serif; color: #1a2a6c; margin-bottom: 10px; }
         .gold { color: #d4af37; }
-        
-        .plan-summary {
-          background: #fdfbf7;
-          padding: 12px;
-          border-radius: 10px;
-          margin-bottom: 30px;
-          font-size: 14px;
-          border: 1px solid #eee;
-          color: #555;
-        }
-
-        form { display: flex; flex-direction: column; gap: 20px; }
-
+        form { display: flex; flex-direction: column; gap: 15px; margin-top: 25px; }
         .input-group { text-align: left; }
-        label { font-size: 12px; font-weight: 700; text-transform: uppercase; color: #999; margin-bottom: 8px; display: block; }
-        
-        input {
-          width: 100%;
-          padding: 15px;
-          border: 1px solid #eee;
-          border-radius: 12px;
-          background: #f9f9f9;
-          font-size: 16px;
-          outline: none;
-          transition: 0.3s;
-          box-sizing: border-box;
-        }
-
-        input:focus { border-color: #d4af37; background: white; }
-
-        .btn-register {
-          background: #d4af37;
-          color: #1a2a6c;
-          border: none;
-          padding: 18px;
-          border-radius: 50px;
-          font-weight: 700;
-          font-size: 16px;
-          cursor: pointer;
-          transition: 0.3s;
-          margin-top: 10px;
-        }
-
-        .btn-register:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(212, 175, 55, 0.3); }
-
-        .footer-links { margin-top: 25px; font-size: 14px; color: #777; }
-        .footer-links a { color: #1a2a6c; font-weight: 600; text-decoration: none; }
+        label { font-size: 11px; font-weight: 700; text-transform: uppercase; color: #999; margin-bottom: 5px; display: block; }
+        input { width: 100%; padding: 12px; border: 1px solid #eee; border-radius: 10px; background: #f9f9f9; outline: none; box-sizing: border-box; }
+        input:focus { border-color: #d4af37; }
+        .btn-register { background: #d4af37; color: #1a2a6c; border: none; padding: 15px; border-radius: 50px; font-weight: 700; cursor: pointer; margin-top: 10px; }
+        .btn-register:disabled { opacity: 0.5; cursor: not-allowed; }
+        .error-msg { color: #e74c3c; font-size: 13px; margin-top: 10px; }
       `}</style>
 
       <div className="register-box">
-        <Link href="/" style={{textDecoration: 'none'}}>
-          <h1>Major<span className="gold">Marc</span></h1>
-        </Link>
-        <p style={{marginBottom: '20px', color: '#666'}}>Créez votre espace hôte</p>
+        <h1>Devenir <span className="gold">Hôte</span></h1>
+        <p style={{color: '#666'}}>Commencez votre expérience MajorMarc.</p>
 
-        {plan && (
-          <div className="plan-summary">
-            Plan sélectionné : <b>{planNames[plan] || plan}</b>
-          </div>
-        )}
+        {error && <div className="error-msg">{error}</div>}
 
-        <form>
+        <form onSubmit={handleRegister}>
           <div className="input-group">
-            <label>Nom Complet</label>
-            <input type="text" placeholder="Jean Dupont" required />
+            <label>Nom complet</label>
+            <input type="text" placeholder="Jean Dupont" value={fullName} onChange={(e) => setFullName(e.target.value)} required />
           </div>
-
           <div className="input-group">
-            <label>Adresse Email</label>
-            <input type="email" placeholder="jean@exemple.com" required />
+            <label>Email professionnel</label>
+            <input type="email" placeholder="jean@exemple.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
           </div>
-
           <div className="input-group">
             <label>Mot de passe</label>
-            <input type="password" placeholder="••••••••" required />
+            <input type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required />
           </div>
 
-         <Link href="/dashboard" className="btn-register" style={{ display: 'block', textDecoration: 'none' }}>
-  Commencer mon essai
-</Link>
+          <button type="submit" className="btn-register" disabled={loading}>
+            {loading ? 'Création en cours...' : 'Créer mon espace prestige'}
+          </button>
         </form>
 
-        <div className="footer-links">
-          Déjà inscrit ? <Link href="/login">Se connecter</Link>
-        </div>
+        <p style={{marginTop: '20px', fontSize: '13px'}}>
+          Déjà inscrit ? <Link href="/login" style={{color: '#1a2a6c', fontWeight: '700'}}>Se connecter</Link>
+        </p>
       </div>
     </div>
   );
