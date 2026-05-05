@@ -115,9 +115,9 @@ export default function Register() {
             <input type="password" placeholder="••••••••" required />
           </div>
 
-          <button type="submit" className="btn-register">
-            Commencer mon essai
-          </button>
+         <Link href="/dashboard" className="btn-register" style={{ display: 'block', textDecoration: 'none' }}>
+  Commencer mon essai
+</Link>
         </form>
 
         <div className="footer-links">
