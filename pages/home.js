@@ -262,7 +262,6 @@ export default function Home() {
 
       <div className="trust-banner">
         <div className="trust-item"><span>🕒</span> Disponible 24h/24 et 7j/7</div>
-        {/* NOUVELLE MENTION ICI */}
         <div className="trust-item"><span>🔓</span> 100% Sans Engagement</div>
         <div className="trust-item"><span>⚡</span> Réponses instantanées</div>
       </div>
@@ -317,10 +316,10 @@ export default function Home() {
 
       <section className="meet-marc">
         <div className="marc-container">
-          <div className="marc-profile">
+          <div className="marc-profile" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
             <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=800&q=80" alt="Marc" className="marc-photo" />
-            <h2 style={{fontFamily: "'Playfair Display', serif", fontSize: '26px'}}>Rencontrez Marc</h2>
-            <p style={{color: '#d4af37', fontWeight: '600'}}>Votre Majordome IA</p>
+            <h2 style={{fontFamily: "'Playfair Display', serif", fontSize: '26px', marginBottom: '5px'}}>Rencontrez Marc</h2>
+            <p style={{color: '#d4af37', fontWeight: '600', margin: '0'}}>Votre Majordome IA</p>
           </div>
           <div className="marc-features">
             <div className="feature-item"><h3>🛡️ Fiabilité Absolue</h3><p>MajorMarc puise ses réponses exclusivement dans vos consignes pour garantir une précision totale.</p></div>
@@ -330,7 +329,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* BLOC TEASING TARIFS MIS À JOUR AVEC LE "SANS ENGAGEMENT" */}
       <section className="pricing-teaser">
         <h2 className="teaser-title">La Sérénité a enfin un prix abordable</h2>
         <p className="teaser-text">
@@ -338,8 +336,12 @@ export default function Home() {
           à partir de <b style={{ color: '#d4af37', fontSize: '24px' }}>24,90€ / mois</b>.
         </p>
         <span className="teaser-subtext">Sans engagement. Annulable à tout moment.</span>
-        <Link href="/pricing" className="cta-teaser">
-          Découvrir nos forfaits sur-mesure
+        
+        {/* BOUTON CORRIGÉ ICI */}
+        <Link href="/pricing" passHref style={{ textDecoration: 'none' }}>
+          <span className="cta-teaser">
+            Découvrir nos forfaits sur-mesure
+          </span>
         </Link>
       </section>
 
@@ -365,3 +367,4 @@ export default function Home() {
     </div>
   );
 }
+```</Link>
