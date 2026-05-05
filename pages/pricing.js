@@ -63,16 +63,16 @@ export default function Pricing() {
         .pricing-grid {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-          gap: 30px;
+          gap: 40px;
           max-width: 1200px;
           margin: -50px auto 80px;
           padding: 0 20px;
-          align-items: start;
+          align-items: stretch;
         }
 
         .price-card {
           background: white;
-          padding: 40px;
+          padding: 50px 40px;
           border-radius: 20px;
           box-shadow: 0 20px 40px rgba(0,0,0,0.05);
           text-align: center;
@@ -95,34 +95,35 @@ export default function Pricing() {
           color: #1a2a6c;
           font-weight: 800;
           font-size: 11px;
-          padding: 6px 15px;
+          padding: 8px 18px;
           border-radius: 50px;
           position: absolute;
-          top: -15px;
+          top: -18px;
           left: 50%;
           transform: translateX(-50%);
           white-space: nowrap;
-          box-shadow: 0 4px 10px rgba(212, 175, 55, 0.3);
+          box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);
+          letter-spacing: 1px;
         }
 
-        .plan-name { font-weight: 700; text-transform: uppercase; letter-spacing: 2px; font-size: 13px; color: #d4af37; margin-bottom: 10px; }
-        .price { font-family: 'Playfair Display', serif; font-size: 48px; font-weight: 700; margin-bottom: 5px; color: #1a2a6c; }
-        .price span { font-size: 16px; font-weight: 400; color: #777; }
-        .billing-cycle { font-size: 12px; color: #999; margin-bottom: 30px; font-style: italic; }
+        .plan-name { font-weight: 700; text-transform: uppercase; letter-spacing: 2px; font-size: 13px; color: #d4af37; margin-bottom: 15px; }
+        .price { font-family: 'Playfair Display', serif; font-size: 52px; font-weight: 700; margin-bottom: 5px; color: #1a2a6c; }
+        .price span { font-size: 18px; font-weight: 400; color: #777; }
+        .billing-cycle { font-size: 13px; color: #999; margin-bottom: 35px; font-style: italic; }
 
-        .features-list { text-align: left; margin-bottom: 40px; flex-grow: 1; border-top: 1px solid #f5f5f5; padding-top: 25px; }
-        .feature { margin-bottom: 15px; font-size: 14px; display: flex; align-items: center; gap: 12px; color: #444; }
-        .check { color: #d4af37; font-weight: bold; }
+        .features-list { text-align: left; margin-bottom: 40px; flex-grow: 1; border-top: 1px solid #f9f9f9; padding-top: 30px; }
+        .feature { margin-bottom: 18px; font-size: 15px; display: flex; align-items: center; gap: 12px; color: #333; }
+        .check { color: #d4af37; font-weight: bold; font-size: 18px; }
 
         .cta-pricing {
           background: #1a2a6c;
           color: white;
-          padding: 18px;
+          padding: 20px;
           border-radius: 50px;
           text-decoration: none;
           font-weight: 700;
           transition: 0.3s;
-          font-size: 15px;
+          font-size: 16px;
         }
 
         .price-card.featured .cta-pricing {
@@ -130,9 +131,9 @@ export default function Pricing() {
           color: #1a2a6c;
         }
 
-        .cta-pricing:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(26, 42, 108, 0.2); }
+        .cta-pricing:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(26, 42, 108, 0.2); }
 
-        /* Bandeau de réassurance */
+        /* Bandeau de réassurance Fixe */
         .trust-banner {
           background: #1a2a6c;
           color: white;
@@ -143,9 +144,9 @@ export default function Pricing() {
           flex-wrap: wrap;
         }
         .trust-item { display: flex; align-items: center; gap: 12px; font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; }
-        .trust-item span { color: #d4af37; font-size: 20px; }
+        .trust-item span { color: #d4af37; font-size: 22px; }
 
-        footer { padding: 60px 20px; text-align: center; background: #fdfbf7; font-size: 13px; color: #777; }
+        footer { padding: 60px 20px; text-align: center; background: #fdfbf7; font-size: 14px; color: #777; }
       `}</style>
 
       <nav>
@@ -162,8 +163,8 @@ export default function Pricing() {
       <header className="pricing-header">
         <h1>Investissez dans votre <span className="gold">Sérénité</span></h1>
         <p className="subtitle">
-          Une tarification transparente adaptée à votre croissance. 
-          Déléguez la charge mentale dès aujourd'hui.
+          Une tarification transparente adaptée à vos ambitions. 
+          Reprenez le contrôle de votre temps dès maintenant.
         </p>
       </header>
 
@@ -175,7 +176,7 @@ export default function Pricing() {
           <div className="billing-cycle">Pour 1 logement LCD</div>
           <div className="features-list">
             <div className="feature"><span className="check">✔</span> 1 Logement unique</div>
-            <div className="feature"><span className="check">✔</span> Majordome IA 24h/24</div>
+            <div className="feature"><span className="check">✔</span> Majordome 24h/24</div>
             <div className="feature"><span className="check">✔</span> Alertes Telegram Urgences</div>
             <div className="feature"><span className="check">✔</span> Lien de Conciergerie Privé</div>
             <div className="feature"><span className="check">✔</span> Configuration en 5 minutes</div>
@@ -183,7 +184,7 @@ export default function Pricing() {
           <Link href="/register?plan=solo" className="cta-pricing">Démarrer maintenant</Link>
         </div>
 
-        {/* Pack Multi (Économie mise en avant) */}
+        {/* Pack Multi-Prestige */}
         <div className="price-card featured">
           <div className="savings-badge">ÉCONOMISEZ 24,60€ / MOIS</div>
           <div className="plan-name">Multi-Prestige</div>
@@ -191,15 +192,16 @@ export default function Pricing() {
           <div className="billing-cycle">Jusqu'à 5 logements</div>
           <div className="features-list">
             <div className="feature"><span className="check">✔</span> Jusqu'à 5 logements</div>
-            <div className="feature"><span className="check">✔</span> Tout le plan Solo</div>
+            <div className="feature"><span className="check">✔</span> Majordome 24h/24</div>
+            <div className="feature"><span className="check">✔</span> Alertes Telegram Urgences</div>
+            <div className="feature"><span className="check">✔</span> Lien de Conciergerie Privé</div>
             <div className="feature"><span className="check">✔</span> Support Hôte Prioritaire</div>
             <div className="feature"><span className="check">✔</span> Personnalisation du Majordome</div>
-            <div className="feature"><span className="check">✔</span> Tableau de bord unifié</div>
           </div>
           <Link href="/register?plan=multi" className="cta-pricing">Choisir Multi-Prestige</Link>
         </div>
 
-        {/* Pack Empire (Très forte économie) */}
+        {/* Pack Empire LCD */}
         <div className="price-card">
           <div className="savings-badge">ÉCONOMISEZ 148,60€ / MOIS</div>
           <div className="plan-name">Empire LCD</div>
@@ -207,8 +209,10 @@ export default function Pricing() {
           <div className="billing-cycle">Jusqu'à 15 logements</div>
           <div className="features-list">
             <div className="feature"><span className="check">✔</span> Jusqu'à 15 logements</div>
-            <div className="feature"><span className="check">✔</span> Tout le plan Multi</div>
-            <div className="feature"><span className="check">✔</span> Gestion multi-comptes (équipe)</div>
+            <div className="feature"><span className="check">✔</span> Majordome 24h/24</div>
+            <div className="feature"><span className="check">✔</span> Alertes Telegram Urgences</div>
+            <div className="feature"><span className="check">✔</span> Lien de Conciergerie Privé</div>
+            <div className="feature"><span className="check">✔</span> Gestion multi-comptes</div>
             <div className="feature"><span className="check">✔</span> Statistiques de satisfaction</div>
             <div className="feature"><span className="check">✔</span> Account Manager Dédié</div>
           </div>
@@ -217,13 +221,13 @@ export default function Pricing() {
       </div>
 
       <div className="trust-banner">
-        <div className="trust-item"><span>🕒</span> Activation Immédiate</div>
+        <div className="trust-item"><span>🕒</span> Disponibilité 24/7</div>
         <div className="trust-item"><span>🛡️</span> Sans Engagement</div>
-        <div className="trust-item"><span>✨</span> Majordome IA Premium</div>
+        <div className="trust-item"><span>✨</span> Service de Prestige</div>
       </div>
 
       <footer>
-        <p>© 2026 MajorMarc - La technologie au service des hôtes d'exception.</p>
+        <p>© 2026 MajorMarc - L'excellence au service des hôtes d'exception.</p>
       </footer>
     </div>
   );
