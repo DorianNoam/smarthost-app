@@ -109,7 +109,7 @@ export default function Pricing() {
           <div className="features-list">
             <div className="feature"><span className="check">✔</span> 1 Logement unique</div>
             <div className="feature"><span className="check">✔</span> Majordome 24h/24</div>
-            <div className="feature"><span className="check">✔</span> <b>Majordome Polyglotte</b></div>
+            <div className="feature"><span className="check">✔</span> Majordome Polyglotte</div>
             <div className="feature"><span className="check">✔</span> Alertes Telegram Urgences</div>
             <div className="feature"><span className="check">✔</span> Lien de Conciergerie Privé</div>
           </div>
