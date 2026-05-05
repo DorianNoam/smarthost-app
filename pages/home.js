@@ -208,18 +208,19 @@ export default function Home() {
         .teaser-text { font-size: 18px; margin-bottom: 10px; opacity: 0.9; line-height: 1.6; }
         .teaser-subtext { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 2px; color: #d4af37; margin-bottom: 40px; display: block; }
         
+        /* CORRECTION ICI : Ajout des !important pour forcer le design par-dessus le navigateur */
         .cta-teaser {
-          background: #d4af37;
-          color: #1a2a6c;
+          background-color: #d4af37 !important;
+          color: #1a2a6c !important;
           padding: 18px 40px;
           border-radius: 50px;
           font-weight: 700;
-          text-decoration: none;
+          text-decoration: none !important;
           display: inline-block;
           transition: 0.3s;
           box-shadow: 0 10px 25px rgba(212, 175, 55, 0.2);
         }
-        .cta-teaser:hover { transform: translateY(-3px); background: #fff; }
+        .cta-teaser:hover { transform: translateY(-3px); background-color: #fff !important; }
 
         /* Testimonials & Footer */
         .testimonials { padding: 80px 5%; background: #fff; text-align: center; }
@@ -254,8 +255,8 @@ export default function Home() {
             MajorMarc gère vos voyageurs en location courte durée 24h/24. <br/>
             Que vous soyez sur Airbnb, Booking, Abritel ou en direct, profitez enfin de votre temps libre.
           </p>
-          <Link href="/register" passHref style={{ textDecoration: 'none' }}>
-            <span className="cta-main">Libérer mon esprit maintenant</span>
+          <Link href="/register" passHref className="cta-main">
+            Libérer mon esprit maintenant
           </Link>
         </div>
       </section>
@@ -337,11 +338,9 @@ export default function Home() {
         </p>
         <span className="teaser-subtext">Sans engagement. Annulable à tout moment.</span>
         
-        {/* BOUTON CORRIGÉ ICI */}
-        <Link href="/pricing" passHref style={{ textDecoration: 'none' }}>
-          <span className="cta-teaser">
-            Découvrir nos forfaits sur-mesure
-          </span>
+        {/* CORRECTION ICI : Le className est appliqué directement sur le Link */}
+        <Link href="/pricing" className="cta-teaser">
+          Découvrir nos forfaits sur-mesure
         </Link>
       </section>
 
@@ -367,4 +366,3 @@ export default function Home() {
     </div>
   );
 }
-```</Link>
