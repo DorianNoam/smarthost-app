@@ -29,22 +29,33 @@ export default function GuestChat() {
   const handleSend = async () => {
     if (!input.trim() || !prop) return;
     
-    // Affiche le message de l'utilisateur
     const userMsg = { role: 'user', text: input };
-    setMessages(prev => [...prev, userMsg]);
+    // On crée l'historique complet (anciens messages + le nouveau)
+    const chatHistory = [...messages, userMsg]; 
+    
+    setMessages(chatHistory);
     setInput('');
-    setIsTyping(true); // Affiche "Marc réfléchit..."
+    setIsTyping(true);
 
     try {
-      // C'est cette ligne qui change tout : on appelle le fichier api/chat.js !
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          question: input, 
-          propertyData: prop // On envoie les infos du logement à l'IA
+          messagesHistory: chatHistory, // On envoie TOUTE la mémoire
+          propertyData: prop 
         }),
       });
+      
+      const data = await response.json();
+      setMessages(prev => [...prev, { role: 'marc', text: data.answer }]);
+    } catch (error) {
+      console.error(error);
+      setMessages(prev => [...prev, { role: 'marc', text: "Navré, ma connexion est momentanément interrompue." }]);
+    } finally {
+      setIsTyping(false);
+    }
+  };
       
       const data = await response.json();
       
