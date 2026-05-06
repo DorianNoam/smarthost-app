@@ -95,13 +95,22 @@ export default function AddPropertyWizard() {
         <div className="progress-bar"><div className="progress-fill"></div></div>
 
         {/* ÉTAPES 1 À 5 (EXISTANTES) */}
+     // ... (Gardez le début du fichier identique)
+
         {step === 1 && (
           <div className="step">
-            <h2>1. Identité</h2>
+            <h2>1. Identité du logement</h2>
             <div className="grid">
-              <div className="input-group full"><label>Nom</label><input name="name" value={formData.name} onChange={handleChange} /></div>
+              <div className="input-group full"><label>Nom du logement</label><input name="name" value={formData.name} onChange={handleChange} placeholder="ex: Villa Cap Ferret" /></div>
+              
+              <div className="input-group"><label>N° de rue</label><input name="street_number" value={formData.street_number} onChange={handleChange} /></div>
+              <div className="input-group"><label>Nom de la Résidence</label><input name="residence" value={formData.residence} onChange={handleChange} /></div>
+              
+              <div className="input-group"><label>Bâtiment</label><input name="building" value={formData.building} onChange={handleChange} /></div>
+              <div className="input-group"><label>Étage</label><input name="floor" value={formData.floor} onChange={handleChange} /></div>
+
               <div className="input-group full" style={{ position: 'relative' }}>
-                <label>Adresse</label>
+                <label>Rue & Ville (Recherche auto)</label>
                 <input name="address" value={formData.address} onChange={(e) => {
                   handleChange(e);
                   if (e.target.value.length > 3) {
@@ -126,10 +135,17 @@ export default function AddPropertyWizard() {
             <div className="grid">
               <div className="input-group"><label>Check-in</label><input type="time" name="check_in_hour" value={formData.check_in_hour} onChange={handleChange} /></div>
               <div className="input-group"><label>Check-out</label><input type="time" name="check_out_hour" value={formData.check_out_hour} onChange={handleChange} /></div>
-              <div className="input-group full"><label>Instructions d'entrée</label><textarea name="checkin_instructions" value={formData.checkin_instructions} onChange={handleChange} /></div>
+              
+              <div className="input-group full" style={{ flexDirection: 'row', alignItems: 'center', gap: '10px', background: '#f8fafc', padding: '15px', borderRadius: '12px' }}>
+                <input type="checkbox" name="self_checkin" checked={formData.self_checkin} onChange={handleChange} style={{ width: '20px', height: '20px' }} />
+                <label style={{ margin: 0 }}>Le logement permet l'arrivée en autonomie</label>
+              </div>
+
+              <div className="input-group full"><label>Instructions d'entrée</label><textarea name="checkin_instructions" rows="4" value={formData.checkin_instructions} onChange={handleChange} placeholder="Détaillez ici le trajet précis une fois devant l'adresse..." /></div>
             </div>
           </div>
         )}
+// ... (Le reste des étapes 3 à 10 demeure identique)
 
         {step === 3 && (
           <div className="step">
