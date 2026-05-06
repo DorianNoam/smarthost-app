@@ -115,13 +115,10 @@ export default function Dashboard() {
       <div className="main">
         <div className="header">
           {/* LOGIQUE D'AFFICHAGE : Nom > Email > Hôte */}
-          <div>
-  <h1>Bienvenue, {profile?.full_name || userEmail.split('@')[0] || 'Hôte'}</h1>
-  <p style={{color: 'red', fontSize: '10px'}}>
-    DEBUG - Mon ID actuel : {userEmail ? "Connecté" : "Déconnecté"} <br/>
-    Vérifiez si l'ID dans Supabase est bien celui-ci.
-  </p>
-</div>
+<p style={{color: 'red', fontSize: '12px', marginTop: '10px'}}>
+  DEBUG - Mon ID actuel : <span style={{fontWeight: 'bold'}}>{profile?.id || "Chargement..."}</span> <br/>
+  Si cet ID n'est pas 96d381ef..., alors tu n'es pas sur le bon compte dans la base.
+</p>
           <Link href="/add-property" className="btn-add">
             + Ajouter un logement
           </Link>
