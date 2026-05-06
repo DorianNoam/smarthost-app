@@ -11,8 +11,8 @@ export default function AddPropertyWizard() {
   const [suggestions, setSuggestions] = useState([]);
 
   const [formData, setFormData] = useState({
-    // 1. Identité
-    name: '', address: '', 
+    // 1. Identité & Localisation
+    name: '', address: '', street_number: '', residence: '', building: '', floor: '',
     // 2. Accès
     check_in_hour: '15:00', check_out_hour: '11:00', self_checkin: false, entrance_type: 'Boîte à clés', key_code: '', checkin_instructions: '',
     // 3. Confort
@@ -81,21 +81,37 @@ export default function AddPropertyWizard() {
         p.subtitle { color: #64748b; margin-bottom: 24px; font-size: 14px; }
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
         .full { grid-column: span 2; }
-        .input-group { margin-bottom: 20px; display: flex; flex-direction: column; gap: 6px; }
+        .input-group { margin-bottom: 20px; display: flex; flex-direction: column; gap: 6px; position: relative; }
         label { font-weight: 600; font-size: 13px; color: #475569; text-transform: uppercase; }
         input, textarea, select { padding: 12px; border: 1px solid #cbd5e1; border-radius: 12px; font-size: 15px; outline: none; }
+        input:focus { border-color: #fbbf24; }
         .actions { display: flex; flex-direction: column; gap: 12px; margin-top: 32px; }
         .btn-next { background: #1e293b; color: white; padding: 16px; border-radius: 14px; border: none; font-weight: 700; cursor: pointer; font-size: 16px; }
         .btn-later { background: #f1f5f9; color: #475569; padding: 14px; border-radius: 14px; border: none; font-weight: 600; cursor: pointer; font-size: 14px; text-align: center; }
-        .suggestion-list { position: absolute; z-index: 100; background: white; width: 100%; border-radius: 12px; box-shadow: 0 10px 15px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; list-style: none; padding: 0; margin-top: 5px; }
-        .suggestion-item { padding: 12px; cursor: pointer; border-bottom: 1px solid #f1f5f9; }
+        
+        /* Correction du bug de la liste de suggestions */
+        .suggestion-list { 
+          position: absolute; 
+          top: 100%; 
+          left: 0; 
+          right: 0; 
+          z-index: 100; 
+          background: white; 
+          border-radius: 12px; 
+          box-shadow: 0 10px 25px rgba(0,0,0,0.2); 
+          border: 1px solid #e2e8f0; 
+          list-style: none; 
+          padding: 0; 
+          margin-top: 8px; 
+          max-height: 200px; 
+          overflow-y: auto; 
+        }
+        .suggestion-item { padding: 12px 16px; cursor: pointer; border-bottom: 1px solid #f1f5f9; font-size: 14px; color: #1e293b; }
+        .suggestion-item:hover { background: #f8fafc; color: #fbbf24; }
       `}</style>
 
       <div className="wizard-card">
         <div className="progress-bar"><div className="progress-fill"></div></div>
-
-        {/* ÉTAPES 1 À 5 (EXISTANTES) */}
-
 
         {step === 1 && (
           <div className="step">
@@ -109,18 +125,28 @@ export default function AddPropertyWizard() {
               <div className="input-group"><label>Bâtiment</label><input name="building" value={formData.building} onChange={handleChange} /></div>
               <div className="input-group"><label>Étage</label><input name="floor" value={formData.floor} onChange={handleChange} /></div>
 
-              <div className="input-group full" style={{ position: 'relative' }}>
+              <div className="input-group full">
                 <label>Rue & Ville (Recherche auto)</label>
-                <input name="address" value={formData.address} onChange={(e) => {
-                  handleChange(e);
-                  if (e.target.value.length > 3) {
-                    fetch(`https://photon.komoot.io/api/?q=${e.target.value}&limit=5`).then(res => res.json()).then(data => setSuggestions(data.features));
-                  }
-                }} />
+                <input 
+                  name="address" 
+                  autoComplete="off"
+                  value={formData.address} 
+                  onChange={(e) => {
+                    handleChange(e);
+                    if (e.target.value.length > 3) {
+                      fetch(`https://photon.komoot.io/api/?q=${e.target.value}&limit=5`).then(res => res.json()).then(data => setSuggestions(data.features));
+                    }
+                  }} 
+                />
                 {suggestions.length > 0 && (
                   <ul className="suggestion-list">
                     {suggestions.map((s, i) => (
-                      <li key={i} className="suggestion-item" onClick={() => { setFormData({...formData, address: s.properties.name + ', ' + s.properties.city}); setSuggestions([]); }}>{s.properties.name} {s.properties.city}</li>
+                      <li key={i} className="suggestion-item" onClick={() => { 
+                        setFormData({...formData, address: (s.properties.name || '') + ', ' + (s.properties.city || '')}); 
+                        setSuggestions([]); 
+                      }}>
+                        {s.properties.name} {s.properties.city}
+                      </li>
                     ))}
                   </ul>
                 )}
@@ -133,27 +159,26 @@ export default function AddPropertyWizard() {
           <div className="step">
             <h2>2. Accès & Logistique</h2>
             <div className="grid">
-              <div className="input-group"><label>Check-in</label><input type="time" name="check_in_hour" value={formData.check_in_hour} onChange={handleChange} /></div>
-              <div className="input-group"><label>Check-out</label><input type="time" name="check_out_hour" value={formData.check_out_hour} onChange={handleChange} /></div>
+              <div className="input-group"><label>Check-in dès</label><input type="time" name="check_in_hour" value={formData.check_in_hour} onChange={handleChange} /></div>
+              <div className="input-group"><label>Check-out avant</label><input type="time" name="check_out_hour" value={formData.check_out_hour} onChange={handleChange} /></div>
               
               <div className="input-group full" style={{ flexDirection: 'row', alignItems: 'center', gap: '10px', background: '#f8fafc', padding: '15px', borderRadius: '12px' }}>
-                <input type="checkbox" name="self_checkin" checked={formData.self_checkin} onChange={handleChange} style={{ width: '20px', height: '20px' }} />
-                <label style={{ margin: 0 }}>Le logement permet l'arrivée en autonomie</label>
+                <input type="checkbox" name="self_checkin" checked={formData.self_checkin} onChange={handleChange} style={{ width: '20px', height: '20px', cursor: 'pointer' }} />
+                <label style={{ margin: 0, cursor: 'pointer' }}>Le logement permet l'arrivée en autonomie</label>
               </div>
 
-              <div className="input-group full"><label>Instructions d'entrée</label><textarea name="checkin_instructions" rows="4" value={formData.checkin_instructions} onChange={handleChange} placeholder="Détaillez ici le trajet précis une fois devant l'adresse..." /></div>
+              <div className="input-group full"><label>Instructions d'entrée détaillées</label><textarea name="checkin_instructions" rows="4" value={formData.checkin_instructions} onChange={handleChange} placeholder="Détaillez ici le trajet précis une fois devant l'adresse..." /></div>
             </div>
           </div>
         )}
-
 
         {step === 3 && (
           <div className="step">
             <h2>3. Wifi & Confort</h2>
             <div className="grid">
-              <div className="input-group"><label>Wifi</label><input name="wifi_name" value={formData.wifi_name} onChange={handleChange} /></div>
-              <div className="input-group"><label>MDP</label><input name="wifi_password" value={formData.wifi_password} onChange={handleChange} /></div>
-              <div className="input-group full"><label>Chauffage / Clim</label><textarea name="heating_cooling_info" value={formData.heating_cooling_info} onChange={handleChange} /></div>
+              <div className="input-group"><label>Nom du Wifi</label><input name="wifi_name" value={formData.wifi_name} onChange={handleChange} /></div>
+              <div className="input-group"><label>Mot de passe</label><input name="wifi_password" value={formData.wifi_password} onChange={handleChange} /></div>
+              <div className="input-group full"><label>Instructions Chauffage / Clim</label><textarea name="heating_cooling_info" value={formData.heating_cooling_info} onChange={handleChange} /></div>
             </div>
           </div>
         )}
@@ -162,9 +187,9 @@ export default function AddPropertyWizard() {
           <div className="step">
             <h2>4. Entretien & Technique</h2>
             <div className="grid">
-              <div className="input-group full"><label>Poubelles</label><textarea name="trash_instructions" value={formData.trash_instructions} onChange={handleChange} /></div>
-              <div className="input-group"><label>Électricité</label><input name="breaker_box_location" value={formData.breaker_box_location} onChange={handleChange} /></div>
-              <div className="input-group"><label>Eau</label><input name="water_shutoff_location" value={formData.water_shutoff_location} onChange={handleChange} /></div>
+              <div className="input-group full"><label>Gestion des poubelles (Tri, jours...)</label><textarea name="trash_instructions" value={formData.trash_instructions} onChange={handleChange} /></div>
+              <div className="input-group"><label>Emplacement Tableau électrique</label><input name="breaker_box_location" value={formData.breaker_box_location} onChange={handleChange} /></div>
+              <div className="input-group"><label>Vanne d'arrêt d'eau</label><input name="water_shutoff_location" value={formData.water_shutoff_location} onChange={handleChange} /></div>
             </div>
           </div>
         )}
@@ -173,18 +198,18 @@ export default function AddPropertyWizard() {
           <div className="step">
             <h2>5. Guide Local</h2>
             <div className="grid">
-              <div className="input-group full"><label>Recommendations</label><textarea name="recommendations" value={formData.recommendations} onChange={handleChange} /></div>
-              <div className="input-group"><label>Transports</label><input name="transport_info" value={formData.transport_info} onChange={handleChange} /></div>
+              <div className="input-group full"><label>Vos Recommendations (Restos, parcs...)</label><textarea name="recommendations" value={formData.recommendations} onChange={handleChange} /></div>
+              <div className="input-group"><label>Transports à proximité</label><input name="transport_info" value={formData.transport_info} onChange={handleChange} /></div>
+              <div className="input-group"><label>Commerces proches</label><input name="local_shops" value={formData.local_shops} onChange={handleChange} /></div>
             </div>
           </div>
         )}
 
-        {/* NOUVELLES ÉTAPES 6 À 10 */}
         {step === 6 && (
           <div className="step">
             <h2>6. Le Départ (Check-out)</h2>
             <div className="grid">
-              <div className="input-group full"><label>Consignes (Lits, poubelles, lumières...)</label><textarea name="checkout_instructions" value={formData.checkout_instructions} onChange={handleChange} /></div>
+              <div className="input-group full"><label>Consignes de sortie (Lits, lumières...)</label><textarea name="checkout_instructions" value={formData.checkout_instructions} onChange={handleChange} /></div>
               <div className="input-group full"><label>Où laisser les clés ?</label><input name="key_return_details" value={formData.key_return_details} onChange={handleChange} /></div>
             </div>
           </div>
@@ -194,9 +219,9 @@ export default function AddPropertyWizard() {
           <div className="step">
             <h2>7. Divertissement</h2>
             <div className="grid">
-              <div className="input-group full"><label>TV (Netflix, chaines, manuel...)</label><textarea name="tv_manual" value={formData.tv_manual} onChange={handleChange} /></div>
-              <div className="input-group"><label>Musique / Enceintes</label><input name="music_system" value={formData.music_system} onChange={handleChange} /></div>
-              <div className="input-group"><label>Jeux de société / Consoles</label><input name="games_available" value={formData.games_available} onChange={handleChange} /></div>
+              <div className="input-group full"><label>TV & Streaming (Instructions)</label><textarea name="tv_manual" value={formData.tv_manual} onChange={handleChange} /></div>
+              <div className="input-group"><label>Système Audio</label><input name="music_system" value={formData.music_system} onChange={handleChange} /></div>
+              <div className="input-group"><label>Jeux & Loisirs</label><input name="games_available" value={formData.games_available} onChange={handleChange} /></div>
             </div>
           </div>
         )}
@@ -205,8 +230,8 @@ export default function AddPropertyWizard() {
           <div className="step">
             <h2>8. Inventaire & Consommables</h2>
             <div className="grid">
-              <div className="input-group full"><label>Où sont les recharges ? (PQ, sacs, pastilles...)</label><textarea name="consumables_location" value={formData.consumables_location} onChange={handleChange} /></div>
-              <div className="input-group full"><label>Cuisine (Sel, huile, café à disposition ?)</label><input name="pantry_basics" value={formData.pantry_basics} onChange={handleChange} /></div>
+              <div className="input-group full"><label>Emplacement des recharges (PQ, sacs...)</label><textarea name="consumables_location" value={formData.consumables_location} onChange={handleChange} /></div>
+              <div className="input-group full"><label>Produits de base (Sel, café...)</label><input name="pantry_basics" value={formData.pantry_basics} onChange={handleChange} /></div>
             </div>
           </div>
         )}
@@ -215,8 +240,8 @@ export default function AddPropertyWizard() {
           <div className="step">
             <h2>9. Les Petits Caprices (Quirks)</h2>
             <div className="grid">
-              <div className="input-group full"><label>Particularités du logement</label><textarea name="property_quirks" placeholder="Ex: La poignée de porte est dure..." value={formData.property_quirks} onChange={handleChange} /></div>
-              <div className="input-group full"><label>Nuisances (Travaux, église...)</label><input name="neighborhood_nuisances" value={formData.neighborhood_nuisances} onChange={handleChange} /></div>
+              <div className="input-group full"><label>Particularités du logement</label><textarea name="property_quirks" placeholder="Ex: La poignée est dure..." value={formData.property_quirks} onChange={handleChange} /></div>
+              <div className="input-group full"><label>Nuisances sonores éventuelles</label><input name="neighborhood_nuisances" value={formData.neighborhood_nuisances} onChange={handleChange} /></div>
             </div>
           </div>
         )}
@@ -225,8 +250,8 @@ export default function AddPropertyWizard() {
           <div className="step">
             <h2>10. Familles & Règles de vie</h2>
             <div className="grid">
-              <div className="input-group full"><label>Équipements bébé (Lit, chaise haute...)</label><input name="baby_equipment" value={formData.baby_equipment} onChange={handleChange} /></div>
-              <div className="input-group full"><label>Règles (Bruit, animaux, tabac...)</label><textarea name="noise_rules" value={formData.noise_rules} onChange={handleChange} /></div>
+              <div className="input-group full"><label>Équipements bébé à disposition</label><input name="baby_equipment" value={formData.baby_equipment} onChange={handleChange} /></div>
+              <div className="input-group full"><label>Règles (Bruit, tabac, animaux...)</label><textarea name="noise_rules" value={formData.noise_rules} onChange={handleChange} /></div>
             </div>
           </div>
         )}
