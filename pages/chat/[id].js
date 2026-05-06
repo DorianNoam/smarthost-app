@@ -10,27 +10,27 @@ export default function GuestChat() {
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
 
-  // 1. Chargement des données du logement depuis Supabase
   useEffect(() => {
-    if (id) fetchProperty();
+    // Fonction placée DANS le useEffect pour satisfaire la rigueur de Vercel
+    const fetchProperty = async () => {
+      const { data } = await supabase.from('properties').select('*').eq('id', id).single();
+      if (data) {
+        setProp(data);
+        setMessages([
+          { role: 'marc', text: `Bonjour ! Je suis Marc, votre majordome virtuel pour votre séjour à "${data.name}". Comment puis-je vous aider aujourd'hui ?` }
+        ]);
+      }
+    };
+
+    if (id) {
+      fetchProperty();
+    }
   }, [id]);
 
-  const fetchProperty = async () => {
-    const { data } = await supabase.from('properties').select('*').eq('id', id).single();
-    if (data) {
-      setProp(data);
-      setMessages([
-        { role: 'marc', text: `Bonjour ! Je suis Marc, votre majordome virtuel pour votre séjour à "${data.name}". Comment puis-je vous aider aujourd'hui ?` }
-      ]);
-    }
-  };
-
-  // 2. ENVOI DU MESSAGE AU VRAI CERVEAU MISTRAL
   const handleSend = async () => {
     if (!input.trim() || !prop) return;
     
     const userMsg = { role: 'user', text: input };
-    // On crée l'historique complet (anciens messages + le nouveau)
     const chatHistory = [...messages, userMsg]; 
     
     setMessages(chatHistory);
@@ -42,7 +42,7 @@ export default function GuestChat() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          messagesHistory: chatHistory, // On envoie TOUTE la mémoire
+          messagesHistory: chatHistory, 
           propertyData: prop 
         }),
       });
@@ -52,18 +52,6 @@ export default function GuestChat() {
     } catch (error) {
       console.error(error);
       setMessages(prev => [...prev, { role: 'marc', text: "Navré, ma connexion est momentanément interrompue." }]);
-    } finally {
-      setIsTyping(false);
-    }
-  };
-      
-      const data = await response.json();
-      
-      // Affiche la VRAIE réponse de Mistral
-      setMessages(prev => [...prev, { role: 'marc', text: data.answer }]);
-    } catch (error) {
-      console.error(error);
-      setMessages(prev => [...prev, { role: 'marc', text: "Navré, ma connexion avec la conciergerie est momentanément interrompue." }]);
     } finally {
       setIsTyping(false);
     }
