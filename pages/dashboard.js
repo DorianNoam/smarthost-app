@@ -38,98 +38,63 @@ export default function Dashboard() {
       `}</style>
       
       <style jsx>{`
-        .dashboard-wrapper { 
-          display: flex; 
-          flex-direction: column; 
-          min-height: 100vh; 
-          font-family: 'Inter', -apple-system, sans-serif; 
-        }
+        .dashboard-wrapper { display: flex; flex-direction: column; min-height: 100vh; font-family: 'Inter', sans-serif; }
 
-        /* BARRE DE NAVIGATION (MOBILE & DESKTOP) */
         nav { 
-          background: #1a2a6c; 
-          padding: 12px 20px; 
-          display: flex; 
-          justify-content: space-between; 
-          align-items: center;
-          position: sticky;
-          top: 0;
-          z-index: 1000;
-          box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+          background: #1a2a6c; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center;
+          position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
         .logo { color: white; font-size: 18px; font-weight: 900; }
         .nav-links { display: flex; gap: 20px; list-style: none; margin: 0; padding: 0; }
-        .nav-item { font-size: 18px; cursor: pointer; color: rgba(255,255,255,0.6); transition: 0.3s; }
+        .nav-item { font-size: 18px; cursor: pointer; color: rgba(255,255,255,0.6); }
         .nav-item.active { color: #fbbf24; }
 
-        /* CONTENU */
-        main { 
-          padding: 20px; 
-          flex: 1;
-          max-width: 1100px;
-          margin: 0 auto;
-          width: 100%;
-          box-sizing: border-box;
-        }
-
-        .header-area { 
-          display: flex; 
-          justify-content: space-between; 
-          align-items: flex-end; 
-          margin-bottom: 25px;
-          padding: 0 5px;
-        }
+        main { padding: 20px; flex: 1; max-width: 1100px; margin: 0 auto; width: 100%; box-sizing: border-box; }
+        .header-area { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 25px; }
         h1 { font-size: 24px; font-weight: 800; color: #1e293b; margin: 0; }
         .btn-add { color: #1a2a6c; font-weight: 700; font-size: 14px; border-bottom: 2px solid #fbbf24; }
 
-        /* GRILLE DE CARTES */
-        .grid { 
-          display: grid; 
-          grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); 
-          gap: 20px; 
-        }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
 
         .card { 
-          background: white; 
-          border-radius: 18px; 
-          padding: 20px; 
-          border: 1px solid #edf2f7;
-          box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02), 0 2px 4px -1px rgba(0,0,0,0.06);
-          position: relative;
-          transition: transform 0.2s;
+          background: white; border-radius: 18px; padding: 20px; border: 1px solid #edf2f7;
+          box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); position: relative;
         }
 
         .btn-delete {
-          position: absolute; top: 15px; right: 15px;
-          background: #fff1f2; color: #e11d48; border: none;
-          width: 32px; height: 32px; border-radius: 50%;
-          display: flex; align-items: center; justify-content: center;
-          font-size: 14px; cursor: pointer;
+          position: absolute; top: 15px; right: 15px; background: #fff1f2; color: #e11d48; 
+          border: none; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 10;
         }
 
-        .card h3 { font-size: 18px; font-weight: 700; color: #1e293b; margin: 0 0 8px 0; padding-right: 30px; }
-        .card .address { color: #64748b; font-size: 13px; margin-bottom: 18px; display: flex; align-items: flex-start; gap: 5px; }
+        /* Titre cliquable vers la page récapitulative */
+        .card-title-link { display: block; cursor: pointer; }
+        .card h3 { font-size: 18px; font-weight: 700; color: #1a2a6c; margin: 0 0 8px 0; padding-right: 35px; text-decoration: underline rgba(26, 42, 108, 0.1); }
+        .card h3:hover { color: #fbbf24; }
+
+        .card .address { color: #64748b; font-size: 13px; margin-bottom: 18px; display: flex; gap: 5px; }
 
         .badges { display: flex; gap: 8px; margin-bottom: 20px; }
-        .badge { font-size: 10px; font-weight: 800; padding: 4px 10px; border-radius: 6px; letter-spacing: 0.3px; }
+        .badge { font-size: 10px; font-weight: 800; padding: 4px 10px; border-radius: 6px; }
         .badge-wifi { background: #ecfdf5; color: #059669; border: 1px solid #d1fae5; }
         .badge-auto { background: #eff6ff; color: #2563eb; border: 1px solid #dbeafe; }
 
-        .btn-manage {
-          display: flex; align-items: center; justify-content: center; gap: 8px;
-          background: #f8fafc; color: #1a2a6c; border: 1px solid #e2e8f0;
-          padding: 12px; border-radius: 12px; font-size: 13px; font-weight: 700;
-          width: 100%; transition: 0.2s;
+        .button-group { display: flex; gap: 10px; }
+        
+        .btn-main {
+          flex: 2; display: flex; align-items: center; justify-content: center; gap: 8px;
+          background: #1a2a6c; color: white; padding: 12px; border-radius: 12px; font-size: 13px; font-weight: 700;
         }
-        .btn-manage:active { background: #edf2f7; transform: scale(0.98); }
 
-        /* --- DESKTOP ADAPTATION --- */
+        .btn-config {
+          flex: 1; display: flex; align-items: center; justify-content: center;
+          background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0;
+          padding: 12px; border-radius: 12px; font-size: 13px;
+        }
+
         @media (min-width: 768px) {
           nav { padding: 15px 40px; }
-          .logo { font-size: 22px; }
           main { padding: 40px; }
           h1 { font-size: 32px; }
-          .grid { gap: 30px; }
         }
       `}</style>
 
@@ -149,39 +114,40 @@ export default function Dashboard() {
         </div>
 
         <div className="grid">
-          {properties.length === 0 ? (
-            <div style={{ textAlign: 'center', gridColumn: '1/-1', padding: '50px', color: '#64748b' }}>
-              Aucun logement trouvé.
-            </div>
-          ) : (
-            properties.map((prop) => (
-              <div key={prop.id} className="card">
-                <button className="btn-delete" onClick={(e) => deleteProperty(e, prop.id, prop.name)}>🗑️</button>
-                
+          {properties.map((prop) => (
+            <div key={prop.id} className="card">
+              <button className="btn-delete" onClick={(e) => deleteProperty(e, prop.id, prop.name)}>🗑️</button>
+              
+              {/* Le titre renvoie vers la page récapitulative du logement */}
+              <Link href={`/property/${prop.id}`} className="card-title-link">
                 <h3>{prop.name}</h3>
-                <div className="address">
-                  <span>📍</span>
-                  <span>
-                    {prop.street_number ? `${prop.street_number} ` : ''}
-                    {prop.address}
-                    {prop.city ? `, ${prop.city}` : ''}
-                  </span>
-                </div>
-                
-                <div className="badges">
-                  {prop.wifi_name && <span className="badge badge-wifi">WIFI OK</span>}
-                  {prop.self_checkin && <span className="badge badge-auto">AUTONOME</span>}
-                </div>
+              </Link>
 
-                <Link href={`/add-property?id=${prop.id}`} className="btn-manage">
-                  <span>⚙️</span> Modifier les informations
+              <div className="address">
+                <span>📍</span>
+                <span>{prop.street_number ? `${prop.street_number} ` : ''}{prop.address}</span>
+              </div>
+              
+              <div className="badges">
+                {prop.wifi_name && <span className="badge badge-wifi">WIFI OK</span>}
+                {prop.self_checkin && <span className="badge badge-auto">AUTONOME</span>}
+              </div>
+
+              <div className="button-group">
+                {/* Bouton pour voir le chat/recap (page invité) */}
+                <Link href={`/chat/${prop.id}`} className="btn-main">
+                  🚀 Ouvrir MajorMarc
+                </Link>
+                
+                {/* Bouton pour modifier les infos techniques (page admin) */}
+                <Link href={`/add-property?id=${prop.id}`} className="btn-config" title="Modifier">
+                  ⚙️
                 </Link>
               </div>
-            ))
-          )}
+            </div>
+          ))}
         </div>
       </main>
     </div>
   );
-  }
-  
+}
