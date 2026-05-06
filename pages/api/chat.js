@@ -1,45 +1,54 @@
 import { Mistral } from '@mistralai/mistralai';
 
+async function sendTelegramAlert(userQuery, propertyName) {
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  const chatId = process.env.TELEGRAM_CHAT_ID;
+  if (!token || !chatId) return;
+
+  const text = `🚨 *ALERTE MAJOR MARC*\n\n*Logement :* ${propertyName || 'Inconnu'}\n*Demande :* "${userQuery}"`;
+  try {
+    await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'Markdown' })
+    });
+  } catch (e) { console.error("Erreur Telegram:", e); }
+}
+
 export default async function handler(req, res) {
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Interdit' });
+  if (req.method !== 'POST') return res.status(405).send('Méthode non autorisée');
 
   const { messagesHistory, propertyData } = req.body;
-
-  // Sécurité pour éviter les erreurs Vercel si les données manquent
-  if (!messagesHistory || !propertyData) {
-    return res.status(400).json({ error: 'Données manquantes' });
-  }
-
   const mistral = new Mistral({ apiKey: process.env.MISTRAL_API_KEY });
 
   try {
     const systemMessage = { 
-  role: 'system', 
-  content: `Tu es MajorMarc, concierge de luxe pour "${propertyData.name}". 
+      role: 'system', 
+      content: `Tu es MajorMarc, concierge de luxe pour "${propertyData.name}". 
 
-  RÈGLES DE STYLE (CRUCIAL) :
-  - Interdiction de faire des paragraphes de plus de 2 lignes.
-  - Utilise des listes à puces (•) pour les choix ou les étapes.
-  - Mets les informations clés en **GRAS** (horaires, noms, prix).
-  - Saute TOUJOURS une ligne entre deux idées.
-  - Sois élégant mais très synthétique.
+      RÈGLES DE MISE EN PAGE :
+      - Fais des phrases courtes.
+      - Utilise des listes à puces (•) pour les choix.
+      - Mets les infos importantes en **GRAS**.
+      - Saute une ligne entre chaque paragraphe.
 
-  ZONE 1 : LE LOGEMENT (Infos prioritaires)
-  - Adresse : ${propertyData.street_number || ''} ${propertyData.address || ''}
-  - Wifi : ${propertyData.wifi_name} / MDP : ${propertyData.wifi_password}
-  - Check-in/out : ${propertyData.check_in_hour} / ${propertyData.check_out_hour}
-  
-  ZONE 2 : GUIDE LOCAL (Suggestions)
-  - Pour les restos/transports : utilise tes connaissances mais reste prudent.
-  - Si tu proposes un lieu, utilise ce format : "• **Nom du lieu** : [Description brève]"
-  - Ajoute toujours : "Il est conseillé de vérifier les horaires en temps réel sur Google Maps."
+      ZONE 1 : LE LOGEMENT (Infos prioritaires)
+      - Adresse : ${propertyData.street_number || ''} ${propertyData.address || ''}
+      - Wifi : ${propertyData.wifi_name || 'Non configuré'} / MDP : ${propertyData.wifi_password || 'Non configuré'}
+      - Arrivée : Dès ${propertyData.check_in_hour || '15h'}.
+      - Départ : Avant ${propertyData.check_out_hour || '11h'}.
 
-  ZONE 3 : ALERTE HÔTE
-  - Pour les pannes, les réclamations ou les infos techniques absentes de la Zone 1 :
-  Réponds UNIQUEMENT : "Je me renseigne immédiatement auprès de votre hôte."
+      ZONE 2 : GUIDE LOCAL (Suggestions)
+      - Pour les restos, les bus ou les activités, utilise tes connaissances générales.
+      - Sois précis mais précise que ce sont des suggestions.
+      - Format : "• **Nom** : Description rapide."
 
-  TON : Majordome de palace, efficace et aéré.` 
-};
+      ZONE 3 : ALERTE HÔTE
+      - Pour les pannes, les réclamations ou les infos techniques que tu n'as pas :
+      Réponds exactement : "Je me renseigne immédiatement auprès de votre hôte."
+
+      TON : Prestigieux, expert et concis.` 
+    };
 
     const formattedHistory = messagesHistory.map(msg => ({
       role: msg.role === 'marc' ? 'assistant' : 'user',
@@ -53,7 +62,6 @@ export default async function handler(req, res) {
 
     const responseText = chatResponse.choices[0].message.content;
 
-    // ALERTE TELEGRAM 
     if (responseText.toLowerCase().includes("hôte") || responseText.toLowerCase().includes("renseigne")) {
       const lastUserMessage = messagesHistory[messagesHistory.length - 1].text;
       await sendTelegramAlert(lastUserMessage, propertyData.name);
@@ -61,27 +69,7 @@ export default async function handler(req, res) {
 
     res.status(200).json({ answer: responseText });
   } catch (error) {
-    console.error("Erreur API Mistral:", error);
-    res.status(500).json({ answer: "Erreur technique, je me renseigne immédiatement auprès de votre hôte." });
-  }
-}
-
-// Fonction isolée proprement pour Vercel
-async function sendTelegramAlert(userQuery, propertyName) {
-  const TELEGRAM_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
-  const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
-  
-  if (!TELEGRAM_TOKEN || !TELEGRAM_CHAT_ID) return;
-
-  const text = `🚨 *ALERTE MAJOR MARC*\n\n*Logement :* ${propertyName || 'Inconnu'}\n*Demande :* "${userQuery}"`;
-  const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
-  try {
-    await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text, parse_mode: 'Markdown' })
-    });
-  } catch (e) { 
-    console.error("Erreur Telegram:", e); 
+    console.error(error);
+    res.status(500).json({ answer: "Je me renseigne immédiatement auprès de votre hôte." });
   }
 }
