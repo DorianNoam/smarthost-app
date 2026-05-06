@@ -11,7 +11,6 @@ export default function Dashboard() {
 
   const fetchProperties = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
       const { data, error } = await supabase
         .from('properties')
         .select('*')
@@ -19,136 +18,163 @@ export default function Dashboard() {
       
       if (!error) setProperties(data);
     } catch (err) {
-      console.error("Erreur lors de la récupération :", err);
+      console.error(err);
     }
   };
 
   const deleteProperty = async (e, id, name) => {
     e.stopPropagation();
-    const confirmed = window.confirm(`Voulez-vous vraiment supprimer "${name}" ? Cette action est irréversible.`);
-    
-    if (confirmed) {
+    if (window.confirm(`Supprimer "${name}" ?`)) {
       const { error } = await supabase.from('properties').delete().eq('id', id);
-      if (error) alert("Erreur : " + error.message);
-      else setProperties(properties.filter(p => p.id !== id));
+      if (!error) setProperties(properties.filter(p => p.id !== id));
     }
   };
 
   return (
-    <div className="dashboard-container">
+    <div className="dashboard-wrapper">
       <style jsx global>{`
+        body { margin: 0; padding: 0; background-color: #f8fafc; }
         a { text-decoration: none !important; color: inherit; }
       `}</style>
       
       <style jsx>{`
-        .dashboard-container { display: flex; min-height: 100vh; background-color: #f8fafc; font-family: 'Inter', sans-serif; }
-        
-        /* Menu Latéral (Desktop) */
-        nav { width: 280px; background: #1e293b; color: white; padding: 40px 24px; display: flex; flex-direction: column; transition: all 0.3s; }
-        .logo { font-size: 22px; font-weight: 900; margin-bottom: 50px; display: flex; align-items: center; gap: 10px; }
-        .nav-links { list-style: none; padding: 0; margin: 0; }
-        .nav-item { padding: 14px 16px; border-radius: 12px; margin-bottom: 8px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 12px; font-weight: 500; }
-        .nav-item.active { background: #334155; color: #fbbf24; }
-        .nav-item:not(.active) { opacity: 0.7; }
-        .nav-item:hover { background: #334155; opacity: 1; }
-
-        /* Zone Principale */
-        main { flex: 1; padding: 50px; overflow-y: auto; transition: all 0.3s; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
-        h1 { font-size: 32px; font-weight: 800; color: #0f172a; margin: 0; }
-        .btn-add { background: #1e293b; color: white; padding: 14px 28px; border-radius: 14px; font-weight: 700; transition: 0.2s; white-space: nowrap; }
-
-        /* Grille responsive */
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 30px; }
-        
-        .card { 
-          background: white; border-radius: 24px; padding: 28px; 
-          box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); 
-          transition: all 0.3s; cursor: pointer; position: relative; border: 1px solid #f1f5f9;
+        .dashboard-wrapper { 
+          display: flex; 
+          flex-direction: column; 
+          min-height: 100vh; 
+          font-family: 'Inter', -apple-system, sans-serif; 
         }
-        .card:hover { transform: translateY(-8px); box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
+
+        /* BARRE DE NAVIGATION (MOBILE & DESKTOP) */
+        nav { 
+          background: #1a2a6c; 
+          padding: 12px 20px; 
+          display: flex; 
+          justify-content: space-between; 
+          align-items: center;
+          position: sticky;
+          top: 0;
+          z-index: 1000;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .logo { color: white; font-size: 18px; font-weight: 900; }
+        .nav-links { display: flex; gap: 20px; list-style: none; margin: 0; padding: 0; }
+        .nav-item { font-size: 18px; cursor: pointer; color: rgba(255,255,255,0.6); transition: 0.3s; }
+        .nav-item.active { color: #fbbf24; }
+
+        /* CONTENU */
+        main { 
+          padding: 20px; 
+          flex: 1;
+          max-width: 1100px;
+          margin: 0 auto;
+          width: 100%;
+          box-sizing: border-box;
+        }
+
+        .header-area { 
+          display: flex; 
+          justify-content: space-between; 
+          align-items: flex-end; 
+          margin-bottom: 25px;
+          padding: 0 5px;
+        }
+        h1 { font-size: 24px; font-weight: 800; color: #1e293b; margin: 0; }
+        .btn-add { color: #1a2a6c; font-weight: 700; font-size: 14px; border-bottom: 2px solid #fbbf24; }
+
+        /* GRILLE DE CARTES */
+        .grid { 
+          display: grid; 
+          grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); 
+          gap: 20px; 
+        }
+
+        .card { 
+          background: white; 
+          border-radius: 18px; 
+          padding: 20px; 
+          border: 1px solid #edf2f7;
+          box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02), 0 2px 4px -1px rgba(0,0,0,0.06);
+          position: relative;
+          transition: transform 0.2s;
+        }
 
         .btn-delete {
-          position: absolute; top: 24px; right: 24px; background: #fee2e2; color: #991b1b; 
-          border: none; width: 36px; height: 36px; border-radius: 10px; cursor: pointer;
+          position: absolute; top: 15px; right: 15px;
+          background: #fff1f2; color: #e11d48; border: none;
+          width: 32px; height: 32px; border-radius: 50%;
+          display: flex; align-items: center; justify-content: center;
+          font-size: 14px; cursor: pointer;
         }
 
-        h3 { margin: 0 0 12px 0; color: #1e293b; font-size: 20px; font-weight: 700; padding-right: 40px; }
-        .address { color: #64748b; font-size: 14px; margin-bottom: 24px; display: flex; align-items: center; gap: 6px; }
-        .badges { display: flex; gap: 10px; margin-bottom: 24px; }
-        .badge { font-size: 11px; font-weight: 700; padding: 6px 12px; border-radius: 8px; text-transform: uppercase; }
-        .badge-wifi-ok { background: #dcfce7; color: #166534; }
-        .badge-wifi-no { background: #fee2e2; color: #991b1b; }
-        .badge-auto { background: #dbeafe; color: #1e40af; }
-        .btn-edit { display: block; width: 100%; text-align: center; background: #f1f5f9; color: #1e293b; padding: 12px; border-radius: 12px; font-size: 13px; font-weight: 700; }
+        .card h3 { font-size: 18px; font-weight: 700; color: #1e293b; margin: 0 0 8px 0; padding-right: 30px; }
+        .card .address { color: #64748b; font-size: 13px; margin-bottom: 18px; display: flex; align-items: flex-start; gap: 5px; }
 
-        /* --- MEDIA QUERIES (MOBILE) --- */
-        @media (max-width: 900px) {
-          .dashboard-container { flex-direction: column; }
-          nav { 
-            width: 100%; padding: 15px 20px; 
-            flex-direction: row; justify-content: space-between; align-items: center;
-          }
-          .logo { margin-bottom: 0; font-size: 18px; }
-          .nav-links { display: flex; gap: 10px; }
-          .nav-item { margin-bottom: 0; padding: 10px; font-size: 13px; }
-          .nav-item span { display: none; } /* On cache le texte pour gagner de la place */
-          
-          main { padding: 25px 20px; }
-          h1 { font-size: 24px; }
-          .header { flex-direction: column; align-items: flex-start; gap: 20px; }
-          .btn-add { width: 100%; text-align: center; }
-          .grid { grid-template-columns: 1fr; } /* Une seule carte par ligne sur petit mobile */
+        .badges { display: flex; gap: 8px; margin-bottom: 20px; }
+        .badge { font-size: 10px; font-weight: 800; padding: 4px 10px; border-radius: 6px; letter-spacing: 0.3px; }
+        .badge-wifi { background: #ecfdf5; color: #059669; border: 1px solid #d1fae5; }
+        .badge-auto { background: #eff6ff; color: #2563eb; border: 1px solid #dbeafe; }
+
+        .btn-manage {
+          display: flex; align-items: center; justify-content: center; gap: 8px;
+          background: #f8fafc; color: #1a2a6c; border: 1px solid #e2e8f0;
+          padding: 12px; border-radius: 12px; font-size: 13px; font-weight: 700;
+          width: 100%; transition: 0.2s;
+        }
+        .btn-manage:active { background: #edf2f7; transform: scale(0.98); }
+
+        /* --- DESKTOP ADAPTATION --- */
+        @media (min-width: 768px) {
+          nav { padding: 15px 40px; }
+          .logo { font-size: 22px; }
+          main { padding: 40px; }
+          h1 { font-size: 32px; }
+          .grid { gap: 30px; }
         }
       `}</style>
 
       <nav>
         <div className="logo">MajorMarc 🎩</div>
         <ul className="nav-links">
-          <Link href="/dashboard">
-            <li className="nav-item active">🏠 <span>Mes Logements</span></li>
-          </Link>
-          <Link href="/messages">
-            <li className="nav-item">💬 <span>Messages (IA)</span></li>
-          </Link>
-          <li className="nav-item">⚙️ <span>Paramètres</span></li>
+          <Link href="/dashboard"><li className="nav-item active">🏠</li></Link>
+          <Link href="/messages"><li className="nav-item">💬</li></Link>
+          <li className="nav-item">⚙️</li>
         </ul>
       </nav>
 
       <main>
-        <div className="header">
+        <div className="header-area">
           <h1>Mes Logements</h1>
-          <Link href="/add-property" className="btn-add">+ Ajouter un logement</Link>
+          <Link href="/add-property" className="btn-add">+ Ajouter</Link>
         </div>
 
         <div className="grid">
           {properties.length === 0 ? (
-            <p style={{ color: '#64748b' }}>Vous n'avez pas encore de logement. Cliquez sur + Ajouter pour commencer !</p>
+            <div style={{ textAlign: 'center', gridColumn: '1/-1', padding: '50px', color: '#64748b' }}>
+              Aucun logement trouvé.
+            </div>
           ) : (
             properties.map((prop) => (
-              <div key={prop.id} className="card" onClick={() => window.location.href = `/property/${prop.id}`}>
-                <button className="btn-delete" onClick={(e) => deleteProperty(e, prop.id, prop.name)} title="Supprimer le logement">
-                  🗑️
-                </button>
-
+              <div key={prop.id} className="card">
+                <button className="btn-delete" onClick={(e) => deleteProperty(e, prop.id, prop.name)}>🗑️</button>
+                
                 <h3>{prop.name}</h3>
                 <div className="address">
-                  📍 {prop.street_number && `${prop.street_number} `}{prop.address}
+                  <span>📍</span>
+                  <span>
+                    {prop.street_number ? `${prop.street_number} ` : ''}
+                    {prop.address}
+                    {prop.city ? `, ${prop.city}` : ''}
+                  </span>
                 </div>
                 
                 <div className="badges">
-                  <span className={`badge ${prop.wifi_name ? 'badge-wifi-ok' : 'badge-wifi-no'}`}>
-                    {prop.wifi_name ? '📶 WIFI' : '❌ WIFI'}
-                  </span>
-                  {prop.self_checkin && <span className="badge badge-auto">🔑 AUTONOME</span>}
+                  {prop.wifi_name && <span className="badge badge-wifi">WIFI OK</span>}
+                  {prop.self_checkin && <span className="badge badge-auto">AUTONOME</span>}
                 </div>
 
-                <Link 
-                  href={`/add-property?id=${prop.id}`} 
-                  onClick={(e) => e.stopPropagation()} 
-                  className="btn-edit"
-                >
-                  ⚙️ Modifier les informations
+                <Link href={`/add-property?id=${prop.id}`} className="btn-manage">
+                  <span>⚙️</span> Modifier les informations
                 </Link>
               </div>
             ))
@@ -158,4 +184,4 @@ export default function Dashboard() {
     </div>
   );
   }
-                           
+  
