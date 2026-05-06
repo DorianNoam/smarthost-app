@@ -110,16 +110,22 @@ export default function Dashboard() {
         .btn-edit:hover { background: #e2e8f0; }
       `}</style>
 
-      {/* NAVIGATION */}
-      <nav>
-        <div className="logo">MajorMarc 🎩</div>
-        <ul className="nav-links">
-          <li className="nav-item active">🏠 Mes Logements</li>
-          <li className="nav-item">💬 Messages (IA)</li>
-          <li className="nav-item">⚙️ Paramètres</li>
-        </ul>
-      </nav>
+     <nav>
+  <div className="logo">MajorMarc 🎩</div>
+  <ul className="nav-links">
+    {/* Lien vers l'accueil (Dashboard) */}
+    <Link href="/dashboard">
+      <li className="nav-item active">🏠 Mes Logements</li>
+    </Link>
 
+    {/* Lien vers la page IA */}
+    <Link href="/messages">
+      <li className="nav-item">💬 Messages (IA)</li>
+    </Link>
+
+    <li className="nav-item">⚙️ Paramètres</li>
+  </ul>
+</nav>
       {/* CONTENU */}
       <main>
         <div className="header">
