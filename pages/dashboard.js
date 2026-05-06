@@ -115,7 +115,13 @@ export default function Dashboard() {
       <div className="main">
         <div className="header">
           {/* LOGIQUE D'AFFICHAGE : Nom > Email > Hôte */}
-          <h1>Bienvenue, {profile?.full_name || userEmail.split('@')[0] || 'Hôte'}</h1>
+          <div>
+  <h1>Bienvenue, {profile?.full_name || userEmail.split('@')[0] || 'Hôte'}</h1>
+  <p style={{color: 'red', fontSize: '10px'}}>
+    DEBUG - Mon ID actuel : {userEmail ? "Connecté" : "Déconnecté"} <br/>
+    Vérifiez si l'ID dans Supabase est bien celui-ci.
+  </p>
+</div>
           <Link href="/add-property" className="btn-add">
             + Ajouter un logement
           </Link>
