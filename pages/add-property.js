@@ -95,7 +95,7 @@ export default function AddPropertyWizard() {
         <div className="progress-bar"><div className="progress-fill"></div></div>
 
         {/* ÉTAPES 1 À 5 (EXISTANTES) */}
-     // ... (Gardez le début du fichier identique)
+
 
         {step === 1 && (
           <div className="step">
@@ -145,7 +145,7 @@ export default function AddPropertyWizard() {
             </div>
           </div>
         )}
-// ... (Le reste des étapes 3 à 10 demeure identique)
+
 
         {step === 3 && (
           <div className="step">
