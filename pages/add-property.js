@@ -1,105 +1,125 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { supabase } from '../lib/supabase';
-import Link from 'next/link';
 
-export default function AddProperty() {
+export default function AddPropertyWizard() {
   const router = useRouter();
-  const [name, setName] = useState('');
-  const [address, setAddress] = useState('');
+  const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [propertyId, setPropertyId] = useState(null);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  // Données du logement
+  const [formData, setFormData] = useState({
+    name: '',
+    address: '',
+    wifi_name: '',
+    wifi_password: '',
+    checkin_instructions: '',
+    key_code: ''
+  });
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const nextStep = async () => {
     setLoading(true);
+    const { data: { user } } = await supabase.auth.getUser();
 
-    try {
-      // 1. On récupère l'ID de l'utilisateur connecté
-      const { data: { user } } = await supabase.auth.getUser();
+    // On utilise "upsert" : si le logement existe déjà (propertyId), on le met à jour.
+    // Sinon, on le crée.
+    const { data, error } = await supabase
+      .from('properties')
+      .upsert({
+        id: propertyId, // sera null la première fois
+        owner_id: user.id,
+        ...formData
+      }, { onConflict: 'id' })
+      .select()
+      .single();
 
-      if (!user) {
-        alert("Vous devez être connecté !");
-        router.push('/login');
-        return;
-      }
-
-      // 2. On insère le logement dans la table 'properties'
-      const { error } = await supabase
-        .from('properties')
-        .insert([
-          { 
-            name: name, 
-            address: address, 
-            owner_id: user.id 
-          }
-        ]);
-
-      if (error) throw error;
-
-      // 3. Succès : retour au dashboard
-      router.push('/dashboard');
-
-    } catch (error) {
-      console.error("Erreur insertion:", error.message);
-      alert("Erreur lors de l'ajout : " + error.message);
-    } finally {
-      setLoading(false);
+    if (error) {
+      alert("Erreur : " + error.message);
+    } else {
+      setPropertyId(data.id);
+      if (step < 3) setStep(step + 1);
+      else router.push('/dashboard');
     }
+    setLoading(false);
   };
 
   return (
-    <div className="container">
+    <div className="wizard-container">
       <style jsx>{`
-        .container { min-height: 100vh; background: #f8f9fa; display: flex; align-items: center; justify-content: center; font-family: 'Montserrat', sans-serif; }
-        .card { background: white; padding: 40px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); width: 100%; max-width: 500px; }
-        h1 { font-family: 'Playfair Display', serif; color: #1a2a6c; margin-bottom: 10px; }
-        p { color: #666; margin-bottom: 30px; font-size: 14px; }
-        form { display: flex; flex-direction: column; gap: 20px; }
-        .input-group { display: flex; flex-direction: column; gap: 8px; }
-        label { font-weight: 600; color: #1a2a6c; font-size: 13px; }
-        input { padding: 15px; border: 1px solid #eee; border-radius: 10px; outline: none; transition: 0.3s; }
-        input:focus { border-color: #d4af37; }
-        .btn-save { background: #d4af37; color: #1a2a6c; border: none; padding: 15px; border-radius: 50px; font-weight: 700; cursor: pointer; transition: 0.3s; margin-top: 10px; }
-        .btn-save:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(212, 175, 55, 0.3); }
-        .btn-save:disabled { opacity: 0.6; cursor: not-allowed; }
-        .back-link { text-align: center; display: block; margin-top: 20px; color: #999; text-decoration: none; font-size: 14px; }
+        .wizard-container { min-height: 100vh; background: #1a2a6c; display: flex; align-items: center; justify-content: center; font-family: 'Montserrat', sans-serif; padding: 20px; }
+        .wizard-card { background: white; padding: 40px; border-radius: 30px; width: 100%; max-width: 600px; position: relative; }
+        .progress-bar { height: 6px; background: #eee; border-radius: 10px; margin-bottom: 30px; overflow: hidden; }
+        .progress-fill { height: 100%; background: #d4af37; transition: 0.5s; width: ${(step / 3) * 100}%; }
+        h2 { font-family: 'Playfair Display', serif; color: #1a2a6c; margin-bottom: 10px; }
+        .step-info { color: #d4af37; font-weight: 700; font-size: 12px; text-transform: uppercase; margin-bottom: 5px; }
+        .input-group { margin-bottom: 20px; display: flex; flex-direction: column; gap: 8px; }
+        input, textarea { padding: 15px; border: 1px solid #eee; border-radius: 12px; font-family: inherit; }
+        .actions { display: flex; justify-content: space-between; align-items: center; margin-top: 30px; }
+        .btn-next { background: #1a2a6c; color: white; padding: 15px 30px; border-radius: 50px; border: none; font-weight: 700; cursor: pointer; }
+        .btn-later { color: #999; background: none; border: none; cursor: pointer; text-decoration: underline; }
       `}</style>
 
-      <div className="card">
-        <h1>Nouveau Logement</h1>
-        <p>Commencez par donner un nom et une adresse à votre propriété pour que Marc puisse s'y retrouver.</p>
+      <div className="wizard-card">
+        <div className="progress-bar"><div className="progress-fill"></div></div>
         
-        <form onSubmit={handleSubmit}>
-          <div className="input-group">
-            <label>Nom du logement</label>
-            <input 
-              type="text" 
-              placeholder="Ex: Villa Blue Coast" 
-              value={name} 
-              onChange={(e) => setName(e.target.value)} 
-              required 
-            />
+        {step === 1 && (
+          <div className="step">
+            <div className="step-info">Étape 1 / 3 : Identité</div>
+            <h2>Où se situe votre logement ?</h2>
+            <div className="input-group">
+              <label>Nom de la propriété</label>
+              <input name="name" placeholder="Ex: Bel Appartement Vue Mer" value={formData.name} onChange={handleChange} />
+            </div>
+            <div className="input-group">
+              <label>Adresse exacte</label>
+              <input name="address" placeholder="Ex: 45 Quai Richelieu, Bordeaux" value={formData.address} onChange={handleChange} />
+            </div>
           </div>
+        )}
 
-          <div className="input-group">
-            <label>Adresse complète</label>
-            <input 
-              type="text" 
-              placeholder="Ex: 12 rue du Port, 33000 Bordeaux" 
-              value={address} 
-              onChange={(e) => setAddress(e.target.value)} 
-              required 
-            />
+        {step === 2 && (
+          <div className="step">
+            <div className="step-info">Étape 2 / 3 : Accès</div>
+            <h2>Comment entrent les voyageurs ?</h2>
+            <div className="input-group">
+              <label>Code de la boîte à clés / Serrure</label>
+              <input name="key_code" placeholder="Ex: 1234#" value={formData.key_code} onChange={handleChange} />
+            </div>
+            <div className="input-group">
+              <label>Instructions d'arrivée</label>
+              <textarea name="checkin_instructions" rows="4" placeholder="Ex: 2ème étage, porte de droite..." value={formData.checkin_instructions} onChange={handleChange} />
+            </div>
           </div>
+        )}
 
-          <button type="submit" className="btn-save" disabled={loading}>
-            {loading ? 'Enregistrement en cours...' : 'Créer le logement'}
+        {step === 3 && (
+          <div className="step">
+            <div className="step-info">Étape 3 / 3 : Confort</div>
+            <h2>Les infos indispensables</h2>
+            <div className="input-group">
+              <label>Nom du réseau Wifi</label>
+              <input name="wifi_name" value={formData.wifi_name} onChange={handleChange} />
+            </div>
+            <div className="input-group">
+              <label>Mot de passe Wifi</label>
+              <input name="wifi_password" value={formData.wifi_password} onChange={handleChange} />
+            </div>
+          </div>
+        )}
+
+        <div className="actions">
+          <button className="btn-later" onClick={() => router.push('/dashboard')}>
+            Enregistrer et continuer plus tard
           </button>
-
-          <Link href="/dashboard" className="back-link">
-            Retour au tableau de bord
-          </Link>
-        </form>
+          <button className="btn-next" onClick={nextStep} disabled={loading}>
+            {loading ? 'Patience...' : step === 3 ? 'Terminer' : 'Suivant'}
+          </button>
+        </div>
       </div>
     </div>
   );
