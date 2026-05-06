@@ -1,11 +1,11 @@
 import { Mistral } from '@mistralai/mistralai';
-import { createClient } from '@supabase/supabase-js';
 
+// Tes identifiants Telegram (Idéalement à mettre dans .env.local plus tard pour la sécurité)
 const TELEGRAM_TOKEN = "8231931843:AAGO21Yr7sZ3n1mZGBj1ragKQApTKL81YSs";
 const TELEGRAM_CHAT_ID = "1539843263"; 
 
-async function sendTelegramAlert(userQuery, userName) {
-  const text = `🚨 *ALERTE CONCIERGERIE*\n\n*Client :* ${userName || 'Inconnu'}\n*Demande :* "${userQuery}"`;
+async function sendTelegramAlert(userQuery, propertyName) {
+  const text = `🚨 *ALERTE MAJOR MARC*\n\n*Logement :* ${propertyName || 'Inconnu'}\n*Demande :* "${userQuery}"`;
   const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
   try {
     await fetch(url, {
@@ -19,47 +19,45 @@ async function sendTelegramAlert(userQuery, userName) {
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Interdit' });
 
-  const { messages, userName } = req.body;
-  const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+  // On récupère la question et les infos du logement envoyées par le front-end
+  const { question, propertyData } = req.body; 
   const mistral = new Mistral({ apiKey: process.env.MISTRAL_API_KEY });
 
   try {
-    // 1. On récupère les infos
-    const { data: info } = await supabase
-      .from('knowledge_base')
-      .select('content')
-      .eq('property_id', '11111111-1111-1111-1111-111111111111');
-
-    const contexte = info?.map(i => i.content).join("\n") || "Aucune consigne particulière.";
-
-    // 2. ON INJECTE LE CONTEXTE ICI (C'était l'erreur !)
+    // 1. ON INJECTE LE CONTEXTE DU LOGEMENT
     const systemMessage = { 
       role: 'system', 
-      content: `Tu es Marc, concierge de luxe. 
+      content: `Tu es MajorMarc, concierge de luxe pour le logement "${propertyData.name}". 
       UTILISE CES INFORMATIONS POUR RÉPONDRE : 
-      ${contexte}
+      - Adresse : ${propertyData.street_number || ''} ${propertyData.address}
+      - Wifi : Nom "${propertyData.wifi_name}", MDP "${propertyData.wifi_password}"
+      - Arrivée : Dès ${propertyData.check_in_hour}. ${propertyData.checkin_instructions}
+      - Départ : Avant ${propertyData.check_out_hour}. ${propertyData.checkout_instructions}
+      - Règles : ${propertyData.noise_rules}
 
       SI L'INFO N'EST PAS CI-DESSUS OU SI C'EST UNE PANNE :
       Réponds exactement : "Je me renseigne immédiatement auprès de votre hôte."
       
-      TON : Prestigieux, max 2 phrases.` 
+      TON : Prestigieux, poli, max 3 phrases.` 
     };
 
+    // 2. APPEL À MISTRAL
     const chatResponse = await mistral.chat.complete({
       model: 'mistral-small-latest',
-      messages: [systemMessage, ...messages],
+      messages: [systemMessage, { role: 'user', content: question }],
     });
 
     const responseText = chatResponse.choices[0].message.content;
 
-    // 3. Alerte si besoin
-    if (responseText.includes("hôte") || responseText.includes("renseigne")) {
-      const lastUserQuery = messages[messages.length - 1].content;
-      await sendTelegramAlert(lastUserQuery, userName);
+    // 3. ALERTE TELEGRAM SI BESOIN
+    if (responseText.toLowerCase().includes("hôte") || responseText.toLowerCase().includes("renseigne")) {
+      await sendTelegramAlert(question, propertyData.name);
     }
 
-    res.status(200).json({ text: responseText });
+    // On renvoie la réponse au Chat (attention, on utilise 'answer' pour matcher avec ton front-end)
+    res.status(200).json({ answer: responseText });
   } catch (error) {
-    res.status(500).json({ text: "Erreur technique, je reviens vers vous." });
+    console.error("Erreur API Mistral:", error);
+    res.status(500).json({ answer: "Erreur technique, je me renseigne immédiatement auprès de votre hôte." });
   }
 }
