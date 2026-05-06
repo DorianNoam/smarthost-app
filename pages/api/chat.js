@@ -1,110 +1,73 @@
 import { Mistral } from '@mistralai/mistralai';
 
-/**
- * Envoie une alerte sur Telegram si Marc ne connaît pas la réponse
- * ou si le système rencontre une erreur.
- */
 async function sendTelegramAlert(userQuery, propertyName) {
   const token = process.env.TELEGRAM_BOT_TOKEN;
   const chatId = process.env.TELEGRAM_CHAT_ID;
-  
   if (!token || !chatId) return;
 
   const text = `🚨 *ALERTE MAJOR MARC*\n\n*Logement :* ${propertyName || 'Inconnu'}\n*Demande :* "${userQuery}"`;
-  
   try {
     await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        chat_id: chatId, 
-        text: text, 
-        parse_mode: 'Markdown' 
-      })
+      body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'Markdown' })
     });
-  } catch (e) { 
-    console.error("Erreur d'envoi Telegram:", e); 
-  }
+  } catch (e) { console.error("Erreur Telegram:", e); }
 }
 
 export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Méthode non autorisée' });
-  }
+  if (req.method !== 'POST') return res.status(405).send('Méthode non autorisée');
 
   const { messagesHistory, propertyData } = req.body;
-
-  // SÉCURITÉ : Vérification des données entrantes
-  if (!messagesHistory || !propertyData) {
-    return res.status(200).json({ 
-      answer: "Bonjour ! Je suis prêt à vous aider, mais je n'ai pas reçu les informations du logement. Pourriez-vous rafraîchir la page ?" 
-    });
-  }
-
   const mistral = new Mistral({ apiKey: process.env.MISTRAL_API_KEY });
 
   try {
     const systemMessage = { 
       role: 'system', 
-      content: `Tu es MajorMarc, concierge de luxe pour le logement "${propertyData.name || 'notre villa'}". 
+      content: `Tu es Marc, le majordome dévoué de "${propertyData.name || 'la villa'}". Ton but est de rendre le séjour des voyageurs inoubliable par ta courtoisie et ton aide.
 
-      RÈGLES DE STYLE ET LISIBILITÉ (OBLIGATOIRE) :
-      - NE FAIS JAMAIS de longs paragraphes. Maximum 2 lignes par bloc.
-      - Saute SYSTÉMATIQUEMENT une ligne entre chaque idée.
-      - Utilise des listes à puces (•) pour énumérer des choix ou des lieux.
-      - Mets les informations cruciales en **GRAS** (noms, horaires, codes).
+      RÈGLES D'OR DE BIENVEILLANCE :
+      - Valide toujours les émotions du client (ex: "Je comprends parfaitement", "Je suis navré d'apprendre cela").
+      - Utilise des formules de politesse élégantes ("Auriez-vous l'amabilité de...", "Je me permets de vous suggérer...").
+      - Ne donne jamais d'ordres directs. Transforme les consignes en conseils attentionnés.
 
-      ZONE 1 : INFOS LOGEMENT (Priorité absolue)
+      PRÉSENTATION VISUELLE :
+      - Garde les listes à puces (•) pour la clarté.
+      - Saute une ligne entre chaque paragraphe.
+      - Utilise le **gras** avec parcimonie pour souligner l'essentiel.
+
+      CONNAISSANCES DU LOGEMENT :
       - Adresse : ${propertyData.street_number || ''} ${propertyData.address || ''}
-      - Wifi : Nom "${propertyData.wifi_name || 'Non configuré'}", MDP "${propertyData.wifi_password || 'Non configuré'}"
-      - Arrivée : Dès ${propertyData.check_in_hour || '15h'}.
-      - Départ : Avant ${propertyData.check_out_hour || '11h'}.
-      - Règles : ${propertyData.noise_rules || 'Respect du voisinage.'}
+      - Wifi : ${propertyData.wifi_name} / ${propertyData.wifi_password}
+      - Check-in/out : ${propertyData.check_in_hour} / ${propertyData.check_out_hour}
 
-      ZONE 2 : GUIDE LOCAL (Expertise)
-      - Pour les restaurants, bus ou activités, utilise tes connaissances.
-      - Format recommandé : "• **Nom** : Brève description."
-      - Précise toujours de vérifier les horaires en temps réel.
+      GESTION DES INCIDENTS :
+      - En cas de problème (fuite, panne), sois très rassurant.
+      - Réponds : "Je suis sincèrement navré pour ce désagrément. Je préviens immédiatement votre hôte pour résoudre cela au plus vite."
+      - Ajoute un conseil de prudence très poliment.
 
-      ZONE 3 : CAS D'URGENCE OU PANNE
-      - Pour toute panne technique, demande de remboursement ou info absente de la Zone 1 :
-      Réponds exactement : "Je me renseigne immédiatement auprès de votre hôte."
-
-      TON : Prestigieux, chaleureux, expert et très synthétique.` 
+      TON : Empathique, raffiné, prévenant et chaleureux.` 
     };
 
-    // Conversion de l'historique pour le format Mistral
     const formattedHistory = messagesHistory.map(msg => ({
       role: msg.role === 'marc' ? 'assistant' : 'user',
       content: msg.text || ''
     }));
 
-    // Appel à Mistral avec le modèle à haute capacité (mistral-small-2506)
     const chatResponse = await mistral.chat.complete({
-      model: 'mistral-small-2506', 
+      model: 'mistral-small-2506',
       messages: [systemMessage, ...formattedHistory],
-      temperature: 0.7,
     });
 
     const responseText = chatResponse.choices[0].message.content;
 
-    // Déclenchement de l'alerte Telegram si Marc passe le relais à l'hôte
-    if (responseText.toLowerCase().includes("hôte") || responseText.toLowerCase().includes("renseigne")) {
-      const lastUserQuery = messagesHistory[messagesHistory.length - 1]?.text || "Question non identifiée";
-      await sendTelegramAlert(lastUserQuery, propertyData.name);
+    if (responseText.toLowerCase().includes("hôte") || responseText.toLowerCase().includes("navré")) {
+      const lastMsg = messagesHistory[messagesHistory.length - 1]?.text || "Besoin d'aide";
+      await sendTelegramAlert(lastMsg, propertyData.name);
     }
 
     res.status(200).json({ answer: responseText });
-
   } catch (error) {
-    console.error("ERREUR API MISTRAL:", error);
-    
-    // Alerte d'urgence si l'IA crash (ex: quota dépassé)
-    const lastUserQuery = messagesHistory[messagesHistory.length - 1]?.text || "Inconnue";
-    await sendTelegramAlert(`⚠️ CRASH SYSTÈME : "${lastUserQuery}"`, propertyData.name);
-
-    res.status(500).json({ 
-      answer: "Pardonnez-moi, je rencontre une petite difficulté technique. Je contacte immédiatement votre hôte pour vous répondre." 
-    });
+    res.status(500).json({ answer: "Je vous prie de m'excuser, je rencontre une difficulté pour vous répondre. Je contacte votre hôte immédiatement." });
   }
 }
