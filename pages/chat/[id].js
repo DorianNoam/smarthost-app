@@ -16,24 +16,19 @@ export default function ChatPage() {
   }, [id]);
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+  }, [messages]);
 
   const fetchPropertyData = async () => {
     const { data, error } = await supabase.from('properties').select('*').eq('id', id).single();
     if (!error) {
       setProperty(data);
-      setMessages([{ role: 'marc', text: `Bonjour ! Je suis Marc, le majordome de "${data.name}". Comment puis-je vous aider ?` }]);
+      setMessages([{ role: 'marc', text: `Bonjour ! Je suis Marc, votre majordome pour votre séjour à "${data.name}". Comment puis-je vous aider aujourd'hui ?` }]);
     }
   };
 
   const sendMessage = async () => {
     if (!input.trim()) return;
-
     const userMsg = { role: 'user', text: input };
     setMessages(prev => [...prev, userMsg]);
     setInput('');
@@ -48,7 +43,7 @@ export default function ChatPage() {
       const data = await res.json();
       setMessages(prev => [...prev, { role: 'marc', text: data.answer }]);
     } catch (e) {
-      setMessages(prev => [...prev, { role: 'marc', text: "Toutes mes excuses, je rencontre une petite difficulté technique." }]);
+      setMessages(prev => [...prev, { role: 'marc', text: "Désolé, je rencontre un petit souci technique." }]);
     } finally {
       setIsTyping(false);
     }
@@ -57,68 +52,43 @@ export default function ChatPage() {
   if (!property) return null;
 
   return (
-    <div className="chat-layout">
+    <div className="chat-wrapper">
       <style jsx global>{`
-        body { margin: 0; background: #f4f7fb; overflow: hidden; }
+        body { margin: 0; background: #f4f7fb; height: 100vh; overflow: hidden; }
       `}</style>
       
       <style jsx>{`
-        .chat-layout { display: flex; flex-direction: column; height: 100vh; font-family: 'Inter', sans-serif; }
+        .chat-wrapper { display: flex; flex-direction: column; height: 100vh; font-family: 'Inter', sans-serif; }
         
-        /* HEADER COMPACT */
         header { 
-          background: #1a2a6c; color: white; padding: 12px 15px; 
-          text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
-          z-index: 10;
+          background: #1a2a6c; color: white; padding: 15px; 
+          text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+          flex-shrink: 0;
         }
-        header h1 { margin: 0; font-size: 16px; font-weight: 800; }
-        header p { margin: 2px 0 0; font-size: 10px; opacity: 0.8; text-transform: uppercase; letter-spacing: 1px; }
+        header h1 { margin: 0; font-size: 18px; font-weight: 800; }
+        header p { margin: 4px 0 0; font-size: 11px; opacity: 0.8; letter-spacing: 1px; text-transform: uppercase; }
 
-        /* ZONE DE MESSAGES */
-        .messages-container { 
-          flex: 1; overflow-y: auto; padding: 15px; 
-          display: flex; flex-direction: column; gap: 12px;
-          padding-bottom: 90px; /* Espace pour la barre d'entrée */
+        .messages-list { 
+          flex: 1; overflow-y: auto; padding: 20px 15px;
+          display: flex; flex-direction: column; gap: 15px;
         }
 
         .bubble { 
-          max-width: 85%; padding: 12px 16px; border-radius: 18px; 
-          font-size: 14px; line-height: 1.4; position: relative;
+          max-width: 80%; padding: 12px 16px; border-radius: 20px; 
+          font-size: 14px; line-height: 1.5; 
         }
-        
-        .marc { 
-          align-self: flex-start; background: white; color: #1e293b; 
-          border-bottom-left-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        }
-        
-        .user { 
-          align-self: flex-end; background: #1a2a6c; color: white; 
-          border-bottom-right-radius: 4px; 
-        }
+        .marc { align-self: flex-start; background: white; color: #1e293b; border-bottom-left-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .user { align-self: flex-end; background: #1a2a6c; color: white; border-bottom-right-radius: 4px; }
 
-        .typing { font-size: 12px; color: #64748b; font-style: italic; margin-left: 5px; }
+        .typing { font-size: 12px; color: #64748b; margin-left: 10px; }
 
-        /* BARRE D'ENTRÉE FIXÉE EN BAS */
-        .input-area { 
-          position: fixed; bottom: 0; left: 0; right: 0; 
-          background: white; padding: 12px 15px; 
+        .input-container { 
+          padding: 15px; background: white; border-top: 1px solid #e2e8f0;
           display: flex; gap: 10px; align-items: center;
-          border-top: 1px solid #e2e8f0;
-          padding-bottom: env(safe-area-inset-bottom, 12px); /* Pour iPhone sans bouton */
+          padding-bottom: calc(15px + env(safe-area-inset-bottom, 0px));
         }
-
-        input { 
-          flex: 1; padding: 12px 18px; border: 1px solid #e2e8f0; 
-          border-radius: 25px; font-size: 14px; outline: none; background: #f8fafc;
-        }
-        input:focus { border-color: #1a2a6c; background: white; }
-
-        button { 
-          background: #1a2a6c; color: white; border: none; 
-          width: 40px; height: 40px; border-radius: 50%; 
-          display: flex; align-items: center; justify-content: center;
-          cursor: pointer; flex-shrink: 0;
-        }
+        input { flex: 1; padding: 12px 20px; border: 1px solid #e2e8f0; border-radius: 30px; font-size: 14px; outline: none; background: #f8fafc; }
+        button { background: #1a2a6c; color: white; border: none; width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; }
       `}</style>
 
       <header>
@@ -126,32 +96,23 @@ export default function ChatPage() {
         <p>Service de Conciergerie</p>
       </header>
 
-      <div className="messages-container">
+      <div className="messages-list">
         {messages.map((m, i) => (
-          <div key={i} className={`bubble ${m.role}`}>
-            {m.text}
-          </div>
+          <div key={i} className={`bubble ${m.role}`}>{m.text}</div>
         ))}
-        {isTyping && <div className="typing">Marc réfléchit...</div>}
+        {isTyping && <div className="typing">Marc écrit...</div>}
         <div ref={messagesEndRef} />
       </div>
 
-      <div className="input-area">
+      <div className="input-container">
         <input 
-          type="text" 
-          placeholder="Écrivez à Marc..." 
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+          value={input} onChange={(e) => setInput(e.target.value)} 
+          placeholder="Écrivez à Marc..." onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
         />
         <button onClick={sendMessage}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-            <line x1="22" y1="2" x2="11" y2="13"></line>
-            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-          </svg>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
         </button>
       </div>
     </div>
   );
-          }
-          
+}
