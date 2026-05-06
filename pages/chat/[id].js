@@ -16,7 +16,7 @@ export default function GuestChat() {
       if (data) {
         setProp(data);
         setMessages([
-          { role: 'marc', text: `Bonjour ! Je suis Marc, votre majordome virtuel pour votre séjour à "${data.name}". Comment puis-je vous aider aujourd'hui ?` }
+          { role: 'marc', text: `Bonjour ! Je suis Marc, votre majordome pour votre séjour à "${data.name}". Comment puis-je vous aider aujourd'hui ?` }
         ]);
       }
     };
