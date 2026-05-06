@@ -24,36 +24,28 @@ export default function Dashboard() {
   };
 
   const deleteProperty = async (e, id, name) => {
-    e.stopPropagation(); // Empêche d'ouvrir la page du logement
+    e.stopPropagation();
     const confirmed = window.confirm(`Voulez-vous vraiment supprimer "${name}" ? Cette action est irréversible.`);
     
     if (confirmed) {
-      const { error } = await supabase
-        .from('properties')
-        .delete()
-        .eq('id', id);
-
-      if (error) {
-        alert("Erreur : " + error.message);
-      } else {
-        setProperties(properties.filter(p => p.id !== id));
-      }
+      const { error } = await supabase.from('properties').delete().eq('id', id);
+      if (error) alert("Erreur : " + error.message);
+      else setProperties(properties.filter(p => p.id !== id));
     }
   };
 
   return (
     <div className="dashboard-container">
       <style jsx global>{`
-        /* Reset global pour enlever les soulignages bleus partout */
         a { text-decoration: none !important; color: inherit; }
       `}</style>
       
       <style jsx>{`
         .dashboard-container { display: flex; min-height: 100vh; background-color: #f8fafc; font-family: 'Inter', sans-serif; }
         
-        /* Menu Latéral */
-        nav { width: 280px; background: #1e293b; color: white; padding: 40px 24px; display: flex; flex-direction: column; }
-        .logo { font-size: 22px; fontWeight: 900; margin-bottom: 50px; display: flex; align-items: center; gap: 10px; }
+        /* Menu Latéral (Desktop) */
+        nav { width: 280px; background: #1e293b; color: white; padding: 40px 24px; display: flex; flex-direction: column; transition: all 0.3s; }
+        .logo { font-size: 22px; font-weight: 900; margin-bottom: 50px; display: flex; align-items: center; gap: 10px; }
         .nav-links { list-style: none; padding: 0; margin: 0; }
         .nav-item { padding: 14px 16px; border-radius: 12px; margin-bottom: 8px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 12px; font-weight: 500; }
         .nav-item.active { background: #334155; color: #fbbf24; }
@@ -61,72 +53,68 @@ export default function Dashboard() {
         .nav-item:hover { background: #334155; opacity: 1; }
 
         /* Zone Principale */
-        main { flex: 1; padding: 50px; overflow-y: auto; }
+        main { flex: 1; padding: 50px; overflow-y: auto; transition: all 0.3s; }
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
         h1 { font-size: 32px; font-weight: 800; color: #0f172a; margin: 0; }
-        .btn-add { background: #1e293b; color: white; padding: 14px 28px; border-radius: 14px; font-weight: 700; transition: 0.2s; }
-        .btn-add:hover { transform: scale(1.03); background: #0f172a; }
+        .btn-add { background: #1e293b; color: white; padding: 14px 28px; border-radius: 14px; font-weight: 700; transition: 0.2s; white-space: nowrap; }
 
-        /* Grille de cartes */
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 30px; }
+        /* Grille responsive */
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 30px; }
         
         .card { 
-          background: white; 
-          border-radius: 24px; 
-          padding: 28px; 
+          background: white; border-radius: 24px; padding: 28px; 
           box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); 
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-          cursor: pointer;
-          position: relative;
-          border: 1px solid #f1f5f9;
+          transition: all 0.3s; cursor: pointer; position: relative; border: 1px solid #f1f5f9;
         }
-        .card:hover { transform: translateY(-8px); box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); border-color: #e2e8f0; }
+        .card:hover { transform: translateY(-8px); box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
 
         .btn-delete {
-          position: absolute; top: 24px; right: 24px;
-          background: #fee2e2; color: #991b1b; border: none;
-          width: 36px; height: 36px; border-radius: 10px;
-          cursor: pointer; display: flex; align-items: center; justify-content: center;
-          transition: 0.2s; font-size: 18px;
+          position: absolute; top: 24px; right: 24px; background: #fee2e2; color: #991b1b; 
+          border: none; width: 36px; height: 36px; border-radius: 10px; cursor: pointer;
         }
-        .btn-delete:hover { background: #fecaca; transform: rotate(15deg); }
 
         h3 { margin: 0 0 12px 0; color: #1e293b; font-size: 20px; font-weight: 700; padding-right: 40px; }
         .address { color: #64748b; font-size: 14px; margin-bottom: 24px; display: flex; align-items: center; gap: 6px; }
-        
         .badges { display: flex; gap: 10px; margin-bottom: 24px; }
-        .badge { font-size: 11px; font-weight: 700; padding: 6px 12px; border-radius: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .badge { font-size: 11px; font-weight: 700; padding: 6px 12px; border-radius: 8px; text-transform: uppercase; }
         .badge-wifi-ok { background: #dcfce7; color: #166534; }
         .badge-wifi-no { background: #fee2e2; color: #991b1b; }
         .badge-auto { background: #dbeafe; color: #1e40af; }
+        .btn-edit { display: block; width: 100%; text-align: center; background: #f1f5f9; color: #1e293b; padding: 12px; border-radius: 12px; font-size: 13px; font-weight: 700; }
 
-        .btn-edit { 
-          display: block; width: 100%; text-align: center; 
-          background: #f1f5f9; color: #1e293b; 
-          padding: 12px; border-radius: 12px; 
-          font-size: 13px; font-weight: 700; 
-          transition: 0.2s;
+        /* --- MEDIA QUERIES (MOBILE) --- */
+        @media (max-width: 900px) {
+          .dashboard-container { flex-direction: column; }
+          nav { 
+            width: 100%; padding: 15px 20px; 
+            flex-direction: row; justify-content: space-between; align-items: center;
+          }
+          .logo { margin-bottom: 0; font-size: 18px; }
+          .nav-links { display: flex; gap: 10px; }
+          .nav-item { margin-bottom: 0; padding: 10px; font-size: 13px; }
+          .nav-item span { display: none; } /* On cache le texte pour gagner de la place */
+          
+          main { padding: 25px 20px; }
+          h1 { font-size: 24px; }
+          .header { flex-direction: column; align-items: flex-start; gap: 20px; }
+          .btn-add { width: 100%; text-align: center; }
+          .grid { grid-template-columns: 1fr; } /* Une seule carte par ligne sur petit mobile */
         }
-        .btn-edit:hover { background: #e2e8f0; }
       `}</style>
 
-     <nav>
-  <div className="logo">MajorMarc 🎩</div>
-  <ul className="nav-links">
-    {/* Lien vers l'accueil (Dashboard) */}
-    <Link href="/dashboard">
-      <li className="nav-item active">🏠 Mes Logements</li>
-    </Link>
+      <nav>
+        <div className="logo">MajorMarc 🎩</div>
+        <ul className="nav-links">
+          <Link href="/dashboard">
+            <li className="nav-item active">🏠 <span>Mes Logements</span></li>
+          </Link>
+          <Link href="/messages">
+            <li className="nav-item">💬 <span>Messages (IA)</span></li>
+          </Link>
+          <li className="nav-item">⚙️ <span>Paramètres</span></li>
+        </ul>
+      </nav>
 
-    {/* Lien vers la page IA */}
-    <Link href="/messages">
-      <li className="nav-item">💬 Messages (IA)</li>
-    </Link>
-
-    <li className="nav-item">⚙️ Paramètres</li>
-  </ul>
-</nav>
-      {/* CONTENU */}
       <main>
         <div className="header">
           <h1>Mes Logements</h1>
@@ -169,4 +157,5 @@ export default function Dashboard() {
       </main>
     </div>
   );
-}
+  }
+                           
