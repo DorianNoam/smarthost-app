@@ -33,84 +33,105 @@ export default function Dashboard() {
   return (
     <div className="dashboard-wrapper">
       <style jsx global>{`
-        body { margin: 0; padding: 0; background-color: #f8fafc; }
+        body { margin: 0; padding: 0; background-color: #f4f7fe; }
         a { text-decoration: none !important; color: inherit; }
       `}</style>
       
       <style jsx>{`
-        .dashboard-wrapper { display: flex; flex-direction: column; min-height: 100vh; font-family: 'Inter', sans-serif; }
+        .dashboard-wrapper { display: flex; flex-direction: column; min-height: 100vh; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
 
+        /* HEADER */
         nav { 
-          background: #1a2a6c; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center;
-          position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+          background: #1a2a6c; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center;
+          position: sticky; top: 0; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         }
         .logo { color: white; font-size: 18px; font-weight: 900; }
-        .nav-links { display: flex; gap: 20px; list-style: none; margin: 0; padding: 0; }
-        .nav-item { font-size: 18px; cursor: pointer; color: rgba(255,255,255,0.6); }
+        .nav-links { display: flex; gap: 15px; }
+        .nav-item { font-size: 20px; color: rgba(255,255,255,0.7); }
         .nav-item.active { color: #fbbf24; }
 
-        main { padding: 20px; flex: 1; max-width: 1100px; margin: 0 auto; width: 100%; box-sizing: border-box; }
-        .header-area { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 25px; }
+        /* MAIN CONTENT */
+        main { padding: 20px; flex: 1; max-width: 800px; margin: 0 auto; width: 100%; box-sizing: border-box; }
+        
+        .header-area { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
         h1 { font-size: 24px; font-weight: 800; color: #1e293b; margin: 0; }
-        .btn-add { color: #1a2a6c; font-weight: 700; font-size: 14px; border-bottom: 2px solid #fbbf24; }
+        .btn-add-top { font-size: 15px; font-weight: 700; color: #1a2a6c; border-bottom: 2px solid #fbbf24; }
 
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
+        /* GRID & CARDS */
+        .grid { display: flex; flex-direction: column; gap: 18px; }
 
         .card { 
-          background: white; border-radius: 18px; padding: 20px; border: 1px solid #edf2f7;
-          box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); position: relative;
+          background: white; border-radius: 22px; padding: 22px; 
+          box-shadow: 0 8px 20px rgba(0,0,0,0.04); position: relative;
+          border: 1px solid #edf2f7;
         }
 
         .btn-delete {
           position: absolute; top: 15px; right: 15px; background: #fff1f2; color: #e11d48; 
-          border: none; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 10;
+          border: none; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 10;
         }
 
-        /* Titre cliquable vers la page récapitulative */
-        .card-title-link { display: block; cursor: pointer; }
-        .card h3 { font-size: 18px; font-weight: 700; color: #1a2a6c; margin: 0 0 8px 0; padding-right: 35px; text-decoration: underline rgba(26, 42, 108, 0.1); }
-        .card h3:hover { color: #fbbf24; }
-
-        .card .address { color: #64748b; font-size: 13px; margin-bottom: 18px; display: flex; gap: 5px; }
-
-        .badges { display: flex; gap: 8px; margin-bottom: 20px; }
-        .badge { font-size: 10px; font-weight: 800; padding: 4px 10px; border-radius: 6px; }
-        .badge-wifi { background: #ecfdf5; color: #059669; border: 1px solid #d1fae5; }
-        .badge-auto { background: #eff6ff; color: #2563eb; border: 1px solid #dbeafe; }
-
-        .button-group { display: flex; gap: 10px; }
+        /* Titre et adresse */
+        .property-link { display: block; margin-bottom: 12px; }
+        h3 { font-size: 20px; font-weight: 800; color: #1a2a6c; margin: 0 0 6px 0; }
+        .address { color: #64748b; font-size: 13px; display: flex; align-items: center; gap: 5px; margin-bottom: 15px; }
         
-        .btn-main {
-          flex: 2; display: flex; align-items: center; justify-content: center; gap: 8px;
-          background: #1a2a6c; color: white; padding: 12px; border-radius: 12px; font-size: 13px; font-weight: 700;
+        .badge { display: inline-block; font-size: 10px; font-weight: 800; padding: 5px 12px; background: #ecfdf5; color: #059669; border-radius: 8px; margin-bottom: 18px; border: 1px solid #d1fae5; }
+
+        /* SECTION BOUTONS (Le gros changement) */
+        .button-group { 
+          display: flex; 
+          gap: 12px; 
+          width: 100%;
         }
 
-        .btn-config {
-          flex: 1; display: flex; align-items: center; justify-content: center;
-          background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0;
-          padding: 12px; border-radius: 12px; font-size: 13px;
+        .btn-primary {
+          flex: 4;
+          background: #1a2a6c;
+          color: white !important;
+          padding: 14px;
+          border-radius: 14px;
+          font-size: 14px;
+          font-weight: 700;
+          text-align: center;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          box-shadow: 0 4px 10px rgba(26, 42, 108, 0.2);
+        }
+
+        .btn-secondary {
+          flex: 1;
+          background: #f1f5f9;
+          color: #475569 !important;
+          padding: 14px;
+          border-radius: 14px;
+          font-size: 18px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border: 1px solid #e2e8f0;
         }
 
         @media (min-width: 768px) {
-          nav { padding: 15px 40px; }
-          main { padding: 40px; }
-          h1 { font-size: 32px; }
+          .grid { display: grid; grid-template-columns: 1fr 1fr; }
         }
       `}</style>
 
       <nav>
         <div className="logo">MajorMarc 🎩</div>
-        <ul className="nav-links">
-          <Link href="/dashboard"><li className="nav-item active">🏠</li></Link>
-          <Link href="/messages"><li className="nav-item">💬</li></Link>
-          <li className="nav-item">⚙️</li>
-        </ul>
+        <div className="nav-links">
+          <Link href="/dashboard"><span className="nav-item active">🏠</span></Link>
+          <Link href="/messages"><span className="nav-item">💬</span></Link>
+          <span className="nav-item">⚙️</span>
+        </div>
       </nav>
 
       <main>
         <div className="header-area">
           <h1>Mes Logements</h1>
-          <Link href="/add-property" className="btn-add">+ Ajouter</Link>
+          <Link href="/add-property" className="btn-add-top">+ Ajouter</Link>
         </div>
 
         <div className="grid">
@@ -118,29 +139,24 @@ export default function Dashboard() {
             <div key={prop.id} className="card">
               <button className="btn-delete" onClick={(e) => deleteProperty(e, prop.id, prop.name)}>🗑️</button>
               
-              {/* Le titre renvoie vers la page récapitulative du logement */}
-              <Link href={`/property/${prop.id}`} className="card-title-link">
+              {/* Le haut de la carte est cliquable vers la fiche */}
+              <Link href={`/property/${prop.id}`} className="property-link">
                 <h3>{prop.name}</h3>
+                <div className="address">
+                  📍 {prop.street_number ? `${prop.street_number} ` : ''}{prop.address}
+                </div>
               </Link>
-
-              <div className="address">
-                <span>📍</span>
-                <span>{prop.street_number ? `${prop.street_number} ` : ''}{prop.address}</span>
-              </div>
               
-              <div className="badges">
-                {prop.wifi_name && <span className="badge badge-wifi">WIFI OK</span>}
-                {prop.self_checkin && <span className="badge badge-auto">AUTONOME</span>}
-              </div>
+              {prop.wifi_name && <span className="badge">📶 WIFI OK</span>}
 
               <div className="button-group">
-                {/* Bouton pour voir le chat/recap (page invité) */}
-                <Link href={`/chat/${prop.id}`} className="btn-main">
+                {/* Gros bouton bleu d'action */}
+                <Link href={`/chat/${prop.id}`} className="btn-primary">
                   🚀 Ouvrir MajorMarc
                 </Link>
                 
-                {/* Bouton pour modifier les infos techniques (page admin) */}
-                <Link href={`/add-property?id=${prop.id}`} className="btn-config" title="Modifier">
+                {/* Bouton gris de réglage */}
+                <Link href={`/add-property?id=${prop.id}`} className="btn-secondary">
                   ⚙️
                 </Link>
               </div>
@@ -150,4 +166,5 @@ export default function Dashboard() {
       </main>
     </div>
   );
-}
+  }
+                
