@@ -60,25 +60,38 @@ export default function ChatPage() {
   return (
     <div className="chat-layout">
       <style jsx global>{`
-        body { margin: 0; background: #f4f7fb; height: 100vh; overflow: hidden; }
+        body { 
+          margin: 0; 
+          background: #f4f7fb; 
+          /* Utilisation du dynamic VH pour éviter les bugs de barre d'adresse */
+          height: 100dvh; 
+          overflow: hidden; 
+        }
       `}</style>
       
       <style jsx>{`
-        .chat-layout { display: flex; flex-direction: column; height: 100vh; font-family: 'Inter', sans-serif; }
+        .chat-layout { 
+          display: flex; 
+          flex-direction: column; 
+          height: 100dvh; 
+          font-family: 'Inter', sans-serif; 
+        }
         
-        /* BANDEAU BLEU FIXE EN HAUT */
         header { 
           background: #1a2a6c; 
           color: white; 
-          padding: 12px 15px; 
+          /* Ajout d'un padding top pour la zone sécurisée (encoches iPhone/Barre de recherche) */
+          padding-top: calc(15px + env(safe-area-inset-top, 0px));
+          padding-bottom: 15px;
+          padding-left: 20px;
+          padding-right: 20px;
           text-align: center; 
           box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-          position: sticky;
-          top: 0;
           z-index: 1000;
+          flex-shrink: 0;
         }
-        header h1 { margin: 0; font-size: 16px; font-weight: 800; letter-spacing: 0.5px; }
-        header p { margin: 2px 0 0; font-size: 10px; opacity: 0.7; text-transform: uppercase; letter-spacing: 1.5px; }
+        header h1 { margin: 0; font-size: 17px; font-weight: 800; }
+        header p { margin: 4px 0 0; font-size: 10px; opacity: 0.7; text-transform: uppercase; letter-spacing: 1.5px; }
 
         .messages-container { 
           flex: 1; 
@@ -100,13 +113,14 @@ export default function ChatPage() {
           border-top: 1px solid #e2e8f0; 
           display: flex; 
           gap: 10px; 
+          align-items: center;
+          /* Sécurité pour le bas de l'écran */
           padding-bottom: calc(15px + env(safe-area-inset-bottom, 0px));
         }
         input { flex: 1; padding: 12px 20px; border: 1px solid #e2e8f0; border-radius: 25px; font-size: 14px; outline: none; background: #f8fafc; }
         button { background: #1a2a6c; color: white; border: none; width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; }
       `}</style>
 
-      {/* LE NOM DU LOGEMENT APPARAÎT ICI DANS LE BANDEAU BLEU */}
       <header>
         <h1>{property.name}</h1>
         <p>Service de Conciergerie</p>
@@ -127,7 +141,7 @@ export default function ChatPage() {
           value={input} 
           onChange={(e) => setInput(e.target.value)} 
           onKeyPress={(e) => e.key === 'Enter' && sendMessage()} 
-          placeholder="Posez votre question à Marc..." 
+          placeholder="Posez votre question..." 
         />
         <button onClick={sendMessage}>🚀</button>
       </div>
