@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { supabase } from '../lib/supabase';
+import Link from 'next/link';
 
 export default function AddPropertyWizard() {
   const router = useRouter();
@@ -8,7 +9,6 @@ export default function AddPropertyWizard() {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [propertyId, setPropertyId] = useState(null);
-  const [suggestions, setSuggestions] = useState([]);
 
   const [formData, setFormData] = useState({
     name: '', address: '', street_number: '', residence_name: '', building: '', floor: '', city: '',
@@ -41,6 +41,7 @@ export default function AddPropertyWizard() {
   };
 
   const saveProgress = async (isFinal = false) => {
+    if (loading) return;
     setLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -51,8 +52,12 @@ export default function AddPropertyWizard() {
       if (error) throw error;
       setPropertyId(data.id);
 
-      if (isFinal) router.push('/dashboard');
-      else setStep(step + 1);
+      if (isFinal) {
+        router.push('/dashboard');
+      } else {
+        setStep(step + 1);
+        window.scrollTo(0, 0);
+      }
     } catch (error) {
       alert("Erreur : " + error.message);
     } finally {
@@ -75,23 +80,15 @@ export default function AddPropertyWizard() {
         input, textarea, select { padding: 12px; border: 1px solid #e2e8f0; border-radius: 12px; font-size: 15px; background: #f8fafc; width: 100%; box-sizing: border-box; }
         input:focus, textarea:focus { border-color: #fbbf24; outline: none; background: white; }
         .actions { display: flex; flex-direction: column; gap: 10px; margin-top: 30px; }
-        .btn-next { background: #1e293b; color: white; padding: 16px; border-radius: 14px; border: none; font-weight: 700; cursor: pointer; font-size: 16px; }
-        .btn-later { color: #64748b; padding: 10px; font-weight: 600; font-size: 13px; text-align: center; border: none; background: none; cursor: pointer; }
-        .suggestion-list { position: absolute; top: 100%; left: 0; right: 0; z-index: 100; background: white; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); border: 1px solid #e2e8f0; list-style: none; padding: 0; margin-top: 5px; max-height: 180px; overflow-y: auto; }
-        .suggestion-item { padding: 12px; cursor: pointer; border-bottom: 1px solid #f1f5f9; font-size: 14px; }
-        @media (max-width: 600px) {
-          .wizard-container { padding: 10px; align-items: flex-start; }
-          .wizard-card { padding: 20px; border-radius: 18px; }
-          .grid { grid-template-columns: 1fr; }
-          .full { grid-column: span 1; }
-          h2 { font-size: 19px; }
-        }
+        .btn-next { background: #1e293b; color: white; padding: 16px; border-radius: 14px; border: none; font-weight: 700; cursor: pointer; font-size: 16px; transition: 0.2s; }
+        .btn-next:hover { background: #334155; }
+        .btn-later { display: block; text-align: center; color: #64748b; padding: 10px; font-weight: 600; font-size: 13px; text-decoration: none; cursor: pointer; }
       `}</style>
 
       <div className="wizard-card">
         <div className="progress-bar"><div className="progress-fill"></div></div>
 
-        {/* ÉTAPE 1 - MISE À JOUR ICI */}
+        {/* ÉTAPE 1 */}
         {step === 1 && (
           <div className="step">
             <h2>1. Identité du logement</h2>
@@ -101,38 +98,8 @@ export default function AddPropertyWizard() {
               <div className="input-group"><label>Résidence</label><input name="residence_name" value={formData.residence_name} onChange={handleChange} /></div>
               <div className="input-group"><label>Bâtiment</label><input name="building" value={formData.building} onChange={handleChange} /></div>
               <div className="input-group"><label>Étage</label><input name="floor" value={formData.floor} onChange={handleChange} /></div>
-              
-              {/* CASE RUE AVEC AUTO-SUGGESTION */}
-              <div className="input-group full">
-                <label>Rue (Saisissez pour chercher)</label>
-                <input name="address" autoComplete="off" value={formData.address} onChange={(e) => {
-                    handleChange(e);
-                    if (e.target.value.length > 3) {
-                      fetch(`https://photon.komoot.io/api/?q=${e.target.value}&limit=5`).then(res => res.json()).then(data => setSuggestions(data.features));
-                    }
-                  }} 
-                />
-                {suggestions.length > 0 && (
-                  <ul className="suggestion-list">
-                    {suggestions.map((s, i) => (
-                      <li key={i} className="suggestion-item" onClick={() => { 
-                        setFormData({ 
-                          ...formData, 
-                          address: (s.properties.name || '') + (s.properties.street ? ' ' + s.properties.street : ''), 
-                          city: s.properties.city || '' 
-                        }); 
-                        setSuggestions([]); 
-                      }}>{s.properties.name} {s.properties.city}</li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-
-              {/* CASE VILLE DÉDIÉE */}
-              <div className="input-group full">
-                <label>Ville</label>
-                <input name="city" value={formData.city} onChange={handleChange} placeholder="ex: Bordeaux" />
-              </div>
+              <div className="input-group full"><label>Rue</label><input name="address" value={formData.address} onChange={handleChange} placeholder="ex: Square Saint-Estèphe" /></div>
+              <div className="input-group full"><label>Ville</label><input name="city" value={formData.city} onChange={handleChange} placeholder="ex: Bordeaux" /></div>
             </div>
           </div>
         )}
@@ -249,9 +216,9 @@ export default function AddPropertyWizard() {
           <button className="btn-next" onClick={() => saveProgress(step === 10)}>
             {loading ? 'Sauvegarde...' : step === 10 ? 'Terminer & Publier' : 'Continuer'}
           </button>
-          <button className="btn-later" onClick={() => router.push('/dashboard')}>
+          <Link href="/dashboard" className="btn-later">
             Plus tard
-          </button>
+          </Link>
         </div>
       </div>
     </div>
