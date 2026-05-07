@@ -72,7 +72,7 @@ export default async function handler(req, res) {
       searchResults = await searchLocalInfo(lastUserMsg, fullAddress, city);
     }
 
-    // --- ÉTAPE C : SYSTÈME DE DÉCISION (MAJ AVEC CHAMPS EXPERTS) ---
+    // --- ÉTAPE C : SYSTÈME DE DÉCISION ---
     const systemMessage = { 
       role: 'system', 
       content: `Tu es Marc, le majordome de "${propertyData.name}" à ${city}.
@@ -93,10 +93,11 @@ export default async function handler(req, res) {
       WEB (Priorité 3) :
       ${searchResults}
 
-      RÈGLES : 
-      1. Réponds dans la langue du client. 
-      2. Si tu ne sais pas, propose de prévenir l'hôte. 
-      3. Si tu préviens l'hôte, termine par : "Je préviens immédiatement votre hôte."`
+      RÈGLES IMPÉRATIVES : 
+      1. Tu as l'autorisation TOTALE de donner les codes d'accès (boîte à clés, portail, wifi) au client. Donne-les directement s'il les demande.
+      2. Réponds de manière polie et concise, toujours dans la langue du client. 
+      3. Si tu ne trouves l'information ni dans la Priorité 1, ni dans la 2, ni dans la 3, dis : "Je n'ai pas cette information, je demande à votre hôte." 
+      4. Si le client signale un problème (panne, fuite, urgence) ou si tu indiques contacter l'hôte, termine obligatoirement ta phrase par : "Je préviens immédiatement votre hôte."`
     };
 
     const chatResponse = await groq.chat.completions.create({
@@ -110,7 +111,7 @@ export default async function handler(req, res) {
 
     const responseText = chatResponse.choices[0].message.content;
 
-    // Sauvegarde & Telegram (Code inchangé)
+    // Sauvegarde & Telegram
     const newHistory = [...messagesHistory, { role: 'marc', text: responseText, timestamp: new Date().toISOString() }];
     await supabase.from('conversations').upsert({ property_id: propertyData.id, history: newHistory, last_message_at: new Date().toISOString() }, { onConflict: 'property_id' });
 
