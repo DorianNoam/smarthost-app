@@ -12,7 +12,7 @@ async function searchLocalInfo(query, location) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         api_key: apiKey,
-        query: `${query} à proximité de ${location} Bordeaux TBM`,
+        query: `${query} à proximité de ${location} Bordeaux TBM bus tram`,
         search_depth: "basic", 
         max_results: 5,
         include_answer: true
@@ -25,7 +25,7 @@ async function searchLocalInfo(query, location) {
   } catch (e) { return ""; }
 }
 
-// --- 2. CODE D'ALERTE TELEGRAM (Intact et présent !) ---
+// --- 2. CODE D'ALERTE TELEGRAM (Toujours présent !) ---
 async function sendTelegramAlert(originalMsg, translatedMsg, propertyData, lang) {
   const token = process.env.TELEGRAM_BOT_TOKEN;
   try {
@@ -68,37 +68,35 @@ export default async function handler(req, res) {
       role: 'system', 
       content: `Tu es Marc, le majordome de "${propertyData.name}". 
 
-      CONSIGNE ANTI-HALLUCINATION STRICTE :
-      - Ne cite JAMAIS un numéro de bus, de tram ou un horaire si tu ne le lis pas EXPLICITEMENT dans les "RÉSULTATS WEB" ci-dessous.
-      - Si la recherche ne donne pas de ligne précise (ex: tu ne vois pas "Tram A" ou "Bus 28"), dis simplement : "Je vois qu'il y a des transports à proximité, mais je n'ai pas le numéro exact de la ligne. Je vous conseille l'application TBM pour les horaires en temps réel."
-      - N'invente AUCUNE adresse.
-      - Si tu ne sais pas, propose de prévenir l'hôte.
+      DONNÉES DU LOGEMENT (Source de vérité absolue pour la maison) :
+      - Ton adresse : ${fullAddress}
+      - Wifi : ${propertyData.wifi_name} / ${propertyData.wifi_password}
+      - Check-in/out : ${propertyData.check_in_hour} / ${propertyData.check_out_hour}
 
-      MISE EN PAGE :
-      - Utilise des listes à puces (-).
-      - Saute DEUX LIGNES entre chaque point.
-      - Utilise des "---" pour séparer les recommandations.
+      CONSIGNES DE RÉPONSE :
+      1. ADRESSE : Si le client te demande l'adresse du logement, tu DOIS lui donner : "${fullAddress}". C'est ton information de base.
+      2. TRANSPORTS/EXTÉRIEUR : Utilise UNIQUEMENT les "RÉSULTATS WEB" ci-dessous. Si tu ne vois pas de numéro de ligne (ex: Tram A, Bus 28) dans les résultats, ne les invente pas. Dis que tu ne connais pas le numéro exact mais que l'hôte pourra préciser.
+      3. HALLUCINATION : Ne cite jamais le "Tram C" à Floirac. Si la recherche ne le mentionne pas, il n'existe pas pour toi.
+      4. STYLE : Raffiné, aéré, liste à puces, double saut de ligne.
 
-      RÉSULTATS WEB (Ta seule source de vérité pour l'extérieur) :
+      RÉSULTATS WEB (Pour les transports et restos uniquement) :
       ${searchResults || "AUCUN RÉSULTAT. Ne donne aucun nom de transport."}
 
-      LOGEMENT :
-      - Wifi : ${propertyData.wifi_name} / ${propertyData.wifi_password}`
+      LOGIQUE D'ALERTE :
+      - Si problème (panne, fuite, ménage), dis obligatoirement : "Je préviens immédiatement votre hôte."`
     };
-
-    const formattedHistory = messagesHistory.map(msg => ({
-      role: msg.role === 'marc' ? 'assistant' : 'user',
-      content: msg.text || ''
-    }));
 
     const chatResponse = await mistral.chat.complete({
       model: 'mistral-small-2506',
-      messages: [systemMessage, ...formattedHistory],
+      messages: [systemMessage, ...messagesHistory.map(msg => ({
+        role: msg.role === 'marc' ? 'assistant' : 'user',
+        content: msg.text
+      }))],
     });
 
     const responseText = chatResponse.choices[0].message.content;
 
-    // Sauvegarde History dans Supabase
+    // Sauvegarde History
     const newHistory = [...messagesHistory, { role: 'marc', text: responseText, timestamp: new Date().toISOString() }];
     await supabase.from('conversations').upsert({
       property_id: propertyData.id,
@@ -106,7 +104,7 @@ export default async function handler(req, res) {
       last_message_at: new Date().toISOString()
     }, { onConflict: 'property_id' });
 
-    // --- BLOC ALERTE TELEGRAM ---
+    // --- BLOC ALERTE TELEGRAM (BIEN CONSERVÉ) ---
     const alertTrigger = responseText.toLowerCase().includes("préviens") || 
                         responseText.toLowerCase().includes("prévenir") || 
                         responseText.toLowerCase().includes("votre hôte");
@@ -124,7 +122,6 @@ export default async function handler(req, res) {
     }
 
     res.status(200).json({ answer: responseText });
-
   } catch (error) {
     res.status(500).json({ answer: "Désolé, j'ai une difficulté technique." });
   }
