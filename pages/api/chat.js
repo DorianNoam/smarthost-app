@@ -1,7 +1,7 @@
 import { Mistral } from '@mistralai/mistralai';
 import { supabase } from '../../lib/supabase';
 
-// --- 1. FONCTION DE RECHERCHE (Correcte avec "basic") ---
+// --- 1. FONCTION DE RECHERCHE (Optimisée) ---
 async function searchLocalInfo(query, location) {
   const apiKey = process.env.TAVILY_API_KEY; 
   if (!apiKey) return ""; 
@@ -12,7 +12,7 @@ async function searchLocalInfo(query, location) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         api_key: apiKey,
-        query: `${query} à proximité de ${location}`,
+        query: `${query} à proximité de ${location} Bordeaux TBM`,
         search_depth: "basic", 
         max_results: 5,
         include_answer: true
@@ -25,7 +25,7 @@ async function searchLocalInfo(query, location) {
   } catch (e) { return ""; }
 }
 
-// --- 2. CODE D'ALERTE TELEGRAM (Restauré) ---
+// --- 2. CODE D'ALERTE TELEGRAM (Intact et présent !) ---
 async function sendTelegramAlert(originalMsg, translatedMsg, propertyData, lang) {
   const token = process.env.TELEGRAM_BOT_TOKEN;
   try {
@@ -68,33 +68,37 @@ export default async function handler(req, res) {
       role: 'system', 
       content: `Tu es Marc, le majordome de "${propertyData.name}". 
 
-      CONSIGNE DE VÉRITÉ ET MISE EN PAGE :
-      - N'INVENTE JAMAIS de lieux ou d'adresses.
-      - Chaque suggestion commence par un tiret (-).
+      CONSIGNE ANTI-HALLUCINATION STRICTE :
+      - Ne cite JAMAIS un numéro de bus, de tram ou un horaire si tu ne le lis pas EXPLICITEMENT dans les "RÉSULTATS WEB" ci-dessous.
+      - Si la recherche ne donne pas de ligne précise (ex: tu ne vois pas "Tram A" ou "Bus 28"), dis simplement : "Je vois qu'il y a des transports à proximité, mais je n'ai pas le numéro exact de la ligne. Je vous conseille l'application TBM pour les horaires en temps réel."
+      - N'invente AUCUNE adresse.
+      - Si tu ne sais pas, propose de prévenir l'hôte.
+
+      MISE EN PAGE :
+      - Utilise des listes à puces (-).
       - Saute DEUX LIGNES entre chaque point.
-      - Insère "---" entre chaque recommandation.
+      - Utilise des "---" pour séparer les recommandations.
 
-      RÈGLE D'ALERTE : 
-      - Si le client signale un problème (panne, fuite, ménage), tu DOIS dire : "Je préviens immédiatement votre hôte."
-
-      RÉSULTATS WEB :
-      ${searchResults || "AUCUN_RESULTAT"}
+      RÉSULTATS WEB (Ta seule source de vérité pour l'extérieur) :
+      ${searchResults || "AUCUN RÉSULTAT. Ne donne aucun nom de transport."}
 
       LOGEMENT :
       - Wifi : ${propertyData.wifi_name} / ${propertyData.wifi_password}`
     };
 
+    const formattedHistory = messagesHistory.map(msg => ({
+      role: msg.role === 'marc' ? 'assistant' : 'user',
+      content: msg.text || ''
+    }));
+
     const chatResponse = await mistral.chat.complete({
       model: 'mistral-small-2506',
-      messages: [systemMessage, ...messagesHistory.map(msg => ({
-        role: msg.role === 'marc' ? 'assistant' : 'user',
-        content: msg.text
-      }))],
+      messages: [systemMessage, ...formattedHistory],
     });
 
     const responseText = chatResponse.choices[0].message.content;
 
-    // Sauvegarde History
+    // Sauvegarde History dans Supabase
     const newHistory = [...messagesHistory, { role: 'marc', text: responseText, timestamp: new Date().toISOString() }];
     await supabase.from('conversations').upsert({
       property_id: propertyData.id,
@@ -102,7 +106,7 @@ export default async function handler(req, res) {
       last_message_at: new Date().toISOString()
     }, { onConflict: 'property_id' });
 
-    // --- BLOC ALERTE TELEGRAM (RÉ-INTÉGRÉ ICI) ---
+    // --- BLOC ALERTE TELEGRAM ---
     const alertTrigger = responseText.toLowerCase().includes("préviens") || 
                         responseText.toLowerCase().includes("prévenir") || 
                         responseText.toLowerCase().includes("votre hôte");
