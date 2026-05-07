@@ -79,7 +79,6 @@ export default function AddPropertyWizard() {
         .btn-later { color: #64748b; padding: 10px; font-weight: 600; font-size: 13px; text-align: center; border: none; background: none; cursor: pointer; }
         .suggestion-list { position: absolute; top: 100%; left: 0; right: 0; z-index: 100; background: white; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); border: 1px solid #e2e8f0; list-style: none; padding: 0; margin-top: 5px; max-height: 180px; overflow-y: auto; }
         .suggestion-item { padding: 12px; cursor: pointer; border-bottom: 1px solid #f1f5f9; font-size: 14px; }
-
         @media (max-width: 600px) {
           .wizard-container { padding: 10px; align-items: flex-start; }
           .wizard-card { padding: 20px; border-radius: 18px; }
@@ -92,7 +91,7 @@ export default function AddPropertyWizard() {
       <div className="wizard-card">
         <div className="progress-bar"><div className="progress-fill"></div></div>
 
-        {/* ÉTAPE 1 */}
+        {/* ÉTAPE 1 - MISE À JOUR ICI */}
         {step === 1 && (
           <div className="step">
             <h2>1. Identité du logement</h2>
@@ -102,8 +101,10 @@ export default function AddPropertyWizard() {
               <div className="input-group"><label>Résidence</label><input name="residence_name" value={formData.residence_name} onChange={handleChange} /></div>
               <div className="input-group"><label>Bâtiment</label><input name="building" value={formData.building} onChange={handleChange} /></div>
               <div className="input-group"><label>Étage</label><input name="floor" value={formData.floor} onChange={handleChange} /></div>
+              
+              {/* CASE RUE AVEC AUTO-SUGGESTION */}
               <div className="input-group full">
-                <label>Rue & Ville</label>
+                <label>Rue (Saisissez pour chercher)</label>
                 <input name="address" autoComplete="off" value={formData.address} onChange={(e) => {
                     handleChange(e);
                     if (e.target.value.length > 3) {
@@ -115,12 +116,22 @@ export default function AddPropertyWizard() {
                   <ul className="suggestion-list">
                     {suggestions.map((s, i) => (
                       <li key={i} className="suggestion-item" onClick={() => { 
-                        setFormData({ ...formData, address: (s.properties.name || '') + (s.properties.street ? ' ' + s.properties.street : ''), city: s.properties.city || '' }); 
+                        setFormData({ 
+                          ...formData, 
+                          address: (s.properties.name || '') + (s.properties.street ? ' ' + s.properties.street : ''), 
+                          city: s.properties.city || '' 
+                        }); 
                         setSuggestions([]); 
                       }}>{s.properties.name} {s.properties.city}</li>
                     ))}
                   </ul>
                 )}
+              </div>
+
+              {/* CASE VILLE DÉDIÉE */}
+              <div className="input-group full">
+                <label>Ville</label>
+                <input name="city" value={formData.city} onChange={handleChange} placeholder="ex: Bordeaux" />
               </div>
             </div>
           </div>
@@ -245,5 +256,4 @@ export default function AddPropertyWizard() {
       </div>
     </div>
   );
-  }
-  
+}
