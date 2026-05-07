@@ -49,9 +49,13 @@ async function sendTelegramAlert(originalMsg, translatedMsg, propertyData, lang)
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).send('Méthode non autorisée');
-  const { messagesHistory, propertyData, userLanguage } = req.body;
   
-  // INITIALISATION DU NOUVEAU MOTEUR GROQ
+  // SÉCURITÉ : Vérification de la clé avant de lancer Groq
+  if (!process.env.GROQ_API_KEY) {
+    return res.status(200).json({ answer: "⚠️ Erreur de configuration : La variable GROQ_API_KEY est introuvable sur Vercel." });
+  }
+
+  const { messagesHistory, propertyData, userLanguage } = req.body;
   const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
   const langCode = userLanguage ? userLanguage.split('-')[0] : 'fr';
 
@@ -70,25 +74,24 @@ export default async function handler(req, res) {
       role: 'system', 
       content: `Tu es Marc, le majordome de "${propertyData.name}" à FLOIRAC. 
 
-      DONNÉES DU LOGEMENT (Source de vérité absolue) :
+      DONNÉES DU LOGEMENT :
       - Ton adresse : ${fullAddress}
       - Wifi : ${propertyData.wifi_name} / ${propertyData.wifi_password}
-      - Check-in/out : ${propertyData.check_in_hour} / ${propertyData.check_out_hour}
 
-      CONSIGNES DE RÉPONSE :
-      1. ADRESSE : Si le client te demande l'adresse du logement, donne : "${fullAddress}".
-      2. TRANSPORTS : Le Tram C ne passe PAS à Floirac. C'est le **Tram A**. Ne cite JAMAIS de lignes ou de temps (ex: 3 min) si ce n'est pas dans les résultats web. 
-      3. Si tu ne sais pas, dis que tu ne connais pas le numéro exact mais que l'hôte peut préciser.
-      4. STYLE : Raffiné, aéré, liste à puces, double saut de ligne.
+      CONSIGNES :
+      1. ADRESSE : Si on te la demande, donne-la : "${fullAddress}".
+      2. TRANSPORTS : Ne cite JAMAIS le Tram C à Floirac. C'est le Tram A.
+      3. VÉRITÉ : Ne donne pas de temps de trajet (ex: 3 min) si ce n'est pas écrit dans les résultats web.
+      4. STYLE : Raffiné, double saut de ligne.
 
-      RÉSULTATS WEB (Source pour l'extérieur uniquement) :
-      ${searchResults || "AUCUN RÉSULTAT. Ne pas inventer de transports."}
+      RÉSULTATS WEB :
+      ${searchResults || "AUCUN RÉSULTAT."}
 
       LOGIQUE D'ALERTE :
-      - Si problème (panne, fuite, ménage), dis : "Je préviens immédiatement votre hôte."`
+      - Si problème, dis : "Je préviens immédiatement votre hôte."`
     };
 
-    // APPEL À L'IA (Groq Llama 3.1 70B)
+    // APPEL À GROQ
     const chatResponse = await groq.chat.completions.create({
       model: "llama-3.1-70b-versatile",
       messages: [
@@ -98,12 +101,12 @@ export default async function handler(req, res) {
           content: msg.text || ''
         }))
       ],
-      temperature: 0.1, // On baisse au minimum pour supprimer l'invention
+      temperature: 0.1,
     });
 
     const responseText = chatResponse.choices[0].message.content;
 
-    // Sauvegarde History dans Supabase
+    // Sauvegarde History Supabase
     const newHistory = [...messagesHistory, { role: 'marc', text: responseText, timestamp: new Date().toISOString() }];
     await supabase.from('conversations').upsert({
       property_id: propertyData.id,
@@ -111,7 +114,7 @@ export default async function handler(req, res) {
       last_message_at: new Date().toISOString()
     }, { onConflict: 'property_id' });
 
-    // --- BLOC ALERTE TELEGRAM ---
+    // --- ALERTE TELEGRAM ---
     const alertTrigger = responseText.toLowerCase().includes("préviens") || 
                         responseText.toLowerCase().includes("prévenir") || 
                         responseText.toLowerCase().includes("votre hôte");
@@ -132,6 +135,6 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error("Erreur Chat:", error);
-    res.status(500).json({ answer: "Désolé, j'ai une difficulté technique." });
+    res.status(200).json({ answer: `Désolé, Marc a un petit souci technique : ${error.message}` });
   }
 }
