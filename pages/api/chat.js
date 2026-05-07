@@ -5,12 +5,10 @@ import { supabase } from '../../lib/supabase';
 async function searchLocalInfo(query, location) {
   const apiKey = process.env.TAVILY_API_KEY; 
   
-  // Ces logs s'afficheront dans l'onglet "Logs" de Vercel
-  console.log("--- DEBUG TAVILY ---");
-  console.log("Clé présente ?", !!apiKey); 
-  console.log("Lieu utilisé :", location);
-
-  if (!apiKey) return ""; 
+  if (!apiKey) {
+    console.error("ERREUR : Clé TAVILY_API_KEY manquante dans Vercel");
+    return "";
+  }
 
   try {
     const res = await fetch('https://api.tavily.com/search', {
@@ -19,25 +17,24 @@ async function searchLocalInfo(query, location) {
       body: JSON.stringify({
         api_key: apiKey,
         query: `${query} à proximité de ${location}`,
-        search_depth: "smart",
-        include_answer: true,
-        max_results: 5
+        search_depth: "basic", // Changé de "smart" à "basic" pour éviter le code 400
+        max_results: 5,
+        include_images: false,
+        include_answer: true
       })
     });
     
+    // Si Tavily répond encore une erreur, on veut savoir pourquoi dans les logs
     if (!res.ok) {
-        const errorData = await res.text();
-        console.error("Erreur API Tavily:", res.status, errorData);
-        return "";
+      const errorText = await res.text();
+      console.error(`Erreur Tavily ${res.status}:`, errorText);
+      return "";
     }
 
     const data = await res.json();
-    console.log("Nombre de résultats :", data.results?.length || 0);
-    
-    if (!data.results || data.results.length === 0) return "";
-    return data.answer || data.results.map(r => r.content).join('\n\n---\n\n');
+    return data.answer || data.results?.map(r => r.content).join('\n\n') || "";
   } catch (e) { 
-    console.error("Exception Tavily :", e);
+    console.error("Erreur de connexion Tavily :", e);
     return ""; 
   }
 }
