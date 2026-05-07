@@ -11,6 +11,7 @@
     "react": "latest",
     "react-dom": "latest",
     "@supabase/supabase-js": "latest",
-    "@mistralai/mistralai": "latest"
+    "@mistralai/mistralai": "latest",
+    "groq-sdk": "latest"
   }
 }
