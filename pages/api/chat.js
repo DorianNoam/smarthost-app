@@ -1,7 +1,7 @@
 import Groq from 'groq-sdk';
 import { supabase } from '../../lib/supabase';
 
-// --- 1. RECHERCHE WEB (Utilisée en dernier recours) ---
+// --- 1. RECHERCHE WEB ---
 async function searchLocalInfo(userQuery, fullAddress, city) {
   const apiKey = process.env.TAVILY_API_KEY; 
   if (!apiKey) return ""; 
@@ -28,7 +28,7 @@ async function sendTelegramAlert(originalMsg, translatedMsg, propertyData, lang)
   try {
     const { data: profile } = await supabase.from('profiles').select('telegram_chat_id').eq('id', propertyData.owner_id).single();
     if (!profile?.telegram_chat_id) return;
-    let text = `🚨 *ALERTE MAJOR MARC*\n\n🏠 *Logement :* ${propertyData.name}\n🌍 *Langue client :* ${lang}\n\n💬 *Message :*\n"${originalMsg}"`;
+    let text = `🚨 *ALERTE MAJOR MARC*\n\n🏠 *Logement :* ${propertyData.name}\n💬 *Client :*\n"${originalMsg}"`;
     if (translatedMsg) { text += `\n\n🇫🇷 *Traduction :*\n"${translatedMsg}"`; }
     await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -49,63 +49,56 @@ export default async function handler(req, res) {
     const fullAddress = `${propertyData.street_number || ''} ${propertyData.address || ''}, ${city}`;
     const lastUserMsg = messagesHistory[messagesHistory.length - 1]?.text || "";
 
-    // --- ÉTAPE A : RÉCUPÉRATION DE LA KNOWLEDGE BASE PERSONNALISÉE ---
+    // --- ÉTAPE A : KNOWLEDGE BASE ---
     const { data: knowledgeBase } = await supabase
       .from('knowledge_base')
       .select('category, content')
       .eq('property_id', propertyData.id);
 
-    const formattedKB = knowledgeBase?.map(kb => `${kb.category}: ${kb.content}`).join('\n') || "Aucune consigne supplémentaire.";
+    const formattedKB = knowledgeBase?.map(kb => `${kb.category}: ${kb.content}`).join('\n') || "";
 
-    // --- ÉTAPE B : DÉTECTION D'INTENTION INTERNATIONALE (Groq 8B) ---
-    // On utilise l'IA pour savoir si on doit chercher sur le web (gère toutes les langues)
+    // --- ÉTAPE B : INTENTION WEB ---
     const intentCheck = await groq.chat.completions.create({
       model: "llama-3.1-8b-instant",
       messages: [
-        { role: 'system', content: "Does the user message require a local search for shops, restaurants, transport, health, or tourism? Answer ONLY 'YES' or 'NO'." },
+        { role: 'system', content: "Does the user message require a local search? Answer ONLY 'YES' or 'NO'." },
         { role: 'user', content: lastUserMsg }
       ],
       temperature: 0,
     });
-    const needsSearch = intentCheck.choices[0].message.content.includes("YES");
     
     let searchResults = "";
-    if (needsSearch) {
+    if (intentCheck.choices[0].message.content.includes("YES")) {
       searchResults = await searchLocalInfo(lastUserMsg, fullAddress, city);
     }
 
-    // --- ÉTAPE C : CONSTRUCTION DU CERVEAU DE MARC (Hiérarchie de vérité) ---
+    // --- ÉTAPE C : SYSTÈME DE DÉCISION (MAJ AVEC CHAMPS EXPERTS) ---
     const systemMessage = { 
       role: 'system', 
       content: `Tu es Marc, le majordome de "${propertyData.name}" à ${city}.
 
-      PRIORITÉ 1 : INFOS DU LOGEMENT (Base de données)
-      - Adresse : ${fullAddress}
+      VÉRITÉS DU LOGEMENT (Priorité 1) :
+      - Accès : ${propertyData.entrance_type} (Code: ${propertyData.key_code}), Parking: ${propertyData.parking_info}, GPS: ${propertyData.gps_link}
       - Wifi : ${propertyData.wifi_name} | Code : ${propertyData.wifi_password}
-      - Check-in/out : ${propertyData.check_in_hour} / ${propertyData.check_out_hour}
-      - Entrée : ${propertyData.entrance_type} (Code: ${propertyData.key_code})
-      - Instructions : ${propertyData.checkin_instructions}
-      - Confort : ${propertyData.heating_cooling_info}
-      - Technique : Poubelles (${propertyData.trash_instructions}), Électricité (${propertyData.breaker_box_location}), Eau (${propertyData.water_shutoff_location})
-      - Sortie : ${propertyData.checkout_instructions} | Clés : ${propertyData.key_return_details}
-      - Services : ${propertyData.tv_manual}, ${propertyData.music_system}, ${propertyData.baby_equipment}
-      - Guide Local : Transports (${propertyData.transport_info}), Commerces (${propertyData.local_shops}), Recommendations (${propertyData.recommendations})
+      - Arrivée/Départ : ${propertyData.check_in_hour} / ${propertyData.check_out_hour}
+      - Technique : Poubelles (${propertyData.trash_instructions}), Électricité (${propertyData.breaker_box_location}), Santé (${propertyData.health_emergency_info})
+      - Appareils : ${propertyData.appliances_instructions}, TV (${propertyData.tv_manual}), Linge (${propertyData.laundry_iron_info})
+      - Guide : Commerces (${propertyData.local_shops}), Transports (${propertyData.transport_info}), Recommendations (${propertyData.recommendations})
+      - Règles : Bruit (${propertyData.noise_rules}), Animaux (${propertyData.pet_policy}), Taxe séjour (${propertyData.tourist_tax_info})
+      - Fin de séjour : ${propertyData.checkout_instructions}, Avis (${propertyData.review_link})
 
-      PRIORITÉ 2 : BASE DE CONNAISSANCES PERSONNALISÉE
+      CONSIGNES HÔTE (Priorité 2) :
       ${formattedKB}
 
-      PRIORITÉ 3 : RÉSULTATS WEB (Seulement pour l'extérieur)
-      ${searchResults || "Pas d'infos web disponibles."}
+      WEB (Priorité 3) :
+      ${searchResults}
 
-      CONSIGNES :
-      1. Si l'info est dans la PRIORITÉ 1 ou 2, utilise-la exclusivement.
-      2. Si tu ne trouves rien, dis : "Je n'ai pas cette information, je demande à votre hôte."
-      3. Si le client signale un problème ou si tu dis contacter l'hôte, ajoute : "Je préviens immédiatement votre hôte."
-
-      STYLE : Majordome de luxe, poli, efficace. Double saut de ligne.`
+      RÈGLES : 
+      1. Réponds dans la langue du client. 
+      2. Si tu ne sais pas, propose de prévenir l'hôte. 
+      3. Si tu préviens l'hôte, termine par : "Je préviens immédiatement votre hôte."`
     };
 
-    // --- ÉTAPE D : RÉPONSE FINALE ---
     const chatResponse = await groq.chat.completions.create({
       model: "llama-3.3-70b-versatile", 
       messages: [systemMessage, ...messagesHistory.map(msg => ({
@@ -117,11 +110,10 @@ export default async function handler(req, res) {
 
     const responseText = chatResponse.choices[0].message.content;
 
-    // Sauvegarde History
+    // Sauvegarde & Telegram (Code inchangé)
     const newHistory = [...messagesHistory, { role: 'marc', text: responseText, timestamp: new Date().toISOString() }];
     await supabase.from('conversations').upsert({ property_id: propertyData.id, history: newHistory, last_message_at: new Date().toISOString() }, { onConflict: 'property_id' });
 
-    // Alerte Telegram
     if (responseText.toLowerCase().includes("préviens") || responseText.toLowerCase().includes("votre hôte")) {
       let translatedMsg = null;
       if (langCode !== 'fr') {
@@ -133,9 +125,8 @@ export default async function handler(req, res) {
       }
       await sendTelegramAlert(lastUserMsg, translatedMsg, propertyData, langCode);
     }
-
     res.status(200).json({ answer: responseText });
   } catch (error) {
-    res.status(200).json({ answer: `Désolé, Marc a un souci : ${error.message}` });
+    res.status(200).json({ answer: `Erreur : ${error.message}` });
   }
 }
