@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { supabase } from '../lib/supabase'; // Ajout de l'import Supabase
 
 export default function Settings() {
+  const [user, setUser] = useState(null);
   const [profile, setProfile] = useState({ 
     name: 'Jean Dupont', 
     email: 'jean.dupont@email.com',
@@ -10,8 +12,40 @@ export default function Settings() {
     city: 'Paris',
   });
 
-  // Faux état pour simuler si le client a déjà lié son Telegram ou non
   const [telegramLinked, setTelegramLinked] = useState(false);
+  
+  // ⚠️ Remplace par le VRAI nom de ton bot (sans le @)
+  const botName = "MajorMarcBot"; 
+
+  useEffect(() => {
+    loadUserData();
+  }, []);
+
+  const loadUserData = async () => {
+    // 1. On récupère l'utilisateur actuellement connecté
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (user) {
+      setUser(user);
+      
+      // 2. On récupère ses infos dans la table profiles
+      const { data } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+        
+      if (data) {
+        // On met à jour l'affichage avec les vraies données
+        setProfile(prev => ({ ...prev, ...data }));
+        
+        // Si on trouve un telegram_chat_id en base, on passe la pastille au vert
+        if (data.telegram_chat_id) {
+          setTelegramLinked(true);
+        }
+      }
+    }
+  };
 
   return (
     <div className="dashboard-layout">
@@ -70,7 +104,7 @@ export default function Settings() {
         .btn-danger { background: #fff1f2; color: #e11d48; border: 1px solid #fecdd3; }
         .btn-danger:hover { background: #ffe4e6; }
         
-        .btn-telegram { background: #0088cc; color: white; width: max-content; }
+        .btn-telegram { background: #0088cc; color: white; width: max-content; display: inline-flex; align-items: center; gap: 8px; text-decoration: none; }
         .btn-telegram:hover { background: #0077b5; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0, 136, 204, 0.3); }
 
         .divider { height: 1px; background: #e2e8f0; margin: 25px 0; }
@@ -84,7 +118,7 @@ export default function Settings() {
           .input-grid { grid-template-columns: 1fr; }
           .input-group.full { grid-column: span 1; }
           .plan-box { flex-direction: column; align-items: flex-start; gap: 15px; }
-          .btn-primary, .btn-outline, .btn-danger, .btn-telegram { width: 100%; text-align: center; }
+          .btn-primary, .btn-outline, .btn-danger, .btn-telegram { width: 100%; justify-content: center; }
         }
       `}</style>
 
@@ -144,20 +178,29 @@ export default function Settings() {
                   <h3 style={{margin: '0 0 5px 0', fontSize: '16px', color: '#0369a1'}}>Connexion Telegram</h3>
                   <p style={{margin: 0, fontSize: '13px', color: '#0ea5e9'}}>Application requise sur votre smartphone.</p>
                 </div>
-                {/* Badge visuel pour rassurer le client */}
                 <div className={`status-badge ${telegramLinked ? 'status-linked' : 'status-unlinked'}`}>
                   {telegramLinked ? '✅ Connecté' : '❌ Non lié'}
                 </div>
               </div>
 
-              {/* Bouton d'action */}
-              <button 
-                className="btn btn-telegram" 
-                onClick={() => setTelegramLinked(!telegramLinked)} // Petit toggle pour le test visuel
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-                {telegramLinked ? 'Mettre à jour la connexion' : 'Lier mon compte Telegram'}
-              </button>
+              {/* Le bouton est maintenant une balise <a>. 
+                Il n'est cliquable que si 'user' est bien chargé. 
+              */}
+              {user ? (
+                <a 
+                  href={`https://t.me/${botName}?start=${user.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn-telegram"
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                  {telegramLinked ? 'Mettre à jour la connexion' : 'Lier mon compte Telegram'}
+                </a>
+              ) : (
+                <button className="btn btn-telegram" disabled style={{opacity: 0.7, cursor: 'not-allowed'}}>
+                  Chargement...
+                </button>
+              )}
             </div>
           </div>
 
