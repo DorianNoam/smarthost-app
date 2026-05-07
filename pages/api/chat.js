@@ -1,21 +1,18 @@
 import { Mistral } from '@mistralai/mistralai';
 import { supabase } from '../../lib/supabase';
 
-// 1. Fonction d'alerte Telegram avec le visuel "Premium"
+// Fonction d'alerte Telegram Premium 🚨
 async function sendTelegramAlert(originalMsg, translatedMsg, propertyData, lang) {
   const token = process.env.TELEGRAM_BOT_TOKEN;
   try {
-    const { data: profile, error } = await supabase
+    const { data: profile } = await supabase
       .from('profiles')
       .select('telegram_chat_id')
       .eq('id', propertyData.owner_id)
       .single();
 
-    if (error || !profile?.telegram_chat_id) return;
+    if (!profile?.telegram_chat_id) return;
 
-    const chatId = profile.telegram_chat_id;
-
-    // --- LE FORMAT VISUEL AVEC EMOJIS ---
     const text = `🚨 *ALERTE MAJOR MARC*\n\n` +
                  `🏠 *Logement :* ${propertyData.name}\n` +
                  `🌍 *Langue :* ${lang}\n\n` +
@@ -25,7 +22,7 @@ async function sendTelegramAlert(originalMsg, translatedMsg, propertyData, lang)
     await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'Markdown' })
+      body: JSON.stringify({ chat_id: profile.telegram_chat_id, text, parse_mode: 'Markdown' })
     });
   } catch (e) { console.error("Erreur Telegram:", e); }
 }
@@ -38,13 +35,19 @@ export default async function handler(req, res) {
   const langCode = userLanguage ? userLanguage.split('-')[0] : 'fr';
 
   try {
+    // LE CERVEAU : On lui dit quoi faire s'il n'a pas l'info
     const systemMessage = { 
       role: 'system', 
-      content: `Tu es Marc, le majordome raffiné de "${propertyData.name}". 
-      Réponds en ${langCode}. 
-      TON : Chaleureux et élégant.
-      INFOS : Wifi ${propertyData.wifi_name} / ${propertyData.wifi_password}.
-      INCIDENTS : Si (et seulement si) il y a un problème technique ou une urgence, dis que tu préviens l'hôte.`
+      content: `Tu es Marc, le majordome de "${propertyData.name}". 
+      Réponds en ${langCode}.
+      
+      INFOS DISPONIBLES :
+      - Wifi : ${propertyData.wifi_name} / ${propertyData.wifi_password}
+      - Check-in/out : ${propertyData.check_in_hour} / ${propertyData.check_out_hour}
+      - Adresse : ${propertyData.address}, ${propertyData.city}
+
+      RÈGLE CRITIQUE :
+      - Si le client pose une question dont la réponse N'EST PAS dans les infos ci-dessus, ou s'il y a un problème technique, réponds poliment que tu ne connais pas la réponse et dis EXACTEMENT : "Je préviens immédiatement votre hôte pour vous aider."`
     };
 
     const formattedHistory = messagesHistory.map(msg => ({
@@ -59,46 +62,34 @@ export default async function handler(req, res) {
 
     const responseText = chatResponse.choices[0].message.content;
 
-    // --- 💾 SAUVEGARDE DANS LA COLONNE HISTORY (JSONB) ---
+    // 💾 SAUVEGARDE HISTORIQUE (JSONB)
     const newHistory = [
       ...messagesHistory,
       { role: 'marc', text: responseText, timestamp: new Date().toISOString() }
     ];
 
-    await supabase
-      .from('conversations')
-      .upsert({
-        property_id: propertyData.id,
-        history: newHistory,
-        last_message_at: new Date().toISOString(),
-        traveler_name: 'Voyageur'
-      }, { onConflict: 'property_id' }); 
+    await supabase.from('conversations').upsert({
+      property_id: propertyData.id,
+      history: newHistory,
+      last_message_at: new Date().toISOString()
+    }, { onConflict: 'property_id' }); 
 
-
-    // --- 🔔 DÉTECTION D'INCIDENT (Version affinée) ---
-    const lastUserMsg = messagesHistory[messagesHistory.length - 1]?.text || "";
-    
-    const triggerWords = ["urgence", "problème", "panne", "fuite", "cassé", "dysfonctionnement", "préviens votre hôte"];
-    const shouldAlert = triggerWords.some(word => responseText.toLowerCase().includes(word));
-
-    if (shouldAlert) {
-      const translationResponse = await mistral.chat.complete({
-        model: 'mistral-small-2506',
-        messages: [
-          { role: 'system', content: "Traduis ce problème client en Français simple." }, 
-          { role: 'user', content: lastUserMsg }
-        ],
-      });
-      const translatedMsg = translationResponse.choices[0].message.content;
+    // 🔔 L'ALERTE : Uniquement si Marc dit qu'il prévient l'hôte
+    // (C'est-à-dire quand il n'a pas trouvé l'info dans la base)
+    if (responseText.toLowerCase().includes("préviens") || responseText.toLowerCase().includes("hôte")) {
+      const lastUserMsg = messagesHistory[messagesHistory.length - 1]?.text || "";
       
-      // On utilise le format visuel défini plus haut
-      await sendTelegramAlert(lastUserMsg, translatedMsg, propertyData, langCode);
+      const translation = await mistral.chat.complete({
+        model: 'mistral-small-2506',
+        messages: [{ role: 'system', content: "Traduis en Français simple." }, { role: 'user', content: lastUserMsg }],
+      });
+      
+      await sendTelegramAlert(lastUserMsg, translation.choices[0].message.content, propertyData, langCode);
     }
 
     res.status(200).json({ answer: responseText });
 
   } catch (error) {
-    console.error("Erreur Chat API:", error);
-    res.status(500).json({ answer: "Désolé, je rencontre une difficulté technique." });
+    res.status(500).json({ answer: "Désolé, petit souci technique." });
   }
 }
