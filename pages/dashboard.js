@@ -30,7 +30,19 @@ export default function Dashboard() {
         .dashboard-layout { display: flex; min-height: 100vh; }
         
         /* NAVBAR DESKTOP */
-        nav { width: 260px; background: #1a2a6c; color: white; padding: 40px 20px; position: fixed; height: 100vh; z-index: 100; box-sizing: border-box; }
+        nav { 
+          width: 260px; 
+          background: #1a2a6c; 
+          color: white; 
+          padding: 40px 20px; 
+          position: fixed; 
+          height: 100vh; 
+          z-index: 100; 
+          box-sizing: border-box; 
+          /* CORRECTION ICI : Force le flex pour aligner les éléments */
+          display: flex; 
+          flex-direction: column; 
+        }
         .logo { font-size: 22px; font-weight: 900; margin-bottom: 50px; text-align: center; }
         .nav-item { padding: 14px 18px; border-radius: 12px; display: flex; align-items: center; gap: 12px; font-weight: 600; opacity: 0.8; margin-bottom: 10px; cursor: pointer; color: white;}
         .nav-item.active { background: rgba(255,255,255,0.15); color: #fbbf24; opacity: 1; }
@@ -41,7 +53,6 @@ export default function Dashboard() {
         h1 { margin: 0; color: #1e293b; font-size: 32px; font-weight: 800; }
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 25px; }
 
-        /* CARTES */
         .card { 
           background: white; border-radius: 24px; padding: 25px; 
           border: 1px solid #e2e8f0; position: relative;
@@ -55,7 +66,6 @@ export default function Dashboard() {
         h3 { margin: 0 0 5px 0; color: #1a2a6c; font-size: 22px; font-weight: 800; }
         .address { color: #64748b; font-size: 14px; margin-bottom: 20px; }
 
-        /* BOUTONS D'ACTION */
         .btn-stack { display: flex; flex-direction: column; gap: 12px; }
         .action-btn { padding: 14px; border-radius: 14px; font-weight: 700; font-size: 14px; text-align: center; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; border: none; width: 100%; box-sizing: border-box; }
         .btn-primary { background: #1a2a6c; color: white; box-shadow: 0 4px 6px rgba(26, 42, 108, 0.2); }
@@ -64,58 +74,36 @@ export default function Dashboard() {
         .btn-add { background: #fbbf24; color: #1a2a6c; padding: 12px 24px; border-radius: 12px; font-weight: 800; font-size: 15px; display: inline-block; box-shadow: 0 4px 6px rgba(251, 191, 36, 0.3); transition: 0.2s; white-space: nowrap; }
 
         /* =========================================
-           OPTIMISATION MOBILE (Correction) 
+           OPTIMISATION MOBILE
            ========================================= */
         @media (max-width: 900px) {
-          /* Vraie barre d'onglets (Tab bar) en bas */
           nav { 
-            width: 100%; height: 70px; position: fixed; bottom: 0; left: 0; top: auto;
-            flex-direction: row; padding: 0; justify-content: space-around; align-items: center; 
+            width: 100%; height: 75px; position: fixed; bottom: 0; left: 0; top: auto;
+            flex-direction: row; /* Maintenant le row fonctionne */
+            padding: 0; justify-content: space-around; align-items: center; 
             z-index: 1000; box-shadow: 0 -4px 15px rgba(0,0,0,0.1); 
-            padding-bottom: env(safe-area-inset-bottom); /* Fix pour les iPhones récents */
+            padding-bottom: env(safe-area-inset-bottom, 10px); 
           }
           .logo { display: none; }
-          .nav-text { display: none; } /* Cache le texte pour laisser juste l'icône */
+          .nav-text { display: none; }
           
-          /* Centrage parfait des icônes de la navbar */
           .nav-item { 
             margin: 0; padding: 10px; flex: 1; justify-content: center; 
             font-size: 24px; border-radius: 0; background: transparent !important;
+            height: 100%;
           }
-          
-          /* L'icône active a une petite pastille sous elle ou change de couleur */
           .nav-item.active { color: #fbbf24; }
 
-          /* Contenu principal adapté */
-          main { 
-            margin-left: 0; 
-            padding: 20px; 
-            padding-bottom: 100px; /* Espace pour ne pas que la navbar cache la dernière carte */
-          }
-          
-          /* Entête sur une seule ligne */
-          .header-area { 
-            flex-direction: row; /* Force le titre et le bouton sur la même ligne */
-            align-items: center; 
-            gap: 15px; 
-            margin-bottom: 25px;
-          }
+          main { margin-left: 0; padding: 20px; padding-bottom: 100px; }
+          .header-area { flex-direction: row; align-items: center; gap: 15px; margin-bottom: 25px; }
           h1 { font-size: 22px; }
-          
-          /* Bouton ajouter plus discret sur mobile */
-          .btn-add { 
-            padding: 10px 15px; 
-            font-size: 13px; 
-            width: auto; /* Empêche le bouton de prendre 100% de la largeur */
-          }
-          
+          .btn-add { padding: 10px 15px; font-size: 13px; width: auto; }
           .grid { grid-template-columns: 1fr; }
         }
       `}</style>
 
       <nav>
         <div className="logo">MajorMarc 🎩</div>
-        {/* Navigation */}
         <Link href="/dashboard" passHref legacyBehavior>
           <a className="nav-item active">🏠 <span className="nav-text">Mes Logements</span></a>
         </Link>
@@ -128,7 +116,6 @@ export default function Dashboard() {
         <div className="header-area">
           <h1>Mes Logements</h1>
           <Link href="/add-property" passHref legacyBehavior>
-            {/* Sur mobile, on raccourcit le texte visuellement avec CSS ou on le laisse s'adapter */}
             <a className="btn-add">+ Ajouter</a>
           </Link>
         </div>
