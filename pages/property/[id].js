@@ -1,121 +1,88 @@
-import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
+import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import Link from 'next/link';
 
-export default function PropertyRecap() {
+export default function PropertySpecs() {
   const router = useRouter();
   const { id } = router.query;
-  const [prop, setProp] = useState(null);
+  const [property, setProperty] = useState(null);
 
   useEffect(() => {
     if (id) fetchProperty();
   }, [id]);
 
   const fetchProperty = async () => {
-    const { data, error } = await supabase.from('properties').select('*').eq('id', id).single();
-    if (!error) setProp(data);
+    const { data } = await supabase.from('properties').select('*').eq('id', id).single();
+    setProperty(data);
   };
 
-  if (!prop) return <div className="loading">Chargement des données...</div>;
+  if (!property) return null;
 
   return (
-    <div className="container">
-      <style jsx global>{`
-        /* On tue les liens bleus/violets une bonne fois pour toutes */
-        a { text-decoration: none !important; color: inherit !important; }
-      `}</style>
-
+    <div className="specs-container">
       <style jsx>{`
-        .container { min-height: 100vh; background: #f8fafc; color: #1e293b; font-family: 'Inter', sans-serif; padding: 40px 20px; }
-        .header { max-width: 1000px; margin: 0 auto 40px; display: flex; justify-content: space-between; align-items: center; }
+        .specs-container { background: #f8fafc; min-height: 100vh; font-family: 'Inter', sans-serif; }
+        nav { background: #1a2a6c; color: white; padding: 15px 30px; display: flex; align-items: center; gap: 20px; }
+        .back-link { color: white; text-decoration: none; font-size: 14px; opacity: 0.8; }
         
-        .back-link { color: #64748b !important; font-size: 14px; font-weight: 600; transition: 0.2s; }
-        .back-link:hover { color: #1e293b !important; }
+        main { max-width: 1000px; margin: 40px auto; padding: 0 20px; display: grid; grid-template-columns: 2fr 1fr; gap: 30px; }
         
-        .btn-edit { background: #1e293b; color: white !important; padding: 12px 24px; border-radius: 12px; font-weight: 700; transition: 0.2s; }
-        .btn-edit:hover { background: #0f172a; transform: translateY(-2px); }
+        .section { background: white; padding: 30px; border-radius: 24px; border: 1px solid #e2e8f0; margin-bottom: 25px; }
+        h2 { font-size: 18px; color: #1a2a6c; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px; margin-bottom: 20px; }
         
-        .main-title { font-size: 32px; font-weight: 800; color: #0f172a; }
-        .grid { max-width: 1000px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 24px; }
+        .stat-card { background: #1a2a6c; color: white; padding: 25px; border-radius: 24px; text-align: center; margin-bottom: 20px; }
+        .stat-value { font-size: 32px; font-weight: 800; display: block; color: #fbbf24; }
+        .stat-label { font-size: 12px; opacity: 0.8; text-transform: uppercase; letter-spacing: 1px; }
+
+        .data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .data-item label { display: block; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; }
+        .data-item p { margin: 5px 0 0; font-size: 15px; color: #1e293b; font-weight: 500; }
         
-        .card { background: white; border: 1px solid #e2e8f0; border-radius: 24px; padding: 30px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
-        .card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; border-bottom: 1px solid #f1f5f9; padding-bottom: 15px; }
-        .card-header span { font-size: 20px; }
-        .card-header h3 { margin: 0; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: #fbbf24; font-weight: 800; }
-        
-        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .info-item label { display: block; font-size: 11px; color: #94a3b8; font-weight: 700; text-transform: uppercase; margin-bottom: 6px; }
-        .info-item p { margin: 0; font-size: 15px; color: #334155; font-weight: 500; line-height: 1.5; }
-        .full-width { grid-column: span 2; }
-        
-        .badge { display: inline-block; background: #f1f5f9; padding: 4px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; color: #1e40af; }
-        .loading { height: 100vh; display: flex; align-items: center; justify-content: center; font-family: 'Inter'; color: #64748b; }
+        @media (max-width: 800px) { main { grid-template-columns: 1fr; } }
       `}</style>
 
-      <div className="header">
-        <Link href="/dashboard" className="back-link">
-          ← Retour au Dashboard
-        </Link>
-        <h1 className="main-title">{prop.name}</h1>
-        <Link href={`/add-property?id=${prop.id}`} className="btn-edit">
-          Modifier
-        </Link>
-      </div>
+      <nav>
+        <Link href="/dashboard" className="back-link">← Retour Dashboard</Link>
+        <h1 style={{fontSize:'18px', margin:0}}>{property.name}</h1>
+      </nav>
 
-      <div className="grid">
-        {/* SECTION 1 : LOCALISATION */}
-        <div className="card">
-          <div className="card-header"><span>📍</span><h3>Localisation & Identité</h3></div>
-          <div className="info-grid">
-            <div className="info-item full-width"><label>Adresse principale</label><p>{prop.address}</p></div>
-            <div className="info-item"><label>N° Rue</label><p>{prop.street_number || 'Non renseigné'}</p></div>
-            <div className="info-item"><label>Résidence</label><p>{prop.residence || 'Non renseigné'}</p></div>
-            <div className="info-item"><label>Bâtiment</label><p>{prop.building || 'Non renseigné'}</p></div>
-            <div className="info-item"><label>Étage</label><p>{prop.floor || 'Non renseigné'}</p></div>
+      <main>
+        <div className="left-col">
+          <div className="section">
+            <h2>🧠 Cerveau du logement</h2>
+            <div className="data-grid">
+              <div className="data-item"><label>Wifi</label><p>{property.wifi_name || 'Non configuré'}</p></div>
+              <div className="data-item"><label>Mot de passe</label><p>{property.wifi_password || 'Non configuré'}</p></div>
+              <div className="data-item"><label>Arrivée</label><p>{property.check_in_hour}</p></div>
+              <div className="data-item"><label>Départ</label><p>{property.check_out_hour}</p></div>
+              <div className="data-item" style={{gridColumn:'span 2'}}><label>Accès</label><p>{property.checkin_instructions || 'Aucune instruction'}</p></div>
+            </div>
+          </div>
+
+          <div className="section">
+            <h2>📍 Localisation</h2>
+            <p>{property.address}, {property.city}</p>
           </div>
         </div>
 
-        {/* SECTION 2 : ACCÈS */}
-        <div className="card">
-          <div className="card-header"><span>🔑</span><h3>Accès & Horaires</h3></div>
-          <div className="info-grid">
-            <div className="info-item"><label>Arrivée (Check-in)</label><p>{prop.check_in_hour}</p></div>
-            <div className="info-item"><label>Départ (Check-out)</label><p>{prop.check_out_hour}</p></div>
-            <div className="info-item"><label>Mode Autonome</label><p><span className="badge">{prop.self_checkin ? 'Activé' : 'Désactivé'}</span></p></div>
-            <div className="info-item full-width"><label>Instructions d'entrée</label><p>{prop.checkin_instructions || 'Aucune instruction spécifique'}</p></div>
+        <div className="right-col">
+          <div className="stat-card">
+            <span className="stat-label">Temps gagné</span>
+            <span className="stat-value">12h 45min</span>
+            <p style={{fontSize:'11px', marginTop:'10px'}}>Basé sur 15min / message</p>
           </div>
-        </div>
 
-        {/* SECTION 3 : WIFI & CONFORT */}
-        <div className="card">
-          <div className="card-header"><span>📶</span><h3>Wifi & Confort</h3></div>
-          <div className="info-grid">
-            <div className="info-item"><label>Nom du réseau</label><p>{prop.wifi_name || 'Non configuré'}</p></div>
-            <div className="info-item"><label>Mot de passe</label><p>{prop.wifi_password || 'Non configuré'}</p></div>
-            <div className="info-item full-width"><label>Chauffage / Clim</label><p>{prop.heating_cooling_info || 'Non renseigné'}</p></div>
+          <div className="stat-card" style={{background: 'white', color: '#1a2a6c', border: '1px solid #e2e8f0'}}>
+            <span className="stat-label" style={{color:'#64748b'}}>Échanges Clients</span>
+            <span className="stat-value" style={{color:'#1a2a6c'}}>54</span>
           </div>
-        </div>
 
-        {/* SECTION 4 : DÉPART */}
-        <div className="card">
-          <div className="card-header"><span>🧹</span><h3>Consignes de départ</h3></div>
-          <div className="info-grid">
-            <div className="info-item full-width"><label>Procédure de sortie</label><p>{prop.checkout_instructions || 'Laisser le logement en l\'état'}</p></div>
-            <div className="info-item full-width"><label>Gestion des clés</label><p>{prop.key_return_details || 'À préciser'}</p></div>
-          </div>
+          <Link href={`/add-property?id=${property.id}`} className="btn" style={{display:'block', textAlign:'center', background:'#fbbf24', padding:'15px', borderRadius:'15px', color:'#1a2a6c', fontWeight:'800', textDecoration:'none'}}>
+            Modifier les infos
+          </Link>
         </div>
-
-        {/* SECTION 5 : RÈGLES */}
-        <div className="card">
-          <div className="card-header"><span>🚫</span><h3>Règles de vie</h3></div>
-          <div className="info-grid">
-            <div className="info-item full-width"><label>Règlement intérieur</label><p>{prop.noise_rules || 'Pas de bruit après 22h, interdiction de fumer'}</p></div>
-            <div className="info-item"><label>Animaux</label><p>{prop.pet_policy}</p></div>
-            <div className="info-item"><label>Équipement bébé</label><p>{prop.baby_equipment || 'Aucun'}</p></div>
-          </div>
-        </div>
-      </div>
+      </main>
     </div>
   );
 }
