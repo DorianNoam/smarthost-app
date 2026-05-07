@@ -1,14 +1,10 @@
 import { Mistral } from '@mistralai/mistralai';
 import { supabase } from '../../lib/supabase';
 
-// --- 1. FONCTION DE RECHERCHE ---
+// --- 1. FONCTION DE RECHERCHE (Correcte avec "basic") ---
 async function searchLocalInfo(query, location) {
   const apiKey = process.env.TAVILY_API_KEY; 
-  
-  if (!apiKey) {
-    console.error("ERREUR : Clé TAVILY_API_KEY manquante dans Vercel");
-    return "";
-  }
+  if (!apiKey) return ""; 
 
   try {
     const res = await fetch('https://api.tavily.com/search', {
@@ -17,29 +13,19 @@ async function searchLocalInfo(query, location) {
       body: JSON.stringify({
         api_key: apiKey,
         query: `${query} à proximité de ${location}`,
-        search_depth: "basic", // Changé de "smart" à "basic" pour éviter le code 400
+        search_depth: "basic", 
         max_results: 5,
-        include_images: false,
         include_answer: true
       })
     });
     
-    // Si Tavily répond encore une erreur, on veut savoir pourquoi dans les logs
-    if (!res.ok) {
-      const errorText = await res.text();
-      console.error(`Erreur Tavily ${res.status}:`, errorText);
-      return "";
-    }
-
+    if (!res.ok) return "";
     const data = await res.json();
-    return data.answer || data.results?.map(r => r.content).join('\n\n') || "";
-  } catch (e) { 
-    console.error("Erreur de connexion Tavily :", e);
-    return ""; 
-  }
+    return data.answer || data.results?.map(r => r.content).join('\n\n---\n\n') || "";
+  } catch (e) { return ""; }
 }
 
-// --- 2. CODE D'ALERTE TELEGRAM ---
+// --- 2. CODE D'ALERTE TELEGRAM (Restauré) ---
 async function sendTelegramAlert(originalMsg, translatedMsg, propertyData, lang) {
   const token = process.env.TELEGRAM_BOT_TOKEN;
   try {
@@ -68,11 +54,10 @@ export default async function handler(req, res) {
   const langCode = userLanguage ? userLanguage.split('-')[0] : 'fr';
 
   try {
-    const fullAddress = `${propertyData.street_number || ''} ${propertyData.address || ''} ${propertyData.residence_name ? `, Résidence ${propertyData.residence_name}` : ''} ${propertyData.building ? `, Bâtiment ${propertyData.building}` : ''} ${propertyData.floor ? `, Étage ${propertyData.floor}` : ''}, ${propertyData.city}`;
-
+    const fullAddress = `${propertyData.street_number || ''} ${propertyData.address || ''}, ${propertyData.city}`;
     const lastUserMsg = messagesHistory[messagesHistory.length - 1]?.text || "";
-    let searchResults = "";
     
+    let searchResults = "";
     const needsSearch = lastUserMsg.toLowerCase().match(/(restaurant|bus|tram|transport|manger|visite|activité|proche|autour|aller|faire|voir)/);
     
     if (needsSearch) {
@@ -83,37 +68,33 @@ export default async function handler(req, res) {
       role: 'system', 
       content: `Tu es Marc, le majordome de "${propertyData.name}". 
 
-      CONSIGNES DE VÉRITÉ ABSOLUE (CRUCIAL) :
-      - N'INVENTE JAMAIS de noms ou d'adresses de restaurants/commerces.
-      - Si la section "RÉSULTATS DE RECHERCHE WEB" est vide, dis simplement que tu n'as pas d'informations vérifiées pour le moment et propose de prévenir l'hôte.
-      - L'adresse du logement (${fullAddress}) ne doit JAMAIS être utilisée pour un restaurant.
-      - Ne réponds que sur la base des résultats de recherche fournis.
-
-      CONSIGNE DE MISE EN PAGE :
-      - Chaque suggestion doit commencer par un tiret (-).
+      CONSIGNE DE VÉRITÉ ET MISE EN PAGE :
+      - N'INVENTE JAMAIS de lieux ou d'adresses.
+      - Chaque suggestion commence par un tiret (-).
       - Saute DEUX LIGNES entre chaque point.
-      - Insère une ligne "---" entre chaque recommandation.
+      - Insère "---" entre chaque recommandation.
 
-      INFOS LOGEMENT :
-      - Adresse : ${fullAddress}
-      - Wifi : ${propertyData.wifi_name} / ${propertyData.wifi_password}
+      RÈGLE D'ALERTE : 
+      - Si le client signale un problème (panne, fuite, ménage), tu DOIS dire : "Je préviens immédiatement votre hôte."
 
-      RÉSULTATS DE RECHERCHE WEB (Ta seule source pour l'extérieur) :
-      ${searchResults || "AUCUNE INFORMATION TROUVÉE SUR LE WEB. NE RIEN INVENTER."}`
+      RÉSULTATS WEB :
+      ${searchResults || "AUCUN_RESULTAT"}
+
+      LOGEMENT :
+      - Wifi : ${propertyData.wifi_name} / ${propertyData.wifi_password}`
     };
-
-    const formattedHistory = messagesHistory.map(msg => ({
-      role: msg.role === 'marc' ? 'assistant' : 'user',
-      content: msg.text || ''
-    }));
 
     const chatResponse = await mistral.chat.complete({
       model: 'mistral-small-2506',
-      messages: [systemMessage, ...formattedHistory],
+      messages: [systemMessage, ...messagesHistory.map(msg => ({
+        role: msg.role === 'marc' ? 'assistant' : 'user',
+        content: msg.text
+      }))],
     });
 
     const responseText = chatResponse.choices[0].message.content;
 
+    // Sauvegarde History
     const newHistory = [...messagesHistory, { role: 'marc', text: responseText, timestamp: new Date().toISOString() }];
     await supabase.from('conversations').upsert({
       property_id: propertyData.id,
@@ -121,7 +102,11 @@ export default async function handler(req, res) {
       last_message_at: new Date().toISOString()
     }, { onConflict: 'property_id' });
 
-    const alertTrigger = responseText.toLowerCase().includes("préviens") || responseText.toLowerCase().includes("votre hôte");
+    // --- BLOC ALERTE TELEGRAM (RÉ-INTÉGRÉ ICI) ---
+    const alertTrigger = responseText.toLowerCase().includes("préviens") || 
+                        responseText.toLowerCase().includes("prévenir") || 
+                        responseText.toLowerCase().includes("votre hôte");
+
     if (alertTrigger) {
       let translatedMsg = null;
       if (langCode !== 'fr') {
@@ -135,6 +120,7 @@ export default async function handler(req, res) {
     }
 
     res.status(200).json({ answer: responseText });
+
   } catch (error) {
     res.status(500).json({ answer: "Désolé, j'ai une difficulté technique." });
   }
