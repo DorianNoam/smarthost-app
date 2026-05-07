@@ -4,6 +4,12 @@ import { supabase } from '../../lib/supabase';
 // --- 1. FONCTION DE RECHERCHE ---
 async function searchLocalInfo(query, location) {
   const apiKey = process.env.TAVILY_API_KEY; 
+  
+  // Ces logs s'afficheront dans l'onglet "Logs" de Vercel
+  console.log("--- DEBUG TAVILY ---");
+  console.log("Clé présente ?", !!apiKey); 
+  console.log("Lieu utilisé :", location);
+
   if (!apiKey) return ""; 
 
   try {
@@ -18,11 +24,22 @@ async function searchLocalInfo(query, location) {
         max_results: 5
       })
     });
+    
+    if (!res.ok) {
+        const errorData = await res.text();
+        console.error("Erreur API Tavily:", res.status, errorData);
+        return "";
+    }
+
     const data = await res.json();
-    // On retourne les résultats réels ou un message vide s'il n'y a rien
+    console.log("Nombre de résultats :", data.results?.length || 0);
+    
     if (!data.results || data.results.length === 0) return "";
     return data.answer || data.results.map(r => r.content).join('\n\n---\n\n');
-  } catch (e) { return ""; }
+  } catch (e) { 
+    console.error("Exception Tavily :", e);
+    return ""; 
+  }
 }
 
 // --- 2. CODE D'ALERTE TELEGRAM ---
