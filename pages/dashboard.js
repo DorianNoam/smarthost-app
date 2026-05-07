@@ -8,14 +8,8 @@ export default function Dashboard() {
   useEffect(() => { fetchProperties(); }, []);
 
   const fetchProperties = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('properties')
-        .select('*')
-        .order('created_at', { ascending: false });
-      
-      if (!error) setProperties(data);
-    } catch (err) { console.error(err); }
+    const { data } = await supabase.from('properties').select('*').order('created_at', { ascending: false });
+    if (data) setProperties(data);
   };
 
   const deleteProperty = async (e, id, name) => {
@@ -29,156 +23,116 @@ export default function Dashboard() {
   return (
     <div className="dashboard-layout">
       <style jsx global>{`
-        body { margin: 0; padding: 0; background-color: #f8fafc; font-family: 'Inter', -apple-system, sans-serif; }
-        a { text-decoration: none !important; color: inherit; }
+        body { margin: 0; background: #f8fafc; font-family: 'Inter', sans-serif; }
+        a { text-decoration: none !important; }
       `}</style>
-      
       <style jsx>{`
         .dashboard-layout { display: flex; min-height: 100vh; }
-
-        /* SIDEBAR */
-        nav { 
-          width: 260px; background: #1a2a6c; color: white; 
-          display: flex; flex-direction: column; padding: 40px 20px;
-          position: fixed; height: 100vh; box-shadow: 4px 0 10px rgba(0,0,0,0.1);
-        }
+        nav { width: 260px; background: #1a2a6c; color: white; padding: 40px 20px; position: fixed; height: 100vh; z-index: 100;}
         .logo { font-size: 22px; font-weight: 900; margin-bottom: 50px; text-align: center; }
-        .nav-links { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
-        .nav-item { 
-          padding: 14px 18px; border-radius: 12px; cursor: pointer; 
-          display: flex; align-items: center; gap: 12px; font-weight: 600; 
-          transition: 0.2s; opacity: 0.8;
-        }
-        .nav-item:hover { background: rgba(255,255,255,0.1); opacity: 1; }
+        .nav-item { padding: 14px 18px; border-radius: 12px; display: flex; align-items: center; gap: 12px; font-weight: 600; opacity: 0.8; margin-bottom: 10px; cursor: pointer; color: white;}
         .nav-item.active { background: rgba(255,255,255,0.15); color: #fbbf24; opacity: 1; }
 
-        /* CONTENU */
-        main { flex: 1; margin-left: 260px; padding: 50px; box-sizing: border-box; }
-        .header-area { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; padding-bottom: 20px; border-bottom: 1px solid #e2e8f0; }
-        h1 { font-size: 32px; font-weight: 800; color: #1e293b; margin: 0; }
-        
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 25px; }
+        main { flex: 1; margin-left: 260px; padding: 50px; }
+        .header-area { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
+        h1 { margin: 0; color: #1e293b; font-size: 32px; font-weight: 800; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 25px; }
 
-        /* CARTES AVEC RELIEF AMÉLIORÉ */
         .card { 
           background: white; border-radius: 24px; padding: 25px; 
-          border: 1px solid #edf2f7; position: relative;
-          box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.04), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
+          border: 1px solid #e2e8f0; position: relative;
+          box-shadow: 0 4px 6px rgba(0,0,0,0.05); 
           transition: transform 0.2s, box-shadow 0.2s;
         }
-        .card:hover { 
-          transform: translateY(-5px); 
-          box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-        }
+        .card:hover { transform: translateY(-3px); box-shadow: 0 10px 15px rgba(0,0,0,0.1); }
+        
+        .btn-delete { position: absolute; top: 15px; right: 15px; background: #fff1f2; color: #e11d48; border: none; width: 34px; height: 34px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;}
+        
+        h3 { margin: 0 0 5px 0; color: #1a2a6c; font-size: 22px; font-weight: 800; }
+        .address { color: #64748b; font-size: 14px; margin-bottom: 20px; }
 
-        .btn-delete { position: absolute; top: 15px; right: 15px; background: #fff1f2; color: #e11d48; border: none; width: 34px; height: 34px; border-radius: 50%; cursor: pointer; }
-        h3 { font-size: 20px; font-weight: 800; color: #1a2a6c; margin: 0 0 8px 0; }
-        .address { color: #64748b; font-size: 13px; margin-bottom: 15px; }
+        .btn-stack { display: flex; flex-direction: column; gap: 12px; }
         
-        /* --- STYLES DES BOUTONS (LE FIX) --- */
-        .btn-group { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
-        
-        .btn { 
-          padding: 14px 20px; 
+        /* Les vrais styles de boutons */
+        .action-btn { 
+          padding: 14px; 
           border-radius: 14px; 
           font-weight: 700; 
           font-size: 14px; 
           text-align: center; 
-          transition: 0.2s, box-shadow 0.2s; 
+          transition: 0.2s; 
           display: flex; 
           align-items: center; 
           justify-content: center; 
           gap: 10px; 
-          border: none; 
           cursor: pointer;
-          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+          border: none;
+          width: 100%;
+          box-sizing: border-box;
         }
         
-        .btn:hover { 
-          opacity: 0.95; 
-          transform: translateY(-3px); 
-          box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-        }
+        .btn-primary { background: #1a2a6c; color: white; box-shadow: 0 4px 6px rgba(26, 42, 108, 0.2); }
+        .btn-primary:hover { background: #111d4a; transform: translateY(-2px); }
+        
+        .btn-outline { background: white; color: #1a2a6c; border: 1px solid #cbd5e1; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .btn-outline:hover { background: #f8fafc; border-color: #94a3b8; transform: translateY(-2px); }
+        
+        .btn-light { background: #f1f5f9; color: #475569; }
+        .btn-light:hover { background: #e2e8f0; transform: translateY(-2px); }
 
-        .btn-config { 
-          background: #fbbf24; 
-          color: #1a2a6c !important; 
-        }
-        .btn-config:hover { 
-          background: #f59e0b;
-        }
-
-        .btn-outline { 
-          background: white; 
-          color: #1a2a6c !important; 
-          border: 1px solid #e2e8f0; 
-        }
-        .btn-outline:hover { 
-          background: #f1f5f9;
-        }
-
-        .btn-light { 
-          background: #f1f5f9; 
-          color: #475569 !important; 
-          border: 1px solid #e2e8f0; 
-        }
-        .btn-light:hover { 
-          background: #e2e8f0;
-        }
-
-        /* BOUTON AJOUTER DANS LE HEADER */
-        .btn-add { 
-          background: #1a2a6c; 
-          color: white !important; 
-          padding: 12px 24px; 
-          border-radius: 12px; 
-          font-weight: 700; 
-          transition: 0.2s;
-        }
-        .btn-add:hover { 
-          transform: scale(1.05); 
-          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
-        }
+        .btn-add { background: #fbbf24; color: #1a2a6c; padding: 12px 24px; border-radius: 12px; font-weight: 800; font-size: 15px; display: inline-block; box-shadow: 0 4px 6px rgba(251, 191, 36, 0.3); transition: 0.2s; }
+        .btn-add:hover { background: #f59e0b; transform: translateY(-2px); }
 
         @media (max-width: 900px) {
-          nav { width: 100%; height: auto; position: sticky; top: 0; padding: 15px 20px; flex-direction: row; justify-content: space-between; }
-          .logo { margin-bottom: 0; font-size: 18px; }
-          .nav-text { display: none; }
-          main { margin-left: 0; padding: 25px 20px; }
+          nav { width: 100%; height: auto; position: fixed; bottom: 0; flex-direction: row; padding: 10px; height: 60px; justify-content: space-around; z-index: 100; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); }
+          .logo, .nav-text { display: none; }
+          main { margin-left: 0; padding: 20px; padding-bottom: 80px; }
           .grid { grid-template-columns: 1fr; }
+          .header-area { flex-direction: column; align-items: flex-start; gap: 15px; }
+          .btn-add { width: 100%; text-align: center; }
         }
       `}</style>
 
       <nav>
         <div className="logo">MajorMarc 🎩</div>
-        <ul className="nav-links">
-          <Link href="/dashboard"><li className="nav-item active">🏠 <span className="nav-text">Mes Logements</span></li></Link>
-          <Link href="/settings"><li className="nav-item">⚙️ <span className="nav-text">Paramètres</span></li></Link>
-        </ul>
+        <Link href="/dashboard" passHref legacyBehavior><a className="nav-item active">🏠 <span className="nav-text">Mes Logements</span></a></Link>
+        <Link href="/settings" passHref legacyBehavior><a className="nav-item">⚙️ <span className="nav-text">Paramètres</span></a></Link>
       </nav>
 
       <main>
         <div className="header-area">
           <h1>Mes Logements</h1>
-          <Link href="/add-property" className="btn-add">+ Ajouter</Link>
+          <Link href="/add-property" passHref legacyBehavior>
+            <a className="btn-add">+ Ajouter un logement</a>
+          </Link>
         </div>
 
         <div className="grid">
           {properties.map((prop) => (
             <div key={prop.id} className="card">
-              <button className="btn-delete" onClick={(e) => deleteProperty(e, prop.id, prop.name)}>🗑️</button>
+              <button className="btn-delete" onClick={(e) => deleteProperty(e, prop.id, prop.name)} title="Supprimer">🗑️</button>
+              
               <h3>{prop.name}</h3>
               <div className="address">📍 {prop.address}</div>
               
-              <div className="btn-group">
-                {/* Le bouton principal de configuration avec relief (couleur Or/Jaune) */}
-                <Link href={`/add-property?id=${prop.id}`} className="btn btn-config">
-                  ⚙️ Continuer la configuration
+              <div className="btn-stack">
+                <Link href={`/property/${prop.id}`} passHref legacyBehavior>
+                  <a className="action-btn btn-primary">
+                    📊 Fiche Logement & Stats
+                  </a>
                 </Link>
-                {/* Bouton secondaire d'ouverture (style outline Bleu Nuit) */}
-                <Link href={`/chat/${prop.id}`} className="btn btn-outline">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
-                  Ouvrir Marc (Test)
+                
+                <Link href={`/add-property?id=${prop.id}`} passHref legacyBehavior>
+                  <a className="action-btn btn-outline">
+                    ⚙️ Modifier la configuration
+                  </a>
+                </Link>
+                
+                <Link href={`/chat/${prop.id}`} passHref legacyBehavior>
+                  <a className="action-btn btn-light">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+                    Ouvrir Marc (Test)
+                  </a>
                 </Link>
               </div>
             </div>
