@@ -44,6 +44,7 @@ export default function PropertyChat() {
   };
 
   const renderText = (text) => {
+    if (!text) return "";
     const linkRegex = /\[(.*?)\]\((.*?)\)/g;
     const parts = [];
     let lastIndex = 0;
@@ -64,7 +65,6 @@ export default function PropertyChat() {
     setInput('');
     setIsTyping(true);
 
-    // Détection de la langue pour l'envoyer à l'API
     const userLang = navigator.language || navigator.userLanguage;
 
     try {
@@ -74,7 +74,7 @@ export default function PropertyChat() {
         body: JSON.stringify({ 
           messagesHistory: [...messages, userMsg], 
           propertyData: property,
-          userLanguage: userLang // On envoie la langue ici
+          userLanguage: userLang
         })
       });
       const data = await res.json();
@@ -97,7 +97,19 @@ export default function PropertyChat() {
         header h1 { margin: 0; font-size: 18px; font-weight: 800; }
         header p { margin: 4px 0 0; font-size: 10px; opacity: 0.7; text-transform: uppercase; letter-spacing: 1.5px; }
         .chat-area { flex: 1; overflow-y: auto; padding: 20px 15px; display: flex; flex-direction: column; gap: 15px; -webkit-overflow-scrolling: touch; }
-        .bubble { max-width: 85%; padding: 12px 16px; border-radius: 20px; font-size: 14px; line-height: 1.5; }
+        
+        /* --- LA CORRECTION EST ICI --- */
+        .bubble { 
+          max-width: 85%; 
+          padding: 12px 16px; 
+          border-radius: 20px; 
+          font-size: 14px; 
+          line-height: 1.5; 
+          white-space: pre-wrap; /* Force l'affichage des retours à la ligne */
+          word-wrap: break-word; /* Évite que le texte ne dépasse de la bulle */
+        }
+        /* ---------------------------- */
+
         .marc { align-self: flex-start; background: white; color: #1e293b; border-bottom-left-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .user { align-self: flex-end; background: #1a2a6c; color: white; border-bottom-right-radius: 4px; }
         .input-bar { background: white; padding: 15px; display: flex; gap: 10px; border-top: 1px solid #eee; padding-bottom: calc(15px + env(safe-area-inset-bottom, 0px)); }
