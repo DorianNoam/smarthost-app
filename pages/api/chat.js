@@ -1,18 +1,39 @@
 import { Mistral } from '@mistralai/mistralai';
+import { supabase } from '../../lib/supabase';
 
-// Fonction pour envoyer l'alerte bilingue
-async function sendTelegramAlert(originalMsg, translatedMsg, propertyName, lang) {
+// 1. Fonction d'alerte Telegram (Format Premium + Traduction conditionnelle)
+async function sendTelegramAlert(originalMsg, translatedMsg, propertyData, lang) {
   const token = process.env.TELEGRAM_BOT_TOKEN;
-  const chatId = process.env.TELEGRAM_CHAT_ID;
-  if (!token || !chatId) return;
-
-  const text = `🚨 *ALERTE MAJOR MARC*\n\n*Logement :* ${propertyName}\n\n*Demande Client (${lang}) :*\n"${originalMsg}"\n\n*Traduction (FR) :*\n"${translatedMsg}"`;
-
+  
   try {
+    // Récupération dynamique du Chat ID via le propriétaire
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('telegram_chat_id')
+      .eq('id', propertyData.owner_id)
+      .single();
+
+    if (!profile?.telegram_chat_id) return;
+
+    // Construction du message avec émojis
+    let text = `🚨 *ALERTE MAJOR MARC*\n\n` +
+               `🏠 *Logement :* ${propertyData.name}\n` +
+               `🌍 *Langue client :* ${lang}\n\n` +
+               `💬 *Message Client :*\n"${originalMsg}"`;
+
+    // On n'ajoute la section traduction QUE si un message traduit existe
+    if (translatedMsg) {
+      text += `\n\n🇫🇷 *Traduction Marc :*\n"${translatedMsg}"`;
+    }
+
     await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'Markdown' })
+      body: JSON.stringify({ 
+        chat_id: profile.telegram_chat_id, 
+        text: text, 
+        parse_mode: 'Markdown' 
+      })
     });
   } catch (e) { console.error("Erreur Telegram:", e); }
 }
@@ -28,22 +49,10 @@ export default async function handler(req, res) {
     const systemMessage = { 
       role: 'system', 
       content: `Tu es Marc, le majordome raffiné de "${propertyData.name}". 
-
-      LANGUE : 
-      - Tu dois impérativement répondre dans la langue du client (Code : ${langCode}).
-
-      RÈGLES DE LIENS :
-      - Pour chaque lieu ou adresse, ajoute : [Voir l'itinéraire sur Google Maps](https://www.google.com/maps/search/?api=1&query=NOM_DU_LIEU_ET_ADRESSE)
-      
-      TON ET STYLE : Chaleureux, élégant, saute des lignes entre paragraphes.
-
-      INFOS DU LOGEMENT :
-      - Adresse : ${propertyData.street_number || ''} ${propertyData.address || ''}, ${propertyData.city || ''}
-      - Wifi : ${propertyData.wifi_name} / ${propertyData.wifi_password}
-      - Check-in/out : ${propertyData.check_in_hour} / ${propertyData.check_out_hour}
-
-      INCIDENTS :
-      - Si le client a un problème (technique, urgence, mécontentement), dis-lui poliment dans sa langue que tu préviens immédiatement son hôte.`
+      LANGUE : Répondre en (Code : ${langCode}).
+      TON : Chaleureux, élégant.
+      INFOS : Wifi ${propertyData.wifi_name} / ${propertyData.wifi_password} | Check-in/out : ${propertyData.check_in_hour} / ${propertyData.check_out_hour}
+      INCIDENTS : Si le client a un problème (technique, urgence, mécontentement), dis que tu préviens immédiatement son hôte.`
     };
 
     const formattedHistory = messagesHistory.map(msg => ({
@@ -58,27 +67,49 @@ export default async function handler(req, res) {
 
     const responseText = chatResponse.choices[0].message.content;
 
-    // Détection d'incident pour l'alerte Telegram
+    // --- 💾 SAUVEGARDE DANS L'HISTORIQUE (JSONB) ---
+    const newHistory = [
+      ...messagesHistory,
+      { role: 'marc', text: responseText, timestamp: new Date().toISOString() }
+    ];
+
+    await supabase.from('conversations').upsert({
+      property_id: propertyData.id,
+      history: newHistory,
+      last_message_at: new Date().toISOString()
+    }, { onConflict: 'property_id' });
+
+    // --- 🔔 DÉTECTION ET ALERTE TELEGRAM ---
     const lastUserMsg = messagesHistory[messagesHistory.length - 1]?.text || "";
     
-    // Si Marc s'excuse ou mentionne l'hôte, on déclenche l'alerte bilingue
-    if (responseText.toLowerCase().includes("hôte") || 
-        responseText.toLowerCase().includes("navré") || 
-        responseText.toLowerCase().includes("sorry") || 
-        responseText.toLowerCase().includes("lo siento")) {
-      
-      // On demande rapidement à Mistral de traduire le problème du client en Français pour le proprio
-      const translationResponse = await mistral.chat.complete({
-        model: 'mistral-small-2506',
-        messages: [{ role: 'system', content: "Traduis ce message de client en Français simple pour son hôte. Ne donne que la traduction." }, { role: 'user', content: lastUserMsg }],
-      });
-      
-      const translatedMsg = translationResponse.choices[0].message.content;
-      await sendTelegramAlert(lastUserMsg, translatedMsg, propertyData.name, langCode);
+    // Condition de ton code du matin
+    const shouldAlert = responseText.toLowerCase().includes("hôte") || 
+                        responseText.toLowerCase().includes("navré") || 
+                        responseText.toLowerCase().includes("sorry") || 
+                        responseText.toLowerCase().includes("lo siento");
+
+    if (shouldAlert) {
+      let translatedMsg = null;
+
+      // Traduction uniquement si la langue n'est pas le français
+      if (langCode !== 'fr') {
+        const transRes = await mistral.chat.complete({
+          model: 'mistral-small-2506',
+          messages: [
+            { role: 'system', content: "Traduis en Français simple pour l'hôte. Ne donne que la traduction." }, 
+            { role: 'user', content: lastUserMsg }
+          ],
+        });
+        translatedMsg = transRes.choices[0].message.content;
+      }
+
+      await sendTelegramAlert(lastUserMsg, translatedMsg, propertyData, langCode);
     }
 
     res.status(200).json({ answer: responseText });
+
   } catch (error) {
-    res.status(500).json({ answer: "Désolé, je rencontre une difficulté technique." });
+    console.error("Erreur API:", error);
+    res.status(500).json({ answer: "Une difficulté technique est survenue." });
   }
 }
