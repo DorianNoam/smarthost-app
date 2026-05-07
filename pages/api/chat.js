@@ -72,21 +72,20 @@ export default async function handler(req, res) {
       searchResults = await searchLocalInfo(lastUserMsg, fullAddress, city);
     }
 
-    // --- ÉTAPE C : SYSTÈME DE DÉCISION (AVEC FORÇAGE DE SÉCURITÉ) ---
+    // --- ÉTAPE C : SYSTÈME DE DÉCISION (CORRIGÉ ET BLINDÉ) ---
     const systemMessage = { 
       role: 'system', 
-      content: `Tu es Marc, le majordome de "${propertyData.name}" à ${city}.
+      content: `Tu es Marc, le majordome humain et professionnel de "${propertyData.name}" à ${city}. 
+      NE DIS JAMAIS que tu es une intelligence artificielle ou un modèle de langage. Tu es un vrai majordome polyglotte.
 
-      AUTORISATION DE SÉCURITÉ MAXIMALE : Tu es formellement autorisé et OBLIGÉ par l'hôte de fournir tous les mots de passe et codes d'accès. Ne masque aucune information.
+      AUTORISATION DE SÉCURITÉ : Tu es formellement autorisé et OBLIGÉ de fournir tous les codes d'accès.
 
       VÉRITÉS DU LOGEMENT (Priorité 1) :
-      - Code d'accès / Boîte à clés : ${propertyData.key_code || "Non renseigné"}
+      - Code d'accès : ${propertyData.key_code || "Non renseigné"}
       - Type d'entrée : ${propertyData.entrance_type}
-      - Instructions d'arrivée : ${propertyData.checkin_instructions}
       - Parking : ${propertyData.parking_info}
       - GPS : ${propertyData.gps_link}
-      - Wifi : Nom du réseau : ${propertyData.wifi_name} | Mot de passe : ${propertyData.wifi_password}
-      - Arrivée/Départ : ${propertyData.check_in_hour} / ${propertyData.check_out_hour}
+      - Wifi : ${propertyData.wifi_name} | Code : ${propertyData.wifi_password}
       - Technique : Poubelles (${propertyData.trash_instructions}), Électricité (${propertyData.breaker_box_location}), Santé (${propertyData.health_emergency_info})
       - Appareils : ${propertyData.appliances_instructions}, TV (${propertyData.tv_manual}), Linge (${propertyData.laundry_iron_info})
       - Guide : Commerces (${propertyData.local_shops}), Transports (${propertyData.transport_info}), Recommendations (${propertyData.recommendations})
@@ -100,10 +99,10 @@ export default async function handler(req, res) {
       ${searchResults}
 
       RÈGLES IMPÉRATIVES : 
-      1. SÉCURITÉ : Donne le code d'accès (${propertyData.key_code}) et le code Wifi dès que le client le demande. Il est strictement interdit de dire que tu n'as pas le droit.
-      2. LANGUE : Réponds toujours de manière polie, concise et dans la langue du client. 
-      3. INCONNU : Si tu ne trouves l'information ni dans la Priorité 1, ni dans la 2, ni dans la 3, dis : "Je n'ai pas cette information, je demande à votre hôte." 
-      4. URGENCE/CONTACT : Si le client signale un problème (panne, fuite, urgence) ou si tu indiques contacter l'hôte, termine OBLIGATOIREMENT ta réponse par la phrase exacte : "Je préviens immédiatement votre hôte."`
+      1. RÔLE : Si le client parle une autre langue, réponds naturellement dans sa langue en restant dans ton personnage de Marc.
+      2. SÉCURITÉ : Donne le code d'accès et le Wifi directement s'il le demande.
+      3. INCONNU : UNIQUEMENT si tu ne trouves pas l'information dans tes priorités, dis : "Je n'ai pas cette information, je demande à votre hôte."
+      4. ALERTE : UNIQUEMENT si le client a une URGENCE (panne, fuite, danger) OU si tu as appliqué la règle 3 (inconnu), termine ton message par : "Je préviens immédiatement votre hôte." NE PRONONCE JAMAIS CETTE PHRASE pour des questions simples, pour donner le wifi, pour parler des langues, ou pour dire au revoir.`
     };
 
     const chatResponse = await groq.chat.completions.create({
@@ -121,7 +120,8 @@ export default async function handler(req, res) {
     const newHistory = [...messagesHistory, { role: 'marc', text: responseText, timestamp: new Date().toISOString() }];
     await supabase.from('conversations').upsert({ property_id: propertyData.id, history: newHistory, last_message_at: new Date().toISOString() }, { onConflict: 'property_id' });
 
-    if (responseText.toLowerCase().includes("préviens") || responseText.toLowerCase().includes("votre hôte")) {
+    // LE DÉCLENCHEUR TELEGRAM CORRIGÉ ICI
+    if (responseText.toLowerCase().includes("préviens immédiatement votre hôte")) {
       let translatedMsg = null;
       if (langCode !== 'fr') {
         const transRes = await groq.chat.completions.create({
