@@ -1,7 +1,7 @@
 import Groq from 'groq-sdk';
 import { supabase } from '../../lib/supabase';
 
-// --- 1. FONCTION DE RECHERCHE UNIVERSELLE ---
+// --- FONCTION DE RECHERCHE WEB (Uniquement si pas dans la BDD) ---
 async function searchLocalInfo(userQuery, fullAddress) {
   const apiKey = process.env.TAVILY_API_KEY; 
   if (!apiKey) return ""; 
@@ -11,26 +11,24 @@ async function searchLocalInfo(userQuery, fullAddress) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         api_key: apiKey,
-        // La recherche se base sur la question client + l'adresse exacte du logement
-        query: `${userQuery} à proximité de ${fullAddress} nom du lieu distance et temps de trajet précis`,
+        query: `${userQuery} à proximité de ${fullAddress}`,
         search_depth: "advanced",
         max_results: 5,
         include_answer: true
       })
     });
-    if (!res.ok) return "";
     const data = await res.json();
-    return data.answer || data.results?.map(r => r.content).join('\n\n---\n\n') || "";
+    return data.answer || data.results?.map(r => r.content).join('\n') || "";
   } catch (e) { return ""; }
 }
 
-// --- 2. CODE D'ALERTE TELEGRAM ---
+// --- ALERTE TELEGRAM ---
 async function sendTelegramAlert(originalMsg, translatedMsg, propertyData, lang) {
   const token = process.env.TELEGRAM_BOT_TOKEN;
   try {
     const { data: profile } = await supabase.from('profiles').select('telegram_chat_id').eq('id', propertyData.owner_id).single();
     if (!profile?.telegram_chat_id) return;
-    let text = `🚨 *ALERTE MAJOR MARC*\n\n🏠 *Logement :* ${propertyData.name}\n🌍 *Langue :* ${lang}\n\n💬 *Message Client :*\n"${originalMsg}"`;
+    let text = `🚨 *ALERTE MAJOR MARC*\n\n🏠 *Logement :* ${propertyData.name}\n💬 *Client :*\n"${originalMsg}"`;
     if (translatedMsg) { text += `\n\n🇫🇷 *Traduction :*\n"${translatedMsg}"`; }
     await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -41,46 +39,44 @@ async function sendTelegramAlert(originalMsg, translatedMsg, propertyData, lang)
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).send('Méthode non autorisée');
-  if (!process.env.GROQ_API_KEY) return res.status(200).json({ answer: "⚠️ Erreur : Variable GROQ_API_KEY manquante." });
-
+  
   const { messagesHistory, propertyData, userLanguage } = req.body;
   const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
   const langCode = userLanguage ? userLanguage.split('-')[0] : 'fr';
 
   try {
-    // Construction de l'adresse dynamique depuis la base de données
     const city = propertyData.city || '';
     const fullAddress = `${propertyData.street_number || ''} ${propertyData.address || ''}, ${city}`;
     const lastUserMsg = messagesHistory[messagesHistory.length - 1]?.text || "";
     
+    // ÉTAPE 1 : On regarde si la question concerne l'extérieur pour savoir si on aura besoin de Google
     let searchResults = "";
-    // Détection large pour inclure supermarchés, restos, pharmacies, etc.
-    const needsSearch = lastUserMsg.toLowerCase().match(/(restaurant|supermarché|magasin|course|bus|tram|transport|manger|visite|activité|proche|autour|aller|faire|voir|boulangerie|pharmacie)/);
+    const isLocalRequest = lastUserMsg.toLowerCase().match(/(restaurant|supermarché|magasin|bus|tram|transport|pharmacie|boulangerie)/);
     
-    if (needsSearch) {
+    if (isLocalRequest) {
       searchResults = await searchLocalInfo(lastUserMsg, fullAddress);
     }
 
     const systemMessage = { 
       role: 'system', 
-      content: `Tu es Marc, le majordome de "${propertyData.name}" situé à ${city}. 
+      content: `Tu es Marc, le majordome de "${propertyData.name}". 
+      
+      TON PROTOCOLE DE RÉPONSE (Respecte cet ordre) :
+      
+      1. INFOS LOGEMENT (Priorité Absolue) : Si la réponse est ici, utilise-la exclusivement.
+         - Adresse : ${fullAddress}
+         - Wifi : ${propertyData.wifi_name} | Pass : ${propertyData.wifi_password}
+         - Check-in : ${propertyData.check_in_hour} | Check-out : ${propertyData.check_out_hour}
+         - Autres notes hôte : ${propertyData.description || "Aucune note spécifique."}
 
-      SOURCE DE VÉRITÉ (Logement actuel) :
-      - Adresse exacte : ${fullAddress}
-      - Wifi : ${propertyData.wifi_name} / ${propertyData.wifi_password}
-      - Check-in : ${propertyData.check_in_hour} | Check-out : ${propertyData.check_out_hour}
+      2. INFOS EXTÉRIEURES (Recherche Web) : Si la réponse n'est pas au-dessus, utilise ceci :
+         ${searchResults || "Aucun résultat web trouvé."}
 
-      CONSIGNES STRICTES :
-      1. HONNÊTETÉ : N'invente JAMAIS de noms de commerces, de lignes de transport ou de temps de trajet (ex: "à 5 min"). 
-      2. SOURCE WEB : Pour toute question sur l'extérieur (restos, magasins, transports), utilise UNIQUEMENT les "RÉSULTATS WEB" fournis.
-      3. SILENCE SI INCONNU : Si les résultats web ne mentionnent pas de temps de trajet ou de nom précis, dis-le franchement : "Je n'ai pas la distance exacte, mais je peux prévenir l'hôte pour plus de précision."
-      4. STYLE : Majordome haut de gamme, poli et concis. Double saut de ligne entre les paragraphes.
+      3. SI AUCUNE INFO : Si ni les notes de l'hôte ni le web ne répondent, dis : "Je n'ai pas cette information précise, je demande immédiatement à votre hôte pour vous répondre."
 
-      RÉSULTATS WEB (Ta source d'information locale) :
-      ${searchResults || "Aucune information web trouvée. Ne fais aucune supposition."}
+      4. URGENCE : Si le client signale une panne ou un problème, conclus par : "Je préviens immédiatement votre hôte."
 
-      LOGIQUE D'ALERTE :
-      - Si le client signale un problème (panne, fuite, ménage), dis obligatoirement : "Je préviens immédiatement votre hôte."`
+      STYLE : Majordome raffiné, poli, pas de blabla inutile.`
     };
 
     const chatResponse = await groq.chat.completions.create({
@@ -89,22 +85,17 @@ export default async function handler(req, res) {
         role: msg.role === 'marc' ? 'assistant' : 'user',
         content: msg.text || ''
       }))],
-      temperature: 0.1, // Verrouillage de la précision
+      temperature: 0.1,
     });
 
     const responseText = chatResponse.choices[0].message.content;
 
     // Sauvegarde History
     const newHistory = [...messagesHistory, { role: 'marc', text: responseText, timestamp: new Date().toISOString() }];
-    await supabase.from('conversations').upsert({
-      property_id: propertyData.id,
-      history: newHistory,
-      last_message_at: new Date().toISOString()
-    }, { onConflict: 'property_id' });
+    await supabase.from('conversations').upsert({ property_id: propertyData.id, history: newHistory, last_message_at: new Date().toISOString() }, { onConflict: 'property_id' });
 
-    // Bloc Alerte Telegram
-    const alertTrigger = responseText.toLowerCase().includes("préviens") || responseText.toLowerCase().includes("votre hôte");
-    if (alertTrigger) {
+    // Alerte Telegram
+    if (responseText.toLowerCase().includes("préviens") || responseText.toLowerCase().includes("votre hôte")) {
       let translatedMsg = null;
       if (langCode !== 'fr') {
         const transRes = await groq.chat.completions.create({
@@ -118,6 +109,6 @@ export default async function handler(req, res) {
 
     res.status(200).json({ answer: responseText });
   } catch (error) {
-    res.status(200).json({ answer: `Désolé, j'ai une difficulté technique : ${error.message}` });
+    res.status(200).json({ answer: `Désolé : ${error.message}` });
   }
 }
