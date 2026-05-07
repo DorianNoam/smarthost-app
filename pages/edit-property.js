@@ -1,198 +1,118 @@
-import { useState } from 'react';
-import Link from 'next/link';
+import Groq from 'groq-sdk';
+import { supabase } from '../../lib/supabase';
 
-export default function EditProperty() {
-  const [tab, setTab] = useState('obligatoire');
+// --- 1. RECHERCHE WEB UNIVERSELLE ---
+async function searchLocalInfo(userQuery, address, city) {
+  const apiKey = process.env.TAVILY_API_KEY; 
+  if (!apiKey) return ""; 
+  try {
+    const res = await fetch('https://api.tavily.com/search', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        api_key: apiKey,
+        query: `${userQuery} near ${address}, ${city} exact location and opening hours`,
+        search_depth: "advanced",
+        max_results: 5,
+        include_answer: true
+      })
+    });
+    const data = await res.json();
+    return data.answer || data.results?.map(r => r.content).join('\n\n') || "";
+  } catch (e) { return ""; }
+}
 
-  return (
-    <div className="config-container">
-      <style jsx>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Montserrat:wght@300;400;600;700&display=swap');
+// --- 2. ALERTE TELEGRAM ---
+async function sendTelegramAlert(originalMsg, translatedMsg, propertyData, lang) {
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  try {
+    const { data: profile } = await supabase.from('profiles').select('telegram_chat_id').eq('id', propertyData.owner_id).single();
+    if (!profile?.telegram_chat_id) return;
+    let text = `🚨 *ALERTE MAJOR MARC*\n\n🏠 *Logement :* ${propertyData.name}\n🌍 *Langue :* ${lang}\n\n💬 *Message :*\n"${originalMsg}"`;
+    if (translatedMsg) { text += `\n\n🇫🇷 *Traduction :*\n"${translatedMsg}"`; }
+    await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: profile.telegram_chat_id, text, parse_mode: 'Markdown' })
+    });
+  } catch (e) { console.error("Erreur Telegram:", e); }
+}
 
-        .config-container { min-height: 100vh; background: #f4f7f9; font-family: 'Montserrat', sans-serif; padding: 40px 5%; }
-        .config-card { max-width: 1000px; margin: 0 auto; background: white; border-radius: 30px; box-shadow: 0 20px 50px rgba(0,0,0,0.05); overflow: hidden; }
+export default async function handler(req, res) {
+  if (req.method !== 'POST') return res.status(405).send('Méthode non autorisée');
+  
+  const { messagesHistory, propertyData, userLanguage } = req.body;
+  const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+  const langCode = userLanguage ? userLanguage.split('-')[0] : 'fr';
 
-        /* Header avec Barre de Progression */
-        .config-header { background: #1a2a6c; color: white; padding: 30px 40px; }
-        .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .header-top h1 { font-family: 'Playfair Display', serif; margin: 0; font-size: 22px; }
-        .score-box { text-align: right; }
-        .progress-container { width: 100%; background: rgba(255,255,255,0.1); height: 8px; border-radius: 10px; position: relative; }
-        .progress-bar { height: 100%; background: #d4af37; border-radius: 10px; transition: 0.5s; width: 35%; }
-        .progress-label { font-size: 11px; margin-top: 8px; display: block; color: #d4af37; font-weight: 700; text-transform: uppercase; }
+  try {
+    const city = propertyData.city || '';
+    const fullAddress = `${propertyData.street_number || ''} ${propertyData.address || ''}, ${city}`;
+    const lastUserMsg = messagesHistory[messagesHistory.length - 1]?.text || "";
 
-        /* Tabs avec scroll latéral sur mobile */
-        .tabs { display: flex; background: #fdfbf7; border-bottom: 1px solid #eee; overflow-x: auto; white-space: nowrap; }
-        .tab-btn { padding: 20px 25px; border: none; background: none; cursor: pointer; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #999; }
-        .tab-btn.active { color: #1a2a6c; border-bottom: 3px solid #d4af37; background: white; }
+    // --- 3. DÉTECTION D'INTENTION (Modèle stable : llama-3.1-8b-instant) ---
+    const intentCheck = await groq.chat.completions.create({
+      model: "llama-3.1-8b-instant", 
+      messages: [
+        { 
+          role: 'system', 
+          content: "Does the user message require a local search for shops, restaurants, transport, health, or tourism? Answer ONLY 'YES' or 'NO'." 
+        },
+        { role: 'user', content: lastUserMsg }
+      ],
+      temperature: 0,
+    });
 
-        .form-content { padding: 40px; }
-        .section-title { font-family: 'Playfair Display', serif; font-size: 20px; color: #1a2a6c; margin-bottom: 25px; border-bottom: 1px solid #f0f0f0; padding-bottom: 10px; }
-        
-        .grid-inputs { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px; margin-bottom: 40px; }
-        .input-group { display: flex; flex-direction: column; }
-        label { font-weight: 700; font-size: 13px; color: #1a2a6c; margin-bottom: 8px; }
-        input, textarea, select { width: 100%; padding: 14px; border: 1px solid #eee; border-radius: 10px; background: #f9f9f9; font-family: 'Montserrat', sans-serif; font-size: 14px; box-sizing: border-box; }
-        textarea { height: 100px; }
-        .helper { font-size: 11px; color: #999; margin-top: 5px; }
+    const needsSearch = intentCheck.choices[0].message.content.includes("YES");
+    
+    let searchResults = "";
+    if (needsSearch) {
+      searchResults = await searchLocalInfo(lastUserMsg, fullAddress, city);
+    }
 
-        .actions { padding: 30px 40px; background: #f9f9f9; display: flex; justify-content: space-between; align-items: center; }
-        .btn-later { background: none; border: 1px solid #ccc; color: #777; padding: 12px 25px; border-radius: 50px; cursor: pointer; font-weight: 600; font-size: 13px; }
-        .btn-save { background: #1a2a6c; color: white; padding: 15px 40px; border-radius: 50px; font-weight: 700; border: none; cursor: pointer; transition: 0.3s; }
-        .btn-save:hover { background: #d4af37; color: #1a2a6c; }
-      `}</style>
+    // --- 4. RÉPONSE FINALE ---
+    const systemMessage = { 
+      role: 'system', 
+      content: `Tu es Marc, le majordome de "${propertyData.name}" à ${city}.
+      
+      HIÉRARCHIE D'INFORMATION :
+      1. TA BASE DE DONNÉES : Adresse: ${fullAddress}, Wifi: ${propertyData.wifi_name}, Check-in: ${propertyData.check_in_hour}.
+      2. RECHERCHE WEB : Utilise ceci pour les commerces/transports :
+         ${searchResults || "Aucune info web trouvée."}
+      3. SI INCONNU : Dis poliment que tu ne sais pas et que tu contactes l'hôte.
 
-      <div className="config-card">
-        <header className="config-header">
-          <div className="header-top">
-            <div>
-              <Link href="/dashboard" style={{color: 'rgba(255,255,255,0.6)', textDecoration: 'none', fontSize: '12px'}}>← Quitter sans enregistrer</Link>
-              <h1>Configuration : Villa Bella</h1>
-            </div>
-            <div className="score-box">
-               <span className="progress-label">Score de Sérénité : 35%</span>
-            </div>
-          </div>
-          <div className="progress-container">
-            <div className="progress-bar"></div>
-          </div>
-        </header>
+      STYLE : Majordome élégant, concis. Saute deux lignes entre les paragraphes.`
+    };
 
-        <nav className="tabs">
-          <button className={`tab-btn ${tab === 'obligatoire' ? 'active' : ''}`} onClick={() => setTab('obligatoire')}>📍 Vital</button>
-          <button className={`tab-btn ${tab === 'logistique' ? 'active' : ''}`} onClick={() => setTab('logistique')}>🔑 Logistique</button>
-          <button className={`tab-btn ${tab === 'vie' ? 'active' : ''}`} onClick={() => setTab('vie')}>🍳 Vie Intérieure</button>
-          <button className={`tab-btn ${tab === 'quartier' ? 'active' : ''}`} onClick={() => setTab('quartier')}>🌍 Quartier</button>
-          <button className={`tab-btn ${tab === 'regles' ? 'active' : ''}`} onClick={() => setTab('regles')}>📜 Règles & Urgence</button>
-        </nav>
+    const chatResponse = await groq.chat.completions.create({
+      model: "llama-3.3-70b-versatile", 
+      messages: [systemMessage, ...messagesHistory.map(msg => ({
+        role: msg.role === 'marc' ? 'assistant' : 'user',
+        content: msg.text || ''
+      }))],
+      temperature: 0.1,
+    });
 
-        <div className="form-content">
-          {tab === 'obligatoire' && (
-            <div className="tab-pane">
-              <h2 className="section-title">Le strict minimum pour lancer Marc</h2>
-              <div className="grid-inputs">
-                <div className="input-group">
-                  <label>Nom du réseau Wi-Fi</label>
-                  <input type="text" placeholder="ex: Villa_Bella_Guest" />
-                </div>
-                <div className="input-group">
-                  <label>Mot de passe Wi-Fi</label>
-                  <input type="text" placeholder="ex: Holiday2026!" />
-                </div>
-                <div className="input-group" style={{gridColumn: '1 / -1'}}>
-                  <label>Accès : Comment entrer dans le logement ?</label>
-                  <textarea placeholder="Expliquez ici l'emplacement de la boîte à clés, les codes d'immeuble et l'étage..."></textarea>
-                  <p className="helper">Soyez le plus précis possible pour éviter les appels à l'arrivée.</p>
-                </div>
-              </div>
-            </div>
-          )}
+    const responseText = chatResponse.choices[0].message.content;
 
-          {tab === 'logistique' && (
-            <div className="tab-pane">
-              <h2 className="section-title">Parking & Transports</h2>
-              <div className="grid-inputs">
-                <div className="input-group">
-                  <label>Parking Privé</label>
-                  <input type="text" placeholder="Place n°12, Bip dans le tiroir de l'entrée..." />
-                </div>
-                <div className="input-group">
-                  <label>Stationnement dans la rue</label>
-                  <input type="text" placeholder="Gratuit, payant (appli PayByPhone)..." />
-                </div>
-              </div>
-              <h2 className="section-title">Poubelles & Tri</h2>
-              <div className="grid-inputs">
-                <div className="input-group">
-                  <label>Emplacement & Codes</label>
-                  <textarea placeholder="Local au fond de la cour, code 45B..."></textarea>
-                </div>
-                <div className="input-group">
-                  <label>Calendrier de ramassage</label>
-                  <input type="text" placeholder="Bac jaune le mardi matin..." />
-                </div>
-              </div>
-            </div>
-          )}
+    // Sauvegarde History
+    const newHistory = [...messagesHistory, { role: 'marc', text: responseText, timestamp: new Date().toISOString() }];
+    await supabase.from('conversations').upsert({ property_id: propertyData.id, history: newHistory, last_message_at: new Date().toISOString() }, { onConflict: 'property_id' });
 
-          {tab === 'vie' && (
-            <div className="tab-pane">
-              <h2 className="section-title">Cuisine & Équipements</h2>
-              <div className="grid-inputs">
-                <div className="input-group">
-                  <label>Machine à Café</label>
-                  <select>
-                    <option>Nespresso</option>
-                    <option>Senseo</option>
-                    <option>Filtre</option>
-                    <option>Piston / Italienne</option>
-                  </select>
-                  <p className="helper">Marc saura quelles capsules conseiller.</p>
-                </div>
-                <div className="input-group">
-                  <label>Outils spécifiques</label>
-                  <input type="text" placeholder="Appareil à raclette, Mixeur, Tire-bouchon..." />
-                </div>
-                <div className="input-group">
-                  <label>Équipements Bébé</label>
-                  <input type="text" placeholder="Lit parapluie (placard chambre 1), Chaise haute..." />
-                </div>
-              </div>
-              <h2 className="section-title">Climatisation & Chauffage</h2>
-              <div className="input-group">
-                <label>Mode d'emploi rapide</label>
-                <textarea placeholder="La télécommande est sur le mur du salon. Ne pas descendre sous 20°C..."></textarea>
-              </div>
-            </div>
-          )}
+    // Alerte Telegram
+    if (responseText.toLowerCase().includes("préviens") || responseText.toLowerCase().includes("votre hôte")) {
+      let translatedMsg = null;
+      if (langCode !== 'fr') {
+        const transRes = await groq.chat.completions.create({
+          model: "llama-3.1-8b-instant",
+          messages: [{ role: 'system', content: "Traduis en FR." }, { role: 'user', content: lastUserMsg }],
+        });
+        translatedMsg = transRes.choices[0].message.content;
+      }
+      await sendTelegramAlert(lastUserMsg, translatedMsg, propertyData, langCode);
+    }
 
-          {tab === 'quartier' && (
-            <div className="tab-pane">
-              <h2 className="section-title">Vos meilleures adresses</h2>
-              <div className="grid-inputs">
-                <div className="input-group">
-                  <label>La Boulangerie de quartier</label>
-                  <input type="text" placeholder="Boulangerie 'Le Bon Pain' à 200m..." />
-                </div>
-                <div className="input-group">
-                  <label>Le Restaurant 'Coup de Cœur'</label>
-                  <input type="text" placeholder="L'Assiette Bleue (Poisson frais)..." />
-                </div>
-                <div className="input-group">
-                  <label>Courses d'urgence</label>
-                  <input type="text" placeholder="Carrefour City ouvert jusqu'à 22h..." />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {tab === 'regles' && (
-            <div className="tab-pane">
-              <h2 className="section-title">Règles & Sécurité</h2>
-              <div className="grid-inputs">
-                <div className="input-group">
-                  <label>Heures de silence</label>
-                  <input type="text" placeholder="Pas de bruit après 22h..." />
-                </div>
-                <div className="input-group">
-                  <label>Vanne d'arrêt d'eau (URGENCE)</label>
-                  <input type="text" placeholder="Sous l'évier de la cuisine..." />
-                  <p className="helper">Marc ne donnera cette info qu'en cas d'alerte fuite.</p>
-                </div>
-                <div className="input-group">
-                  <label>Tableau électrique</label>
-                  <input type="text" placeholder="Dans le placard de l'entrée..." />
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        <div className="actions">
-          <button className="btn-later">Finir la configuration plus tard</button>
-          <button className="btn-save">Valider les informations</button>
-        </div>
-      </div>
-    </div>
-  );
+    res.status(200).json({ answer: responseText });
+  } catch (error) {
+    res.status(200).json({ answer: `Désolé : ${error.message}` });
+  }
 }
