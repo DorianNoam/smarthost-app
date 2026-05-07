@@ -5,12 +5,7 @@ import { supabase } from '../../lib/supabase';
 async function sendTelegramAlert(originalMsg, translatedMsg, propertyData, lang) {
   const token = process.env.TELEGRAM_BOT_TOKEN;
   try {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('telegram_chat_id')
-      .eq('id', propertyData.owner_id)
-      .single();
-
+    const { data: profile } = await supabase.from('profiles').select('telegram_chat_id').eq('id', propertyData.owner_id).single();
     if (!profile?.telegram_chat_id) return;
 
     let text = `🚨 *ALERTE MAJOR MARC*\n\n` +
@@ -32,28 +27,30 @@ async function sendTelegramAlert(originalMsg, translatedMsg, propertyData, lang)
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).send('Méthode non autorisée');
-
   const { messagesHistory, propertyData, userLanguage } = req.body;
   const mistral = new Mistral({ apiKey: process.env.MISTRAL_API_KEY });
   const langCode = userLanguage ? userLanguage.split('-')[0] : 'fr';
 
   try {
-    // 🧠 SYSTEM MESSAGE : On revient à l'essentiel
+    // 🧠 LE SYSTEM PROMPT : Intelligence Hybride
     const systemMessage = { 
       role: 'system', 
-      content: `Tu es Marc, le majordome de "${propertyData.name}" à ${propertyData.city}.
-      
-      CONSIGNES :
-      - Réponds en ${langCode}.
-      - Utilise UNIQUEMENT les infos ci-dessous. N'invente RIEN.
-      - Si tu ne sais pas, dis poliment que tu préviens l'hôte.
-      - Format : Saute des lignes entre les paragraphes pour la lisibilité.
+      content: `Tu es Marc, le majordome raffiné de "${propertyData.name}" à ${propertyData.city}.
 
-      INFOS DU LOGEMENT :
+      TON RÔLE :
+      - Tu es un expert local. Pour les restaurants, activités, transports et culture à ${propertyData.city}, utilise tes connaissances générales pour conseiller le client avec élégance.
+      - Pour les questions spécifiques au logement (Wifi, check-in, adresse), utilise UNIQUEMENT les infos ci-dessous.
+      - Style : Chaleureux, élégant, saute des lignes pour la lisibilité.
+
+      INFOS DU LOGEMENT (Source prioritaire) :
       - Adresse : ${propertyData.address}, ${propertyData.city}
       - Wifi : ${propertyData.wifi_name} / ${propertyData.wifi_password}
-      - Transports/Détails : ${propertyData.parking_info || 'Non renseigné.'}
-      - Arrivée/Départ : ${propertyData.check_in_hour} / ${propertyData.check_out_hour}`
+      - Check-in/out : ${propertyData.check_in_hour} / ${propertyData.check_out_hour}
+      - Précisions : ${propertyData.parking_info || ''}
+
+      LOGIQUE D'ALERTE :
+      - Si le client signale un PROBLÈME (panne, fuite, ménage), un mécontentement, ou s'il demande explicitement à parler à l'hôte, dis : "Je préviens immédiatement votre hôte."
+      - Si tu réponds à une question sur la ville ou le wifi, ne préviens PAS l'hôte.`
     };
 
     const formattedHistory = messagesHistory.map(msg => ({
@@ -69,30 +66,26 @@ export default async function handler(req, res) {
     const responseText = chatResponse.choices[0].message.content;
 
     // --- 💾 SAUVEGARDE HISTORIQUE (JSONB) ---
-    const newHistory = [
-      ...messagesHistory,
-      { role: 'marc', text: responseText, timestamp: new Date().toISOString() }
-    ];
-
+    const newHistory = [...messagesHistory, { role: 'marc', text: responseText, timestamp: new Date().toISOString() }];
     await supabase.from('conversations').upsert({
       property_id: propertyData.id,
       history: newHistory,
       last_message_at: new Date().toISOString()
     }, { onConflict: 'property_id' });
 
-    // --- 🔔 DÉTECTION D'ALERTE ---
+    // --- 🔔 DÉTECTION D'ALERTE (Basée sur l'intention de Marc) ---
     const lastUserMsg = messagesHistory[messagesHistory.length - 1]?.text || "";
-    // On utilise ta logique de détection par mots-clés dans la réponse de Marc
-    const shouldAlert = responseText.toLowerCase().includes("hôte") || 
-                        responseText.toLowerCase().includes("préviens") || 
-                        responseText.toLowerCase().includes("navré");
+    
+    // On ne déclenche QUE si Marc confirme qu'il contacte l'hôte (donc en cas d'incident)
+    const alertTrigger = responseText.toLowerCase().includes("préviens") || 
+                        responseText.toLowerCase().includes("votre hôte");
 
-    if (shouldAlert) {
+    if (alertTrigger) {
       let translatedMsg = null;
       if (langCode !== 'fr') {
         const transRes = await mistral.chat.complete({
           model: 'mistral-small-2506',
-          messages: [{ role: 'system', content: "Traduis en Français simple." }, { role: 'user', content: lastUserMsg }],
+          messages: [{ role: 'system', content: "Traduis en FR." }, { role: 'user', content: lastUserMsg }],
         });
         translatedMsg = transRes.choices[0].message.content;
       }
@@ -100,7 +93,6 @@ export default async function handler(req, res) {
     }
 
     res.status(200).json({ answer: responseText });
-
   } catch (error) {
     res.status(500).json({ answer: "Désolé, j'ai une difficulté technique." });
   }
