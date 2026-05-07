@@ -5,7 +5,6 @@ import { supabase } from '../../lib/supabase';
 async function searchLocalInfo(query, location) {
   const apiKey = process.env.TAVILY_API_KEY; 
   if (!apiKey) return ""; 
-
   try {
     const res = await fetch('https://api.tavily.com/search', {
       method: 'POST',
@@ -18,7 +17,6 @@ async function searchLocalInfo(query, location) {
         include_answer: true
       })
     });
-    
     if (!res.ok) return "";
     const data = await res.json();
     return data.answer || data.results?.map(r => r.content).join('\n\n---\n\n') || "";
@@ -31,17 +29,13 @@ async function sendTelegramAlert(originalMsg, translatedMsg, propertyData, lang)
   try {
     const { data: profile } = await supabase.from('profiles').select('telegram_chat_id').eq('id', propertyData.owner_id).single();
     if (!profile?.telegram_chat_id) return;
-
     let text = `🚨 *ALERTE MAJOR MARC*\n\n` +
                `🏠 *Logement :* ${propertyData.name}\n` + 
                `🌍 *Langue client :* ${lang}\n\n` + 
                `💬 *Message Client :*\n"${originalMsg}"`;
-
     if (translatedMsg) { text += `\n\n` + `🇫🇷 *Traduction Marc :*\n"${translatedMsg}"`; }
-
     await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ chat_id: profile.telegram_chat_id, text, parse_mode: 'Markdown' })
     });
   } catch (e) { console.error("Erreur Telegram:", e); }
@@ -49,10 +43,8 @@ async function sendTelegramAlert(originalMsg, translatedMsg, propertyData, lang)
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).send('Méthode non autorisée');
-  
-  // SÉCURITÉ : Vérification de la clé avant de lancer Groq
   if (!process.env.GROQ_API_KEY) {
-    return res.status(200).json({ answer: "⚠️ Erreur de configuration : La variable GROQ_API_KEY est introuvable sur Vercel." });
+    return res.status(200).json({ answer: "⚠️ Erreur : Variable GROQ_API_KEY manquante." });
   }
 
   const { messagesHistory, propertyData, userLanguage } = req.body;
@@ -74,26 +66,20 @@ export default async function handler(req, res) {
       role: 'system', 
       content: `Tu es Marc, le majordome de "${propertyData.name}" à FLOIRAC. 
 
-      DONNÉES DU LOGEMENT :
+      DONNÉES DU LOGEMENT (Vérité absolue) :
       - Ton adresse : ${fullAddress}
       - Wifi : ${propertyData.wifi_name} / ${propertyData.wifi_password}
 
       CONSIGNES :
       1. ADRESSE : Si on te la demande, donne-la : "${fullAddress}".
-      2. TRANSPORTS : Ne cite JAMAIS le Tram C à Floirac. C'est le Tram A.
-      3. VÉRITÉ : Ne donne pas de temps de trajet (ex: 3 min) si ce n'est pas écrit dans les résultats web.
-      4. STYLE : Raffiné, double saut de ligne.
-
-      RÉSULTATS WEB :
-      ${searchResults || "AUCUN RÉSULTAT."}
-
-      LOGIQUE D'ALERTE :
-      - Si problème, dis : "Je préviens immédiatement votre hôte."`
+      2. TRANSPORTS : Le Tram C ne passe PAS à Floirac. C'est le Tram A.
+      3. VÉRITÉ : Ne donne pas de temps de trajet si ce n'est pas dans les résultats web.
+      4. STYLE : Raffiné, double saut de ligne.`
     };
 
-    // APPEL À GROQ
+    // --- CHANGEMENT ICI : Modèle llama-3.3-70b-versatile ---
     const chatResponse = await groq.chat.completions.create({
-      model: "llama-3.1-70b-versatile",
+      model: "llama-3.3-70b-versatile", 
       messages: [
         systemMessage,
         ...messagesHistory.map(msg => ({
@@ -106,7 +92,7 @@ export default async function handler(req, res) {
 
     const responseText = chatResponse.choices[0].message.content;
 
-    // Sauvegarde History Supabase
+    // Sauvegarde History
     const newHistory = [...messagesHistory, { role: 'marc', text: responseText, timestamp: new Date().toISOString() }];
     await supabase.from('conversations').upsert({
       property_id: propertyData.id,
@@ -123,7 +109,7 @@ export default async function handler(req, res) {
       let translatedMsg = null;
       if (langCode !== 'fr') {
         const transRes = await groq.chat.completions.create({
-          model: "llama-3.1-8b-instant",
+          model: "llama-3.3-8b-instant", // Modèle léger pour la traduction
           messages: [{ role: 'system', content: "Traduis en FR." }, { role: 'user', content: lastUserMsg }],
         });
         translatedMsg = transRes.choices[0].message.content;
