@@ -13,22 +13,16 @@ export default function Settings() {
   });
 
   const [telegramLinked, setTelegramLinked] = useState(false);
-  
-  // Nom de ton bot officiel
-  const botName = "Marc_Alerte_Bot"; 
+  const botName = "Marc_Alerte_Bot"; // Ton nom de bot officiel
 
   useEffect(() => {
     loadUserData();
   }, []);
 
   const loadUserData = async () => {
-    // 1. Récupération de l'utilisateur connecté
     const { data: { user } } = await supabase.auth.getUser();
-    
     if (user) {
       setUser(user);
-      
-      // 2. Récupération des infos dans la table profiles
       const { data } = await supabase
         .from('profiles')
         .select('*')
@@ -37,7 +31,6 @@ export default function Settings() {
         
       if (data) {
         setProfile(prev => ({ ...prev, ...data }));
-        // Si un ID Telegram est déjà enregistré
         if (data.telegram_chat_id) {
           setTelegramLinked(true);
         }
@@ -49,17 +42,12 @@ export default function Settings() {
     <div className="dashboard-layout">
       <style jsx global>{`
         body { margin: 0; background: #f8fafc; font-family: 'Inter', sans-serif; }
-        a { text-decoration: none !important; }
+        a { text-decoration: none !important; color: inherit; }
       `}</style>
       
       <style jsx>{`
         .dashboard-layout { display: flex; min-height: 100vh; }
-        
-        nav { 
-          width: 260px; background: #1a2a6c; color: white; padding: 40px 20px; 
-          position: fixed; height: 100vh; z-index: 100; box-sizing: border-box; 
-          display: flex; flex-direction: column; 
-        }
+        nav { width: 260px; background: #1a2a6c; color: white; padding: 40px 20px; position: fixed; height: 100vh; z-index: 100; box-sizing: border-box; display: flex; flex-direction: column; }
         .logo { font-size: 22px; font-weight: 900; margin-bottom: 50px; text-align: center; }
         .nav-item { padding: 14px 18px; border-radius: 12px; display: flex; align-items: center; gap: 12px; font-weight: 600; opacity: 0.8; margin-bottom: 10px; cursor: pointer; color: white;}
         .nav-item.active { background: rgba(255,255,255,0.15); color: #fbbf24; opacity: 1; }
@@ -81,11 +69,11 @@ export default function Settings() {
         input { padding: 14px; border: 1px solid #e2e8f0; border-radius: 12px; background: #f8fafc; font-size: 15px; color: #1e293b; outline: none; transition: 0.2s; }
         input:focus { border-color: #1a2a6c; background: white; }
 
-        /* TELEGRAM BOX & FIX MOBILE */
+        /* TELEGRAM BOX */
         .telegram-box { 
-          background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 16px; 
-          padding: 20px; display: flex; flex-direction: column; gap: 15px; 
-          width: 100%; box-sizing: border-box;
+          background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 16px; padding: 20px; 
+          display: flex; flex-direction: column; gap: 15px; 
+          width: 100%; box-sizing: border-box; /* Garanti de ne pas dépasser */
         }
         .telegram-status { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
         .status-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; padding: 6px 12px; border-radius: 20px; white-space: nowrap; }
@@ -93,15 +81,30 @@ export default function Settings() {
         .status-linked { background: #ecfdf5; color: #059669; }
 
         .btn { padding: 12px 24px; border-radius: 12px; font-weight: 700; font-size: 14px; cursor: pointer; border: none; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
-        .btn-primary { background: #1a2a6c; color: white; }
-        .btn-outline { background: white; color: #1a2a6c; border: 1px solid #cbd5e1; }
+        .btn-primary { background: #1a2a6c; color: white !important; }
+        .btn-outline { background: white; color: #1a2a6c !important; border: 1px solid #cbd5e1; }
         .btn-danger { background: #fff1f2; color: #e11d48; border: 1px solid #fecdd3; }
         
+        /* --- LE FIX MOBILE DU BOUTON (On enlève width: max-content) --- */
         .btn-telegram { 
-          background: #0088cc; color: white !important; width: 100%; max-width: 300px; 
-          display: inline-flex; align-items: center; justify-content: center; gap: 8px; 
-          text-decoration: none; padding: 14px; border-radius: 12px; font-weight: 700;
+          background: #0088cc; 
+          color: white !important; 
+          display: inline-flex; 
+          align-items: center; 
+          justify-content: center; 
+          gap: 10px; 
+          text-decoration: none; 
+          padding: 14px 20px; 
+          border-radius: 12px; 
+          font-weight: 800; 
+          transition: 0.2s;
+          box-sizing: border-box; 
+          width: 100%; /* Prend toute la largeur de sa boîte bleue */
+          max-width: 350px; /* Mais se limite sur Desktop */
+          margin-top: 10px;
+          text-align: center;
         }
+        .btn-telegram:hover { background: #0077b5; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0, 136, 204, 0.3); }
 
         /* ABONNEMENT */
         .plan-box { border: 2px solid #1a2a6c; border-radius: 16px; padding: 20px; display: flex; justify-content: space-between; align-items: center; background: #f8fafc; margin-bottom: 20px; }
@@ -116,8 +119,13 @@ export default function Settings() {
           main { margin-left: 0; padding: 25px 20px; padding-bottom: 100px; }
           .input-grid { grid-template-columns: 1fr; }
           .input-group.full { grid-column: span 1; }
-          .btn-primary, .btn-outline, .btn-danger, .btn-telegram { width: 100%; max-width: 100%; }
-          .telegram-status { flex-direction: column; align-items: flex-start; }
+          .header-area h1 { font-size: 26px; }
+          .btn-primary, .btn-outline, .btn-danger { width: 100%; justify-content: center; }
+          
+          /* Ajustements Telegram sur mobile */
+          .telegram-status { flex-direction: column; align-items: flex-start; gap: 10px; }
+          .status-badge { margin-top: 5px; }
+          .btn-telegram { width: 100%; max-width: 100%; font-size: 13px; padding: 12px; } /* S'adapte à 100% et réduit légèrement le texte */
           .plan-box { flex-direction: column; align-items: flex-start; gap: 15px; }
         }
       `}</style>
@@ -135,11 +143,12 @@ export default function Settings() {
             <p className="subtitle">Gérez vos informations, votre abonnement et vos alertes.</p>
           </div>
 
+          {/* 👤 SECTION : PROFIL */}
           <div className="settings-card">
             <h2>👤 Profil & Facturation</h2>
             <div className="input-grid">
               <div className="input-group">
-                <label>Nom ou Société</label>
+                <label>Nom complet ou Société</label>
                 <input type="text" value={profile.name} onChange={e => setProfile({...profile, name: e.target.value})} />
               </div>
               <div className="input-group">
@@ -164,17 +173,18 @@ export default function Settings() {
             </div>
           </div>
 
+          {/* 🔔 SECTION : ALERTES (CORRIGÉE MOBILE) */}
           <div className="settings-card">
             <h2>🔔 Alertes & Urgences</h2>
             <p style={{fontSize: '14px', color: '#64748b', marginBottom: '20px', lineHeight: '1.5'}}>
-              MajorMarc utilise Telegram pour vous prévenir instantanément en cas d'urgence.
+              MajorMarc utilise Telegram pour vous prévenir instantanément en cas d'urgence ou de client mécontent.
             </p>
             
             <div className="telegram-box">
               <div className="telegram-status">
-                <div style={{flex: 1}}>
+                <div style={{ flex: 1 }}>
                   <h3 style={{margin: '0 0 5px 0', fontSize: '16px', color: '#0369a1'}}>Connexion Telegram</h3>
-                  <p style={{margin: 0, fontSize: '13px', color: '#0ea5e9'}}>Nécessite l'application sur smartphone.</p>
+                  <p style={{margin: 0, fontSize: '13px', color: '#0ea5e9'}}>Application requise sur votre smartphone.</p>
                 </div>
                 <div className={`status-badge ${telegramLinked ? 'status-linked' : 'status-unlinked'}`}>
                   {telegramLinked ? '✅ Connecté' : '❌ Non lié'}
@@ -188,7 +198,7 @@ export default function Settings() {
                   rel="noopener noreferrer"
                   className="btn-telegram"
                 >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
                   {telegramLinked ? 'Mettre à jour la connexion' : 'Lier mon compte Telegram'}
                 </a>
               ) : (
@@ -197,6 +207,7 @@ export default function Settings() {
             </div>
           </div>
 
+          {/* 💳 SECTION : ABONNEMENT */}
           <div className="settings-card">
             <h2>💳 Abonnement</h2>
             <div className="plan-box">
@@ -213,6 +224,7 @@ export default function Settings() {
             </div>
           </div>
 
+          {/* 🔒 SECTION : SÉCURITÉ */}
           <div className="settings-card">
             <h2>🔒 Sécurité</h2>
             <div className="input-grid">
