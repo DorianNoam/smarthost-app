@@ -1,7 +1,6 @@
 import { Mistral } from '@mistralai/mistralai';
 import { supabase } from '../../lib/supabase';
 
-// 1. Fonction d'alerte Telegram (Format Premium 🚨)
 async function sendTelegramAlert(originalMsg, translatedMsg, propertyData, lang) {
   const token = process.env.TELEGRAM_BOT_TOKEN;
   try {
@@ -32,7 +31,9 @@ export default async function handler(req, res) {
   const langCode = userLanguage ? userLanguage.split('-')[0] : 'fr';
 
   try {
-    // 🧠 LE SYSTEM PROMPT : Intelligence Hybride
+    // ON CONSTRUIT L'ADRESSE COMPLÈTE ICI
+    const fullAddress = `${propertyData.street_number || ''} ${propertyData.address || ''} ${propertyData.residence ? `, Résidence ${propertyData.residence}` : ''} ${propertyData.building ? `, Bâtiment ${propertyData.building}` : ''} ${propertyData.floor ? `, Étage ${propertyData.floor}` : ''}, ${propertyData.city}`;
+
     const systemMessage = { 
       role: 'system', 
       content: `Tu es Marc, le majordome raffiné de "${propertyData.name}" à ${propertyData.city}.
@@ -43,7 +44,7 @@ export default async function handler(req, res) {
       - Style : Chaleureux, élégant, saute des lignes pour la lisibilité.
 
       INFOS DU LOGEMENT (Source prioritaire) :
-      - Adresse : ${propertyData.address}, ${propertyData.city}
+      - Adresse complète : ${fullAddress}
       - Wifi : ${propertyData.wifi_name} / ${propertyData.wifi_password}
       - Check-in/out : ${propertyData.check_in_hour} / ${propertyData.check_out_hour}
       - Précisions : ${propertyData.parking_info || ''}
@@ -65,7 +66,6 @@ export default async function handler(req, res) {
 
     const responseText = chatResponse.choices[0].message.content;
 
-    // --- 💾 SAUVEGARDE HISTORIQUE (JSONB) ---
     const newHistory = [...messagesHistory, { role: 'marc', text: responseText, timestamp: new Date().toISOString() }];
     await supabase.from('conversations').upsert({
       property_id: propertyData.id,
@@ -73,10 +73,6 @@ export default async function handler(req, res) {
       last_message_at: new Date().toISOString()
     }, { onConflict: 'property_id' });
 
-    // --- 🔔 DÉTECTION D'ALERTE (Basée sur l'intention de Marc) ---
-    const lastUserMsg = messagesHistory[messagesHistory.length - 1]?.text || "";
-    
-    // On ne déclenche QUE si Marc confirme qu'il contacte l'hôte (donc en cas d'incident)
     const alertTrigger = responseText.toLowerCase().includes("préviens") || 
                         responseText.toLowerCase().includes("votre hôte");
 
