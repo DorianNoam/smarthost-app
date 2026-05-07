@@ -19,7 +19,8 @@ async function searchLocalInfo(query, location) {
       })
     });
     const data = await res.json();
-    // On force l'espacement entre les différents résultats trouvés
+    // On retourne les résultats réels ou un message vide s'il n'y a rien
+    if (!data.results || data.results.length === 0) return "";
     return data.answer || data.results.map(r => r.content).join('\n\n---\n\n');
   } catch (e) { return ""; }
 }
@@ -68,26 +69,23 @@ export default async function handler(req, res) {
       role: 'system', 
       content: `Tu es Marc, le majordome de "${propertyData.name}". 
 
-      CONSIGNE DE MISE EN PAGE (OBLIGATOIRE) :
-      - Ne fais jamais de blocs de texte.
-      - Chaque suggestion doit commencer sur une NOUVELLE LIGNE par un tiret (-).
-      - Tu DOIS sauter une ligne entre chaque point.
-      - Insère une ligne de séparation "---" SEULE sur sa ligne entre chaque recommandation.
+      CONSIGNES DE VÉRITÉ ABSOLUE (CRUCIAL) :
+      - N'INVENTE JAMAIS de noms ou d'adresses de restaurants/commerces.
+      - Si la section "RÉSULTATS DE RECHERCHE WEB" est vide, dis simplement que tu n'as pas d'informations vérifiées pour le moment et propose de prévenir l'hôte.
+      - L'adresse du logement (${fullAddress}) ne doit JAMAIS être utilisée pour un restaurant.
+      - Ne réponds que sur la base des résultats de recherche fournis.
 
-      EXEMPLE DE STRUCTURE À SUIVRE :
-      - **NOM DU LIEU** : Description courte.
-      *Adresse* : Rue et ville.
-      
-      ---
-      
-      - **LIEU SUIVANT** : Description...
+      CONSIGNE DE MISE EN PAGE :
+      - Chaque suggestion doit commencer par un tiret (-).
+      - Saute DEUX LIGNES entre chaque point.
+      - Insère une ligne "---" entre chaque recommandation.
 
       INFOS LOGEMENT :
       - Adresse : ${fullAddress}
       - Wifi : ${propertyData.wifi_name} / ${propertyData.wifi_password}
 
-      RÉSULTATS DE RECHERCHE WEB :
-      ${searchResults || "Pas de recherche web nécessaire."}`
+      RÉSULTATS DE RECHERCHE WEB (Ta seule source pour l'extérieur) :
+      ${searchResults || "AUCUNE INFORMATION TROUVÉE SUR LE WEB. NE RIEN INVENTER."}`
     };
 
     const formattedHistory = messagesHistory.map(msg => ({
