@@ -1,7 +1,7 @@
-import { Mistral } from '@mistralai/mistralai';
+import Groq from 'groq-sdk';
 import { supabase } from '../../lib/supabase';
 
-// --- 1. FONCTION DE RECHERCHE (Optimisée) ---
+// --- 1. FONCTION DE RECHERCHE (Tavily) ---
 async function searchLocalInfo(query, location) {
   const apiKey = process.env.TAVILY_API_KEY; 
   if (!apiKey) return ""; 
@@ -25,7 +25,7 @@ async function searchLocalInfo(query, location) {
   } catch (e) { return ""; }
 }
 
-// --- 2. CODE D'ALERTE TELEGRAM (Toujours présent !) ---
+// --- 2. CODE D'ALERTE TELEGRAM ---
 async function sendTelegramAlert(originalMsg, translatedMsg, propertyData, lang) {
   const token = process.env.TELEGRAM_BOT_TOKEN;
   try {
@@ -34,7 +34,7 @@ async function sendTelegramAlert(originalMsg, translatedMsg, propertyData, lang)
 
     let text = `🚨 *ALERTE MAJOR MARC*\n\n` +
                `🏠 *Logement :* ${propertyData.name}\n` + 
-               `🌍 *Langue client :* ${lang}\n\n` +
+               `🌍 *Langue client :* ${lang}\n\n` + 
                `💬 *Message Client :*\n"${originalMsg}"`;
 
     if (translatedMsg) { text += `\n\n` + `🇫🇷 *Traduction Marc :*\n"${translatedMsg}"`; }
@@ -50,7 +50,9 @@ async function sendTelegramAlert(originalMsg, translatedMsg, propertyData, lang)
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).send('Méthode non autorisée');
   const { messagesHistory, propertyData, userLanguage } = req.body;
-  const mistral = new Mistral({ apiKey: process.env.MISTRAL_API_KEY });
+  
+  // INITIALISATION DU NOUVEAU MOTEUR GROQ
+  const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
   const langCode = userLanguage ? userLanguage.split('-')[0] : 'fr';
 
   try {
@@ -66,37 +68,42 @@ export default async function handler(req, res) {
 
     const systemMessage = { 
       role: 'system', 
-      content: `Tu es Marc, le majordome de "${propertyData.name}". 
+      content: `Tu es Marc, le majordome de "${propertyData.name}" à FLOIRAC. 
 
-      DONNÉES DU LOGEMENT (Source de vérité absolue pour la maison) :
+      DONNÉES DU LOGEMENT (Source de vérité absolue) :
       - Ton adresse : ${fullAddress}
       - Wifi : ${propertyData.wifi_name} / ${propertyData.wifi_password}
       - Check-in/out : ${propertyData.check_in_hour} / ${propertyData.check_out_hour}
 
       CONSIGNES DE RÉPONSE :
-      1. ADRESSE : Si le client te demande l'adresse du logement, tu DOIS lui donner : "${fullAddress}". C'est ton information de base.
-      2. TRANSPORTS/EXTÉRIEUR : Utilise UNIQUEMENT les "RÉSULTATS WEB" ci-dessous. Si tu ne vois pas de numéro de ligne (ex: Tram A, Bus 28) dans les résultats, ne les invente pas. Dis que tu ne connais pas le numéro exact mais que l'hôte pourra préciser.
-      3. HALLUCINATION : Ne cite jamais le "Tram C" à Floirac. Si la recherche ne le mentionne pas, il n'existe pas pour toi.
+      1. ADRESSE : Si le client te demande l'adresse du logement, donne : "${fullAddress}".
+      2. TRANSPORTS : Le Tram C ne passe PAS à Floirac. C'est le **Tram A**. Ne cite JAMAIS de lignes ou de temps (ex: 3 min) si ce n'est pas dans les résultats web. 
+      3. Si tu ne sais pas, dis que tu ne connais pas le numéro exact mais que l'hôte peut préciser.
       4. STYLE : Raffiné, aéré, liste à puces, double saut de ligne.
 
-      RÉSULTATS WEB (Pour les transports et restos uniquement) :
-      ${searchResults || "AUCUN RÉSULTAT. Ne donne aucun nom de transport."}
+      RÉSULTATS WEB (Source pour l'extérieur uniquement) :
+      ${searchResults || "AUCUN RÉSULTAT. Ne pas inventer de transports."}
 
       LOGIQUE D'ALERTE :
-      - Si problème (panne, fuite, ménage), dis obligatoirement : "Je préviens immédiatement votre hôte."`
+      - Si problème (panne, fuite, ménage), dis : "Je préviens immédiatement votre hôte."`
     };
 
-    const chatResponse = await mistral.chat.complete({
-      model: 'mistral-small-2506',
-      messages: [systemMessage, ...messagesHistory.map(msg => ({
-        role: msg.role === 'marc' ? 'assistant' : 'user',
-        content: msg.text
-      }))],
+    // APPEL À L'IA (Groq Llama 3.1 70B)
+    const chatResponse = await groq.chat.completions.create({
+      model: "llama-3.1-70b-versatile",
+      messages: [
+        systemMessage,
+        ...messagesHistory.map(msg => ({
+          role: msg.role === 'marc' ? 'assistant' : 'user',
+          content: msg.text || ''
+        }))
+      ],
+      temperature: 0.1, // On baisse au minimum pour supprimer l'invention
     });
 
     const responseText = chatResponse.choices[0].message.content;
 
-    // Sauvegarde History
+    // Sauvegarde History dans Supabase
     const newHistory = [...messagesHistory, { role: 'marc', text: responseText, timestamp: new Date().toISOString() }];
     await supabase.from('conversations').upsert({
       property_id: propertyData.id,
@@ -104,7 +111,7 @@ export default async function handler(req, res) {
       last_message_at: new Date().toISOString()
     }, { onConflict: 'property_id' });
 
-    // --- BLOC ALERTE TELEGRAM (BIEN CONSERVÉ) ---
+    // --- BLOC ALERTE TELEGRAM ---
     const alertTrigger = responseText.toLowerCase().includes("préviens") || 
                         responseText.toLowerCase().includes("prévenir") || 
                         responseText.toLowerCase().includes("votre hôte");
@@ -112,8 +119,8 @@ export default async function handler(req, res) {
     if (alertTrigger) {
       let translatedMsg = null;
       if (langCode !== 'fr') {
-        const transRes = await mistral.chat.complete({
-          model: 'mistral-small-2506',
+        const transRes = await groq.chat.completions.create({
+          model: "llama-3.1-8b-instant",
           messages: [{ role: 'system', content: "Traduis en FR." }, { role: 'user', content: lastUserMsg }],
         });
         translatedMsg = transRes.choices[0].message.content;
@@ -122,7 +129,9 @@ export default async function handler(req, res) {
     }
 
     res.status(200).json({ answer: responseText });
+
   } catch (error) {
+    console.error("Erreur Chat:", error);
     res.status(500).json({ answer: "Désolé, j'ai une difficulté technique." });
   }
 }
