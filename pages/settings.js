@@ -8,9 +8,10 @@ export default function Settings() {
     address: '12 Rue de la Paix',
     zipcode: '75000',
     city: 'Paris',
-    alertEmail: 'urgences@conciergerie-dupont.com',
-    alertPhone: '+33 6 12 34 56 78'
   });
+
+  // Faux état pour simuler si le client a déjà lié son Telegram ou non
+  const [telegramLinked, setTelegramLinked] = useState(false);
 
   return (
     <div className="dashboard-layout">
@@ -44,6 +45,7 @@ export default function Settings() {
         input { padding: 14px; border: 1px solid #e2e8f0; border-radius: 12px; background: #f8fafc; font-size: 15px; color: #1e293b; outline: none; transition: 0.2s; }
         input:focus { border-color: #1a2a6c; background: white; }
 
+        /* ABONNEMENT */
         .plan-box { border: 2px solid #1a2a6c; border-radius: 16px; padding: 20px; display: flex; justify-content: space-between; align-items: center; background: #f8fafc; margin-bottom: 20px; }
         .plan-info h3 { margin: 0; color: #1a2a6c; font-size: 18px; font-weight: 800; }
         .plan-info p { margin: 5px 0 0 0; color: #64748b; font-size: 14px; }
@@ -52,6 +54,14 @@ export default function Settings() {
         .payment-method { display: flex; align-items: center; gap: 15px; padding: 15px; border: 1px solid #e2e8f0; border-radius: 12px; }
         .card-icon { background: #1e293b; color: white; padding: 5px 10px; border-radius: 6px; font-size: 12px; font-weight: 800; font-family: monospace; }
 
+        /* TELEGRAM BOX */
+        .telegram-box { background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
+        .telegram-status { display: flex; align-items: center; justify-content: space-between; }
+        .status-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; padding: 6px 12px; border-radius: 20px; }
+        .status-unlinked { background: #fee2e2; color: #b91c1c; }
+        .status-linked { background: #ecfdf5; color: #059669; }
+
+        /* BOUTONS */
         .btn { padding: 12px 24px; border-radius: 12px; font-weight: 700; font-size: 14px; cursor: pointer; border: none; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
         .btn-primary { background: #1a2a6c; color: white; box-shadow: 0 4px 6px rgba(26, 42, 108, 0.2); }
         .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 10px rgba(26, 42, 108, 0.3); }
@@ -59,8 +69,9 @@ export default function Settings() {
         .btn-outline:hover { background: #f8fafc; }
         .btn-danger { background: #fff1f2; color: #e11d48; border: 1px solid #fecdd3; }
         .btn-danger:hover { background: #ffe4e6; }
-        .btn-telegram { background: #0088cc; color: white; }
-        .btn-telegram:hover { background: #0077b5; transform: translateY(-2px); }
+        
+        .btn-telegram { background: #0088cc; color: white; width: max-content; }
+        .btn-telegram:hover { background: #0077b5; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0, 136, 204, 0.3); }
 
         .divider { height: 1px; background: #e2e8f0; margin: 25px 0; }
 
@@ -120,31 +131,33 @@ export default function Settings() {
             </div>
           </div>
 
-          {/* 🔔 SECTION : ALERTES & NOTIFICATIONS (Simplifié pour le client) */}
+          {/* 🔔 SECTION : ALERTES (100% TELEGRAM) */}
           <div className="settings-card">
-            <h2>🔔 Réception des alertes (Urgences)</h2>
-            <p style={{fontSize: '14px', color: '#64748b', marginBottom: '20px'}}>
-              Si l'IA détecte une urgence ou un client mécontent, elle vous préviendra immédiatement. Choisissez comment vous souhaitez être contacté.
+            <h2>🔔 Alertes & Urgences</h2>
+            <p style={{fontSize: '14px', color: '#64748b', marginBottom: '20px', lineHeight: '1.5'}}>
+              MajorMarc utilise Telegram pour vous prévenir instantanément (et gratuitement) si l'IA détecte une urgence ou un client mécontent dans l'un de vos logements.
             </p>
-            <div className="input-grid">
-              <div className="input-group">
-                <label>Email pour les alertes</label>
-                <input type="email" value={profile.alertEmail} onChange={e => setProfile({...profile, alertEmail: e.target.value})} />
-              </div>
-              <div className="input-group">
-                <label>Numéro de téléphone (SMS/WhatsApp)</label>
-                <input type="tel" value={profile.alertPhone} onChange={e => setProfile({...profile, alertPhone: e.target.value})} />
-              </div>
-            </div>
             
-            <div className="divider"></div>
-            
-            <div style={{display: 'flex', alignItems: 'center', gap: '15px', flexWrap: 'wrap'}}>
-              <button className="btn btn-telegram">
+            <div className="telegram-box">
+              <div className="telegram-status">
+                <div>
+                  <h3 style={{margin: '0 0 5px 0', fontSize: '16px', color: '#0369a1'}}>Connexion Telegram</h3>
+                  <p style={{margin: 0, fontSize: '13px', color: '#0ea5e9'}}>Application requise sur votre smartphone.</p>
+                </div>
+                {/* Badge visuel pour rassurer le client */}
+                <div className={`status-badge ${telegramLinked ? 'status-linked' : 'status-unlinked'}`}>
+                  {telegramLinked ? '✅ Connecté' : '❌ Non lié'}
+                </div>
+              </div>
+
+              {/* Bouton d'action */}
+              <button 
+                className="btn btn-telegram" 
+                onClick={() => setTelegramLinked(!telegramLinked)} // Petit toggle pour le test visuel
+              >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-                Lier mon compte Telegram
+                {telegramLinked ? 'Mettre à jour la connexion' : 'Lier mon compte Telegram'}
               </button>
-              <span style={{fontSize: '13px', color: '#64748b'}}>Recevez des notifications instantanées et gratuites via notre Bot officiel.</span>
             </div>
           </div>
 
