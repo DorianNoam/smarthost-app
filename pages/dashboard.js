@@ -28,16 +28,20 @@ export default function Dashboard() {
       `}</style>
       <style jsx>{`
         .dashboard-layout { display: flex; min-height: 100vh; }
-        nav { width: 260px; background: #1a2a6c; color: white; padding: 40px 20px; position: fixed; height: 100vh; z-index: 100;}
+        
+        /* NAVBAR DESKTOP */
+        nav { width: 260px; background: #1a2a6c; color: white; padding: 40px 20px; position: fixed; height: 100vh; z-index: 100; box-sizing: border-box; }
         .logo { font-size: 22px; font-weight: 900; margin-bottom: 50px; text-align: center; }
         .nav-item { padding: 14px 18px; border-radius: 12px; display: flex; align-items: center; gap: 12px; font-weight: 600; opacity: 0.8; margin-bottom: 10px; cursor: pointer; color: white;}
         .nav-item.active { background: rgba(255,255,255,0.15); color: #fbbf24; opacity: 1; }
 
-        main { flex: 1; margin-left: 260px; padding: 50px; }
+        /* CONTENU DESKTOP */
+        main { flex: 1; margin-left: 260px; padding: 50px; box-sizing: border-box; }
         .header-area { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
         h1 { margin: 0; color: #1e293b; font-size: 32px; font-weight: 800; }
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 25px; }
 
+        /* CARTES */
         .card { 
           background: white; border-radius: 24px; padding: 25px; 
           border: 1px solid #e2e8f0; position: relative;
@@ -51,59 +55,81 @@ export default function Dashboard() {
         h3 { margin: 0 0 5px 0; color: #1a2a6c; font-size: 22px; font-weight: 800; }
         .address { color: #64748b; font-size: 14px; margin-bottom: 20px; }
 
+        /* BOUTONS D'ACTION */
         .btn-stack { display: flex; flex-direction: column; gap: 12px; }
-        
-        /* Les vrais styles de boutons */
-        .action-btn { 
-          padding: 14px; 
-          border-radius: 14px; 
-          font-weight: 700; 
-          font-size: 14px; 
-          text-align: center; 
-          transition: 0.2s; 
-          display: flex; 
-          align-items: center; 
-          justify-content: center; 
-          gap: 10px; 
-          cursor: pointer;
-          border: none;
-          width: 100%;
-          box-sizing: border-box;
-        }
-        
+        .action-btn { padding: 14px; border-radius: 14px; font-weight: 700; font-size: 14px; text-align: center; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; border: none; width: 100%; box-sizing: border-box; }
         .btn-primary { background: #1a2a6c; color: white; box-shadow: 0 4px 6px rgba(26, 42, 108, 0.2); }
-        .btn-primary:hover { background: #111d4a; transform: translateY(-2px); }
-        
         .btn-outline { background: white; color: #1a2a6c; border: 1px solid #cbd5e1; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
-        .btn-outline:hover { background: #f8fafc; border-color: #94a3b8; transform: translateY(-2px); }
-        
         .btn-light { background: #f1f5f9; color: #475569; }
-        .btn-light:hover { background: #e2e8f0; transform: translateY(-2px); }
+        .btn-add { background: #fbbf24; color: #1a2a6c; padding: 12px 24px; border-radius: 12px; font-weight: 800; font-size: 15px; display: inline-block; box-shadow: 0 4px 6px rgba(251, 191, 36, 0.3); transition: 0.2s; white-space: nowrap; }
 
-        .btn-add { background: #fbbf24; color: #1a2a6c; padding: 12px 24px; border-radius: 12px; font-weight: 800; font-size: 15px; display: inline-block; box-shadow: 0 4px 6px rgba(251, 191, 36, 0.3); transition: 0.2s; }
-        .btn-add:hover { background: #f59e0b; transform: translateY(-2px); }
-
+        /* =========================================
+           OPTIMISATION MOBILE (Correction) 
+           ========================================= */
         @media (max-width: 900px) {
-          nav { width: 100%; height: auto; position: fixed; bottom: 0; flex-direction: row; padding: 10px; height: 60px; justify-content: space-around; z-index: 100; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); }
-          .logo, .nav-text { display: none; }
-          main { margin-left: 0; padding: 20px; padding-bottom: 80px; }
+          /* Vraie barre d'onglets (Tab bar) en bas */
+          nav { 
+            width: 100%; height: 70px; position: fixed; bottom: 0; left: 0; top: auto;
+            flex-direction: row; padding: 0; justify-content: space-around; align-items: center; 
+            z-index: 1000; box-shadow: 0 -4px 15px rgba(0,0,0,0.1); 
+            padding-bottom: env(safe-area-inset-bottom); /* Fix pour les iPhones récents */
+          }
+          .logo { display: none; }
+          .nav-text { display: none; } /* Cache le texte pour laisser juste l'icône */
+          
+          /* Centrage parfait des icônes de la navbar */
+          .nav-item { 
+            margin: 0; padding: 10px; flex: 1; justify-content: center; 
+            font-size: 24px; border-radius: 0; background: transparent !important;
+          }
+          
+          /* L'icône active a une petite pastille sous elle ou change de couleur */
+          .nav-item.active { color: #fbbf24; }
+
+          /* Contenu principal adapté */
+          main { 
+            margin-left: 0; 
+            padding: 20px; 
+            padding-bottom: 100px; /* Espace pour ne pas que la navbar cache la dernière carte */
+          }
+          
+          /* Entête sur une seule ligne */
+          .header-area { 
+            flex-direction: row; /* Force le titre et le bouton sur la même ligne */
+            align-items: center; 
+            gap: 15px; 
+            margin-bottom: 25px;
+          }
+          h1 { font-size: 22px; }
+          
+          /* Bouton ajouter plus discret sur mobile */
+          .btn-add { 
+            padding: 10px 15px; 
+            font-size: 13px; 
+            width: auto; /* Empêche le bouton de prendre 100% de la largeur */
+          }
+          
           .grid { grid-template-columns: 1fr; }
-          .header-area { flex-direction: column; align-items: flex-start; gap: 15px; }
-          .btn-add { width: 100%; text-align: center; }
         }
       `}</style>
 
       <nav>
         <div className="logo">MajorMarc 🎩</div>
-        <Link href="/dashboard" passHref legacyBehavior><a className="nav-item active">🏠 <span className="nav-text">Mes Logements</span></a></Link>
-        <Link href="/settings" passHref legacyBehavior><a className="nav-item">⚙️ <span className="nav-text">Paramètres</span></a></Link>
+        {/* Navigation */}
+        <Link href="/dashboard" passHref legacyBehavior>
+          <a className="nav-item active">🏠 <span className="nav-text">Mes Logements</span></a>
+        </Link>
+        <Link href="/settings" passHref legacyBehavior>
+          <a className="nav-item">⚙️ <span className="nav-text">Paramètres</span></a>
+        </Link>
       </nav>
 
       <main>
         <div className="header-area">
           <h1>Mes Logements</h1>
           <Link href="/add-property" passHref legacyBehavior>
-            <a className="btn-add">+ Ajouter un logement</a>
+            {/* Sur mobile, on raccourcit le texte visuellement avec CSS ou on le laisse s'adapter */}
+            <a className="btn-add">+ Ajouter</a>
           </Link>
         </div>
 
@@ -117,15 +143,11 @@ export default function Dashboard() {
               
               <div className="btn-stack">
                 <Link href={`/property/${prop.id}`} passHref legacyBehavior>
-                  <a className="action-btn btn-primary">
-                    📊 Fiche Logement & Stats
-                  </a>
+                  <a className="action-btn btn-primary">📊 Fiche Logement & Stats</a>
                 </Link>
                 
                 <Link href={`/add-property?id=${prop.id}`} passHref legacyBehavior>
-                  <a className="action-btn btn-outline">
-                    ⚙️ Modifier la configuration
-                  </a>
+                  <a className="action-btn btn-outline">⚙️ Modifier la configuration</a>
                 </Link>
                 
                 <Link href={`/chat/${prop.id}`} passHref legacyBehavior>
