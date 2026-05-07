@@ -1,10 +1,10 @@
 import { Mistral } from '@mistralai/mistralai';
 import { supabase } from '../../lib/supabase';
 
-// --- 1. FONCTION DE RECHERCHE ---
+// --- 1. FONCTION DE RECHERCHE (Optimisée avec plus d'espacement) ---
 async function searchLocalInfo(query, location) {
   const apiKey = process.env.TAVILY_API_KEY; 
-  if (!apiKey) return ""; // On reste discret si pas de clé
+  if (!apiKey) return ""; 
 
   try {
     const res = await fetch('https://api.tavily.com/search', {
@@ -19,11 +19,12 @@ async function searchLocalInfo(query, location) {
       })
     });
     const data = await res.json();
-    return data.answer || data.results.map(r => r.content).join('\n---\n');
+    // On ajoute un double saut de ligne et une ligne de séparation entre chaque résultat trouvé sur le web
+    return data.answer || data.results.map(r => r.content).join('\n\n---\n\n');
   } catch (e) { return ""; }
 }
 
-// --- 2. ALERTE TELEGRAM ---
+// --- 2. CODE D'ALERTE TELEGRAM (Intact) ---
 async function sendTelegramAlert(originalMsg, translatedMsg, propertyData, lang) {
   const token = process.env.TELEGRAM_BOT_TOKEN;
   try {
@@ -52,13 +53,13 @@ export default async function handler(req, res) {
   const langCode = userLanguage ? userLanguage.split('-')[0] : 'fr';
 
   try {
-    // Construction de l'adresse avec les noms de colonnes du Wizard
+    // Construction de l'adresse complète
     const fullAddress = `${propertyData.street_number || ''} ${propertyData.address || ''} ${propertyData.residence_name ? `, Résidence ${propertyData.residence_name}` : ''} ${propertyData.building ? `, Bâtiment ${propertyData.building}` : ''} ${propertyData.floor ? `, Étage ${propertyData.floor}` : ''}, ${propertyData.city}`;
 
     const lastUserMsg = messagesHistory[messagesHistory.length - 1]?.text || "";
     let searchResults = "";
     
-    // Déclencheur élargi (on ajoute transport, aller, faire, voir)
+    // Déclencheur de recherche
     const needsSearch = lastUserMsg.toLowerCase().match(/(restaurant|bus|tram|transport|manger|visite|activité|proche|autour|aller|faire|voir)/);
     
     if (needsSearch) {
@@ -67,13 +68,19 @@ export default async function handler(req, res) {
 
     const systemMessage = { 
       role: 'system', 
-      content: `Tu es Marc, le majordome raffiné et connecté de "${propertyData.name}" à ${propertyData.city}.
+      content: `Tu es Marc, le majordome de "${propertyData.name}".
 
-      DIRECTIVES CRUCIALES :
-      - Tu AS accès à internet. Ne dis JAMAIS "je n'ai pas accès aux infos en temps réel".
-      - Utilise les "RÉSULTATS DE RECHERCHE" ci-dessous pour donner des réponses ultra-précises (lignes de bus, noms de restos).
-      - Style : Élégant, aéré. Fais des listes à puces.
-      - SAUTE DEUX LIGNES entre chaque point pour la clarté.
+      RÈGLES D'OR DE MISE EN PAGE :
+      1. Ne fais JAMAIS de paragraphes compacts.
+      2. Utilise des listes à puces claires.
+      3. SAUTE DEUX LIGNES (double retour chariot) entre chaque point ou recommandation.
+      4. Utilise le **GRAS** pour les noms de restaurants, les lignes de transport ou les lieux.
+      5. Ajoute une ligne de séparation "---" entre les différentes suggestions.
+
+      TON RÔLE :
+      - Tu es un majordome raffiné. Ton affichage doit être luxueux et facile à lire sur mobile.
+      - Utilise les "RÉSULTATS DE RECHERCHE" pour être précis sur la ville.
+      - Pour le Wifi et les accès, utilise les infos du logement.
 
       INFOS DU LOGEMENT :
       - Adresse : ${fullAddress}
@@ -81,10 +88,10 @@ export default async function handler(req, res) {
       - Check-in/out : ${propertyData.check_in_hour} / ${propertyData.check_out_hour}
 
       RÉSULTATS DE TA RECHERCHE WEB (Source de vérité) :
-      ${searchResults || "Aucune recherche nécessaire. Utilise tes connaissances générales sur " + propertyData.city}
+      ${searchResults || "Pas de recherche web nécessaire."}
 
       LOGIQUE D'ALERTE :
-      - Si problème (panne, fuite, ménage), dis : "Je préviens immédiatement votre hôte."`
+      - Si problème ou mécontentement, dis : "Je préviens immédiatement votre hôte."`
     };
 
     const formattedHistory = messagesHistory.map(msg => ({
