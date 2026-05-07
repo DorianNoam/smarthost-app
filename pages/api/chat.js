@@ -1,7 +1,7 @@
 import { Mistral } from '@mistralai/mistralai';
 import { supabase } from '../../lib/supabase';
 
-// --- 1. FONCTION DE RECHERCHE (Optimisée avec plus d'espacement) ---
+// --- 1. FONCTION DE RECHERCHE ---
 async function searchLocalInfo(query, location) {
   const apiKey = process.env.TAVILY_API_KEY; 
   if (!apiKey) return ""; 
@@ -19,12 +19,12 @@ async function searchLocalInfo(query, location) {
       })
     });
     const data = await res.json();
-    // On ajoute un double saut de ligne et une ligne de séparation entre chaque résultat trouvé sur le web
+    // On force l'espacement entre les différents résultats trouvés
     return data.answer || data.results.map(r => r.content).join('\n\n---\n\n');
   } catch (e) { return ""; }
 }
 
-// --- 2. CODE D'ALERTE TELEGRAM (Intact) ---
+// --- 2. CODE D'ALERTE TELEGRAM ---
 async function sendTelegramAlert(originalMsg, translatedMsg, propertyData, lang) {
   const token = process.env.TELEGRAM_BOT_TOKEN;
   try {
@@ -32,7 +32,7 @@ async function sendTelegramAlert(originalMsg, translatedMsg, propertyData, lang)
     if (!profile?.telegram_chat_id) return;
 
     let text = `🚨 *ALERTE MAJOR MARC*\n\n` +
-               `🏠 *Logement :* ${propertyData.name}\n` +
+               `🏠 *Logement :* ${propertyData.name}\n` + 
                `🌍 *Langue client :* ${lang}\n\n` +
                `💬 *Message Client :*\n"${originalMsg}"`;
 
@@ -53,13 +53,11 @@ export default async function handler(req, res) {
   const langCode = userLanguage ? userLanguage.split('-')[0] : 'fr';
 
   try {
-    // Construction de l'adresse complète
     const fullAddress = `${propertyData.street_number || ''} ${propertyData.address || ''} ${propertyData.residence_name ? `, Résidence ${propertyData.residence_name}` : ''} ${propertyData.building ? `, Bâtiment ${propertyData.building}` : ''} ${propertyData.floor ? `, Étage ${propertyData.floor}` : ''}, ${propertyData.city}`;
 
     const lastUserMsg = messagesHistory[messagesHistory.length - 1]?.text || "";
     let searchResults = "";
     
-    // Déclencheur de recherche
     const needsSearch = lastUserMsg.toLowerCase().match(/(restaurant|bus|tram|transport|manger|visite|activité|proche|autour|aller|faire|voir)/);
     
     if (needsSearch) {
@@ -68,30 +66,28 @@ export default async function handler(req, res) {
 
     const systemMessage = { 
       role: 'system', 
-      content: `Tu es Marc, le majordome de "${propertyData.name}".
+      content: `Tu es Marc, le majordome de "${propertyData.name}". 
 
-      RÈGLES D'OR DE MISE EN PAGE :
-      1. Ne fais JAMAIS de paragraphes compacts.
-      2. Utilise des listes à puces claires.
-      3. SAUTE DEUX LIGNES (double retour chariot) entre chaque point ou recommandation.
-      4. Utilise le **GRAS** pour les noms de restaurants, les lignes de transport ou les lieux.
-      5. Ajoute une ligne de séparation "---" entre les différentes suggestions.
+      CONSIGNE DE MISE EN PAGE (OBLIGATOIRE) :
+      - Ne fais jamais de blocs de texte.
+      - Chaque suggestion doit commencer sur une NOUVELLE LIGNE par un tiret (-).
+      - Tu DOIS sauter une ligne entre chaque point.
+      - Insère une ligne de séparation "---" SEULE sur sa ligne entre chaque recommandation.
 
-      TON RÔLE :
-      - Tu es un majordome raffiné. Ton affichage doit être luxueux et facile à lire sur mobile.
-      - Utilise les "RÉSULTATS DE RECHERCHE" pour être précis sur la ville.
-      - Pour le Wifi et les accès, utilise les infos du logement.
+      EXEMPLE DE STRUCTURE À SUIVRE :
+      - **NOM DU LIEU** : Description courte.
+      *Adresse* : Rue et ville.
+      
+      ---
+      
+      - **LIEU SUIVANT** : Description...
 
-      INFOS DU LOGEMENT :
+      INFOS LOGEMENT :
       - Adresse : ${fullAddress}
       - Wifi : ${propertyData.wifi_name} / ${propertyData.wifi_password}
-      - Check-in/out : ${propertyData.check_in_hour} / ${propertyData.check_out_hour}
 
-      RÉSULTATS DE TA RECHERCHE WEB (Source de vérité) :
-      ${searchResults || "Pas de recherche web nécessaire."}
-
-      LOGIQUE D'ALERTE :
-      - Si problème ou mécontentement, dis : "Je préviens immédiatement votre hôte."`
+      RÉSULTATS DE RECHERCHE WEB :
+      ${searchResults || "Pas de recherche web nécessaire."}`
     };
 
     const formattedHistory = messagesHistory.map(msg => ({
@@ -106,7 +102,6 @@ export default async function handler(req, res) {
 
     const responseText = chatResponse.choices[0].message.content;
 
-    // Sauvegarde History
     const newHistory = [...messagesHistory, { role: 'marc', text: responseText, timestamp: new Date().toISOString() }];
     await supabase.from('conversations').upsert({
       property_id: propertyData.id,
@@ -114,7 +109,6 @@ export default async function handler(req, res) {
       last_message_at: new Date().toISOString()
     }, { onConflict: 'property_id' });
 
-    // Alerte Telegram
     const alertTrigger = responseText.toLowerCase().includes("préviens") || responseText.toLowerCase().includes("votre hôte");
     if (alertTrigger) {
       let translatedMsg = null;
