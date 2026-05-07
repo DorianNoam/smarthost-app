@@ -15,7 +15,7 @@ export default function Settings() {
   const [telegramLinked, setTelegramLinked] = useState(false);
   
   // ⚠️ Remplace par le VRAI nom de ton bot (sans le @)
-  const botName = "MajorMarcBot"; 
+ const botName = "Marc_Alerte_Bot";
 
   useEffect(() => {
     loadUserData();
