@@ -19,67 +19,133 @@ export default function PropertySpecs() {
 
   if (!property) return null;
 
+  // Petit composant pour afficher proprement les données (gère les cases vides)
+  const DataItem = ({ label, value, fullWidth }) => (
+    <div className="data-item" style={{ gridColumn: fullWidth ? 'span 2' : 'auto' }}>
+      <label>{label}</label>
+      <p>{value ? value : <span style={{color: '#cbd5e1', fontStyle: 'italic'}}>Non renseigné</span>}</p>
+    </div>
+  );
+
   return (
     <div className="specs-container">
+      <style jsx global>{`
+        body { margin: 0; background: #f8fafc; font-family: 'Inter', sans-serif; }
+        a { text-decoration: none; }
+      `}</style>
       <style jsx>{`
-        .specs-container { background: #f8fafc; min-height: 100vh; font-family: 'Inter', sans-serif; }
-        nav { background: #1a2a6c; color: white; padding: 15px 30px; display: flex; align-items: center; gap: 20px; }
-        .back-link { color: white; text-decoration: none; font-size: 14px; opacity: 0.8; }
+        .specs-container { min-height: 100vh; }
         
-        main { max-width: 1000px; margin: 40px auto; padding: 0 20px; display: grid; grid-template-columns: 2fr 1fr; gap: 30px; }
+        /* HEADER AVEC LIEN CORRIGÉ */
+        nav { background: #1a2a6c; color: white; padding: 15px 30px; display: flex; align-items: center; gap: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .back-link { color: white !important; font-size: 14px; opacity: 0.8; transition: 0.2s; font-weight: 600; }
+        .back-link:hover { opacity: 1; text-decoration: underline; }
+        h1 { font-size: 20px; margin: 0; font-weight: 800; border-left: 2px solid rgba(255,255,255,0.2); padding-left: 20px; }
         
-        .section { background: white; padding: 30px; border-radius: 24px; border: 1px solid #e2e8f0; margin-bottom: 25px; }
-        h2 { font-size: 18px; color: #1a2a6c; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px; margin-bottom: 20px; }
+        /* MISE EN PAGE */
+        main { max-width: 1100px; margin: 40px auto; padding: 0 20px; display: grid; grid-template-columns: 2fr 1fr; gap: 30px; align-items: start; }
         
-        .stat-card { background: #1a2a6c; color: white; padding: 25px; border-radius: 24px; text-align: center; margin-bottom: 20px; }
-        .stat-value { font-size: 32px; font-weight: 800; display: block; color: #fbbf24; }
-        .stat-label { font-size: 12px; opacity: 0.8; text-transform: uppercase; letter-spacing: 1px; }
-
+        /* SECTIONS DE DONNÉES */
+        .left-col { display: flex; flex-direction: column; gap: 25px; }
+        .section { background: white; padding: 30px; border-radius: 24px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
+        h2 { font-size: 18px; color: #1a2a6c; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; margin-top: 0; margin-bottom: 20px; font-weight: 800; display: flex; align-items: center; gap: 10px; }
+        
         .data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .data-item label { display: block; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; }
-        .data-item p { margin: 5px 0 0; font-size: 15px; color: #1e293b; font-weight: 500; }
         
-        @media (max-width: 800px) { main { grid-template-columns: 1fr; } }
+        /* COMPOSANT DONNÉE */
+        .data-item label { display: block; font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
+        .data-item p { margin: 6px 0 0; font-size: 15px; color: #1e293b; font-weight: 500; line-height: 1.5; }
+        
+        /* STATISTIQUES (COLONNE DROITE) */
+        .right-col { display: flex; flex-direction: column; gap: 20px; position: sticky; top: 40px; }
+        .stat-card { background: #1a2a6c; color: white; padding: 30px; border-radius: 24px; text-align: center; box-shadow: 0 10px 15px -3px rgba(26,42,108,0.3); }
+        .stat-value { font-size: 36px; font-weight: 900; display: block; color: #fbbf24; margin: 10px 0; }
+        .stat-label { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; opacity: 0.9; }
+
+        .btn-edit { background: #fbbf24; color: #1a2a6c !important; padding: 16px; border-radius: 16px; font-weight: 800; font-size: 15px; text-align: center; display: block; box-shadow: 0 4px 6px rgba(251,191,36,0.3); transition: 0.2s; }
+        .btn-edit:hover { transform: translateY(-3px); box-shadow: 0 10px 15px rgba(251,191,36,0.4); }
+
+        @media (max-width: 900px) { 
+          main { grid-template-columns: 1fr; } 
+          .right-col { position: static; }
+          .data-grid { grid-template-columns: 1fr; }
+        }
       `}</style>
 
       <nav>
-        <Link href="/dashboard" className="back-link">← Retour Dashboard</Link>
-        <h1 style={{fontSize:'18px', margin:0}}>{property.name}</h1>
+        <Link href="/dashboard" passHref legacyBehavior>
+          <a className="back-link">← Retour Dashboard</a>
+        </Link>
+        <h1>{property.name}</h1>
       </nav>
 
       <main>
         <div className="left-col">
+          
           <div className="section">
-            <h2>🧠 Cerveau du logement</h2>
+            <h2>📍 Identité & Localisation</h2>
             <div className="data-grid">
-              <div className="data-item"><label>Wifi</label><p>{property.wifi_name || 'Non configuré'}</p></div>
-              <div className="data-item"><label>Mot de passe</label><p>{property.wifi_password || 'Non configuré'}</p></div>
-              <div className="data-item"><label>Arrivée</label><p>{property.check_in_hour}</p></div>
-              <div className="data-item"><label>Départ</label><p>{property.check_out_hour}</p></div>
-              <div className="data-item" style={{gridColumn:'span 2'}}><label>Accès</label><p>{property.checkin_instructions || 'Aucune instruction'}</p></div>
+              <DataItem label="Adresse" value={property.address} fullWidth />
+              <DataItem label="Ville" value={property.city} />
+              <DataItem label="Bâtiment / Étage" value={`${property.building || ''} ${property.floor ? `- Étage ${property.floor}` : ''}`} />
             </div>
           </div>
 
           <div className="section">
-            <h2>📍 Localisation</h2>
-            <p>{property.address}, {property.city}</p>
+            <h2>🔑 Accès & Arrivée</h2>
+            <div className="data-grid">
+              <DataItem label="Check-in" value={`Dès ${property.check_in_hour}`} />
+              <DataItem label="Check-out" value={`Avant ${property.check_out_hour}`} />
+              <DataItem label="Autonomie" value={property.self_checkin ? "Oui" : "Non"} />
+              <DataItem label="Instructions d'entrée" value={property.checkin_instructions} fullWidth />
+              <DataItem label="Consignes de départ" value={property.checkout_instructions} fullWidth />
+            </div>
           </div>
+
+          <div className="section">
+            <h2>📡 Wifi & Confort</h2>
+            <div className="data-grid">
+              <DataItem label="Nom du réseau (SSID)" value={property.wifi_name} />
+              <DataItem label="Mot de passe" value={property.wifi_password} />
+              <DataItem label="Chauffage / Climatisation" value={property.heating_cooling_info} fullWidth />
+            </div>
+          </div>
+
+          <div className="section">
+            <h2>🛠️ Technique & Entretien</h2>
+            <div className="data-grid">
+              <DataItem label="Tableau électrique" value={property.breaker_box_location} />
+              <DataItem label="Vanne d'eau" value={property.water_shutoff_location} />
+              <DataItem label="Gestion des poubelles" value={property.trash_instructions} fullWidth />
+            </div>
+          </div>
+
+          <div className="section">
+            <h2>🧭 Guide Local & Recommandations</h2>
+            <div className="data-grid">
+              <DataItem label="Commerces proches" value={property.local_shops} />
+              <DataItem label="Transports" value={property.transport_info} />
+              <DataItem label="Recommandations du propriétaire" value={property.recommendations} fullWidth />
+            </div>
+          </div>
+
         </div>
 
         <div className="right-col">
+          {/* STATISTIQUES RÉELLES (A 0 pour le moment) */}
           <div className="stat-card">
             <span className="stat-label">Temps gagné</span>
-            <span className="stat-value">12h 45min</span>
-            <p style={{fontSize:'11px', marginTop:'10px'}}>Basé sur 15min / message</p>
+            <span className="stat-value">0h 00</span>
+            <p style={{fontSize:'12px', margin:0, opacity:0.8}}>En attente des premiers messages...</p>
           </div>
 
-          <div className="stat-card" style={{background: 'white', color: '#1a2a6c', border: '1px solid #e2e8f0'}}>
+          <div className="stat-card" style={{background: 'white', color: '#1a2a6c', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px rgba(0,0,0,0.02)'}}>
             <span className="stat-label" style={{color:'#64748b'}}>Échanges Clients</span>
-            <span className="stat-value" style={{color:'#1a2a6c'}}>54</span>
+            <span className="stat-value" style={{color:'#1a2a6c'}}>0</span>
           </div>
 
-          <Link href={`/add-property?id=${property.id}`} className="btn" style={{display:'block', textAlign:'center', background:'#fbbf24', padding:'15px', borderRadius:'15px', color:'#1a2a6c', fontWeight:'800', textDecoration:'none'}}>
-            Modifier les infos
+          <Link href={`/add-property?id=${property.id}`} passHref legacyBehavior>
+            <a className="btn-edit">⚙️ Compléter les infos</a>
           </Link>
         </div>
       </main>
