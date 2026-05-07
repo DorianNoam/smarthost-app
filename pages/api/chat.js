@@ -49,9 +49,9 @@ export default async function handler(req, res) {
     const fullAddress = `${propertyData.street_number || ''} ${propertyData.address || ''}, ${city}`;
     const lastUserMsg = messagesHistory[messagesHistory.length - 1]?.text || "";
 
-    // --- 3. DÉTECTION D'INTENTION PAR IA (Gère toutes les langues) ---
+    // --- 3. DÉTECTION D'INTENTION (Modèle stable : llama-3.1-8b-instant) ---
     const intentCheck = await groq.chat.completions.create({
-      model: "llama-3.3-8b-instant", // Modèle ultra-rapide et gratuit
+      model: "llama-3.1-8b-instant", 
       messages: [
         { 
           role: 'system', 
@@ -69,21 +69,18 @@ export default async function handler(req, res) {
       searchResults = await searchLocalInfo(lastUserMsg, fullAddress, city);
     }
 
-    // --- 4. RÉPONSE FINALE (Llama 70B pour l'intelligence) ---
+    // --- 4. RÉPONSE FINALE ---
     const systemMessage = { 
       role: 'system', 
       content: `Tu es Marc, le majordome de "${propertyData.name}" à ${city}.
       
-      RÈGLES D'OR :
-      1. Utilise les infos de la BDD pour le Wifi/Check-in/Adresse.
-      2. Utilise les "RÉSULTATS WEB" pour les commerces/transports.
-      3. Si tu ne trouves rien de précis sur le web, dis poliment que tu ne sais pas et que tu demandes à l'hôte.
-      4. Ne donne jamais de temps de trajet sans source vérifiée.
+      HIÉRARCHIE D'INFORMATION :
+      1. TA BASE DE DONNÉES : Adresse: ${fullAddress}, Wifi: ${propertyData.wifi_name}, Check-in: ${propertyData.check_in_hour}.
+      2. RECHERCHE WEB : Utilise ceci pour les commerces/transports :
+         ${searchResults || "Aucune info web trouvée."}
+      3. SI INCONNU : Dis poliment que tu ne sais pas et que tu contactes l'hôte.
 
-      DONNÉES BDD : Adresse: ${fullAddress}, Wifi: ${propertyData.wifi_name}, Check-in/out: ${propertyData.check_in_hour}/${propertyData.check_out_hour}.
-      
-      RÉSULTATS WEB :
-      ${searchResults || "Aucune info web trouvée."}`
+      STYLE : Majordome élégant, concis. Saute deux lignes entre les paragraphes.`
     };
 
     const chatResponse = await groq.chat.completions.create({
@@ -97,15 +94,16 @@ export default async function handler(req, res) {
 
     const responseText = chatResponse.choices[0].message.content;
 
-    // Sauvegarde et Alerte (Code inchangé)
+    // Sauvegarde History
     const newHistory = [...messagesHistory, { role: 'marc', text: responseText, timestamp: new Date().toISOString() }];
     await supabase.from('conversations').upsert({ property_id: propertyData.id, history: newHistory, last_message_at: new Date().toISOString() }, { onConflict: 'property_id' });
 
+    // Alerte Telegram
     if (responseText.toLowerCase().includes("préviens") || responseText.toLowerCase().includes("votre hôte")) {
       let translatedMsg = null;
       if (langCode !== 'fr') {
         const transRes = await groq.chat.completions.create({
-          model: "llama-3.3-8b-instant",
+          model: "llama-3.1-8b-instant",
           messages: [{ role: 'system', content: "Traduis en FR." }, { role: 'user', content: lastUserMsg }],
         });
         translatedMsg = transRes.choices[0].message.content;
