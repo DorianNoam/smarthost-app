@@ -44,7 +44,7 @@ export default function Dashboard() {
         .btn-delete { position: absolute; top: 15px; right: 15px; background: #fff1f2; color: #e11d48; border: none; width: 34px; height: 34px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;}
         
         h3 { margin: 0 0 5px 0; color: #1a2a6c; font-size: 22px; font-weight: 800; }
-        .address { color: #64748b; font-size: 14px; margin-bottom: 20px; }
+        .address { color: #64748b; font-size: 14px; margin-bottom: 20px; line-height: 1.5; }
 
         .btn-stack { display: flex; flex-direction: column; gap: 10px; }
         .action-btn { padding: 12px; border-radius: 12px; font-weight: 700; font-size: 13px; text-align: center; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; border: none; width: 100%; box-sizing: border-box; }
@@ -83,24 +83,26 @@ export default function Dashboard() {
             <div key={prop.id} className="card">
               <button className="btn-delete" onClick={(e) => deleteProperty(e, prop.id, prop.name)}>🗑️</button>
               <h3>{prop.name}</h3>
-              <div className="address">📍 {prop.address}</div>
+              
+              {/* ADRESSE COMPLÈTE ICI */}
+              <div className="address">
+                📍 {prop.street_number} {prop.address} 
+                {prop.residence && <><br />Résidence {prop.residence}</>}
+                {(prop.building || prop.floor) && (
+                  <><br />{prop.building ? `Bât. ${prop.building}` : ''} {prop.floor ? ` - Étage ${prop.floor}` : ''}</>
+                )}
+              </div>
               
               <div className="btn-stack">
-                {/* NOUVEAU BOUTON : HISTORIQUE DES MESSAGES */}
                 <Link href={`/history/${prop.id}`} passHref legacyBehavior>
-                  <a className="action-btn btn-history">
-                    💬 Historique des échanges
-                  </a>
+                  <a className="action-btn btn-history">💬 Historique des échanges</a>
                 </Link>
-
                 <Link href={`/property/${prop.id}`} passHref legacyBehavior>
                   <a className="action-btn btn-primary">📊 Fiche & Base de connaissances</a>
                 </Link>
-                
                 <Link href={`/add-property?id=${prop.id}`} passHref legacyBehavior>
                   <a className="action-btn btn-outline">⚙️ Paramètres techniques</a>
                 </Link>
-                
                 <Link href={`/chat/${prop.id}`} passHref legacyBehavior>
                   <a className="action-btn btn-light">Test de Marc (Simuler voyageur)</a>
                 </Link>
