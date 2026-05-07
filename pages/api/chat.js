@@ -1,10 +1,10 @@
 import { Mistral } from '@mistralai/mistralai';
 import { supabase } from '../../lib/supabase';
 
-// --- 1. FONCTION DE RECHERCHE (L'œil de Marc sur Google) ---
+// --- 1. FONCTION DE RECHERCHE ---
 async function searchLocalInfo(query, location) {
   const apiKey = process.env.TAVILY_API_KEY; 
-  if (!apiKey) return "Pas d'accès recherche configuré.";
+  if (!apiKey) return ""; // On reste discret si pas de clé
 
   try {
     const res = await fetch('https://api.tavily.com/search', {
@@ -15,15 +15,15 @@ async function searchLocalInfo(query, location) {
         query: `${query} à proximité de ${location}`,
         search_depth: "smart",
         include_answer: true,
-        max_results: 3
+        max_results: 5
       })
     });
     const data = await res.json();
-    return data.answer || data.results.map(r => r.content).join('\n');
-  } catch (e) { return "Erreur lors de la recherche."; }
+    return data.answer || data.results.map(r => r.content).join('\n---\n');
+  } catch (e) { return ""; }
 }
 
-// --- 2. TON CODE D'ALERTE (Intact) ---
+// --- 2. ALERTE TELEGRAM ---
 async function sendTelegramAlert(originalMsg, translatedMsg, propertyData, lang) {
   const token = process.env.TELEGRAM_BOT_TOKEN;
   try {
@@ -35,9 +35,7 @@ async function sendTelegramAlert(originalMsg, translatedMsg, propertyData, lang)
                `🌍 *Langue client :* ${lang}\n\n` +
                `💬 *Message Client :*\n"${originalMsg}"`;
 
-    if (translatedMsg) {
-      text += `\n\n` + `🇫🇷 *Traduction Marc :*\n"${translatedMsg}"`;
-    }
+    if (translatedMsg) { text += `\n\n` + `🇫🇷 *Traduction Marc :*\n"${translatedMsg}"`; }
 
     await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
       method: 'POST',
@@ -54,35 +52,36 @@ export default async function handler(req, res) {
   const langCode = userLanguage ? userLanguage.split('-')[0] : 'fr';
 
   try {
-    const fullAddress = `${propertyData.street_number || ''} ${propertyData.address || ''} ${propertyData.residence ? `, Résidence ${propertyData.residence}` : ''} ${propertyData.building ? `, Bâtiment ${propertyData.building}` : ''} ${propertyData.floor ? `, Étage ${propertyData.floor}` : ''}, ${propertyData.city}`;
+    // Construction de l'adresse avec les noms de colonnes du Wizard
+    const fullAddress = `${propertyData.street_number || ''} ${propertyData.address || ''} ${propertyData.residence_name ? `, Résidence ${propertyData.residence_name}` : ''} ${propertyData.building ? `, Bâtiment ${propertyData.building}` : ''} ${propertyData.floor ? `, Étage ${propertyData.floor}` : ''}, ${propertyData.city}`;
 
-    // --- LOGIQUE DE RECHERCHE ---
     const lastUserMsg = messagesHistory[messagesHistory.length - 1]?.text || "";
     let searchResults = "";
     
-    // On lance une recherche si le client demande un truc sur la ville
-    const needsSearch = lastUserMsg.toLowerCase().match(/(restaurant|bus|tram|manger|visite|activité|proche|autour)/);
+    // Déclencheur élargi (on ajoute transport, aller, faire, voir)
+    const needsSearch = lastUserMsg.toLowerCase().match(/(restaurant|bus|tram|transport|manger|visite|activité|proche|autour|aller|faire|voir)/);
+    
     if (needsSearch) {
       searchResults = await searchLocalInfo(lastUserMsg, fullAddress);
     }
 
     const systemMessage = { 
       role: 'system', 
-      content: `Tu es Marc, le majordome raffiné de "${propertyData.name}" à ${propertyData.city}.
+      content: `Tu es Marc, le majordome raffiné et connecté de "${propertyData.name}" à ${propertyData.city}.
 
-      INFOS DU LOGEMENT (Source prioritaire pour le wifi/check-in) :
-      - Adresse complète : ${fullAddress}
+      DIRECTIVES CRUCIALES :
+      - Tu AS accès à internet. Ne dis JAMAIS "je n'ai pas accès aux infos en temps réel".
+      - Utilise les "RÉSULTATS DE RECHERCHE" ci-dessous pour donner des réponses ultra-précises (lignes de bus, noms de restos).
+      - Style : Élégant, aéré. Fais des listes à puces.
+      - SAUTE DEUX LIGNES entre chaque point pour la clarté.
+
+      INFOS DU LOGEMENT :
+      - Adresse : ${fullAddress}
       - Wifi : ${propertyData.wifi_name} / ${propertyData.wifi_password}
       - Check-in/out : ${propertyData.check_in_hour} / ${propertyData.check_out_hour}
-      - Précisions techniques : ${propertyData.parking_info || ''}
 
-      RÉSULTATS DE TA RECHERCHE WEB (Utilise ça pour les bus/restos) :
-      ${searchResults || "Aucune recherche nécessaire pour cette demande."}
-
-      TON RÔLE :
-      - Pour l'extérieur, utilise les "RÉSULTATS DE TA RECHERCHE WEB" pour être précis.
-      - Ne donne JAMAIS de ligne de tram ou bus que tu n'as pas vérifiée dans la recherche.
-      - Style : Chaleureux, élégant, aéré (saute des lignes).
+      RÉSULTATS DE TA RECHERCHE WEB (Source de vérité) :
+      ${searchResults || "Aucune recherche nécessaire. Utilise tes connaissances générales sur " + propertyData.city}
 
       LOGIQUE D'ALERTE :
       - Si problème (panne, fuite, ménage), dis : "Je préviens immédiatement votre hôte."`
@@ -100,7 +99,7 @@ export default async function handler(req, res) {
 
     const responseText = chatResponse.choices[0].message.content;
 
-    // --- SAUVEGARDE ET ALERTE (Tes codes d'origine) ---
+    // Sauvegarde History
     const newHistory = [...messagesHistory, { role: 'marc', text: responseText, timestamp: new Date().toISOString() }];
     await supabase.from('conversations').upsert({
       property_id: propertyData.id,
@@ -108,8 +107,8 @@ export default async function handler(req, res) {
       last_message_at: new Date().toISOString()
     }, { onConflict: 'property_id' });
 
+    // Alerte Telegram
     const alertTrigger = responseText.toLowerCase().includes("préviens") || responseText.toLowerCase().includes("votre hôte");
-
     if (alertTrigger) {
       let translatedMsg = null;
       if (langCode !== 'fr') {
