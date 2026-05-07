@@ -1,41 +1,50 @@
 import Groq from 'groq-sdk';
 import { supabase } from '../../lib/supabase';
 
-// --- 1. FONCTION DE RECHERCHE (Tavily) ---
+// --- 1. FONCTION DE RECHERCHE (Optimisée pour trouver les noms d'arrêts) ---
 async function searchLocalInfo(query, location) {
   const apiKey = process.env.TAVILY_API_KEY; 
   if (!apiKey) return ""; 
+
   try {
     const res = await fetch('https://api.tavily.com/search', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         api_key: apiKey,
-        query: `${query} à proximité de ${location} Bordeaux TBM bus tram`,
-        search_depth: "basic", 
+        // Requête ultra-précise pour forcer les noms d'arrêts et les distances
+        query: `nom de l'arrêt TBM bus ou tram le plus proche de ${location} Floirac et temps de marche à pied`,
+        search_depth: "advanced", // Mode plus performant pour éviter les réponses vides
         max_results: 5,
         include_answer: true
       })
     });
+    
     if (!res.ok) return "";
     const data = await res.json();
+    
+    // On combine la réponse synthétisée et les contenus des sites trouvés
     return data.answer || data.results?.map(r => r.content).join('\n\n---\n\n') || "";
   } catch (e) { return ""; }
 }
 
-// --- 2. CODE D'ALERTE TELEGRAM ---
+// --- 2. CODE D'ALERTE TELEGRAM (Intact) ---
 async function sendTelegramAlert(originalMsg, translatedMsg, propertyData, lang) {
   const token = process.env.TELEGRAM_BOT_TOKEN;
   try {
     const { data: profile } = await supabase.from('profiles').select('telegram_chat_id').eq('id', propertyData.owner_id).single();
     if (!profile?.telegram_chat_id) return;
+
     let text = `🚨 *ALERTE MAJOR MARC*\n\n` +
                `🏠 *Logement :* ${propertyData.name}\n` + 
                `🌍 *Langue client :* ${lang}\n\n` + 
                `💬 *Message Client :*\n"${originalMsg}"`;
+
     if (translatedMsg) { text += `\n\n` + `🇫🇷 *Traduction Marc :*\n"${translatedMsg}"`; }
+
     await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ chat_id: profile.telegram_chat_id, text, parse_mode: 'Markdown' })
     });
   } catch (e) { console.error("Erreur Telegram:", e); }
@@ -56,7 +65,8 @@ export default async function handler(req, res) {
     const lastUserMsg = messagesHistory[messagesHistory.length - 1]?.text || "";
     
     let searchResults = "";
-    const needsSearch = lastUserMsg.toLowerCase().match(/(restaurant|bus|tram|transport|manger|visite|activité|proche|autour|aller|faire|voir)/);
+    // Déclencheur de recherche web
+    const needsSearch = lastUserMsg.toLowerCase().match(/(restaurant|bus|tram|transport|manger|visite|activité|proche|autour|aller|faire|voir|arrêt|station)/);
     
     if (needsSearch) {
       searchResults = await searchLocalInfo(lastUserMsg, fullAddress);
@@ -66,18 +76,19 @@ export default async function handler(req, res) {
       role: 'system', 
       content: `Tu es Marc, le majordome de "${propertyData.name}" à FLOIRAC. 
 
-      DONNÉES DU LOGEMENT (Vérité absolue) :
+      DONNÉES DU LOGEMENT :
       - Ton adresse : ${fullAddress}
       - Wifi : ${propertyData.wifi_name} / ${propertyData.wifi_password}
 
-      CONSIGNES :
+      CONSIGNES STRICTES :
       1. ADRESSE : Si on te la demande, donne-la : "${fullAddress}".
-      2. TRANSPORTS : Le Tram C ne passe PAS à Floirac. C'est le Tram A.
-      3. VÉRITÉ : Ne donne pas de temps de trajet si ce n'est pas dans les résultats web.
-      4. STYLE : Raffiné, double saut de ligne.`
+      2. TRANSPORTS : Ne cite JAMAIS le Tram C. Utilise le Tram A pour Bordeaux centre.
+      3. PRÉCISION : Utilise les "RÉSULTATS WEB" pour donner les noms exacts des arrêts (ex: Floirac Dravemont) et le temps de marche. 
+      4. Si la recherche ne donne rien, propose de contacter l'hôte.
+      5. STYLE : Raffiné, clair, double saut de ligne.`
     };
 
-    // --- CHANGEMENT ICI : Modèle llama-3.3-70b-versatile ---
+    // Appel au modèle Llama 3.3 70B (Le plus performant de Groq)
     const chatResponse = await groq.chat.completions.create({
       model: "llama-3.3-70b-versatile", 
       messages: [
@@ -92,7 +103,7 @@ export default async function handler(req, res) {
 
     const responseText = chatResponse.choices[0].message.content;
 
-    // Sauvegarde History
+    // Sauvegarde History dans Supabase
     const newHistory = [...messagesHistory, { role: 'marc', text: responseText, timestamp: new Date().toISOString() }];
     await supabase.from('conversations').upsert({
       property_id: propertyData.id,
@@ -100,7 +111,7 @@ export default async function handler(req, res) {
       last_message_at: new Date().toISOString()
     }, { onConflict: 'property_id' });
 
-    // --- ALERTE TELEGRAM ---
+    // --- BLOC ALERTE TELEGRAM ---
     const alertTrigger = responseText.toLowerCase().includes("préviens") || 
                         responseText.toLowerCase().includes("prévenir") || 
                         responseText.toLowerCase().includes("votre hôte");
@@ -109,7 +120,7 @@ export default async function handler(req, res) {
       let translatedMsg = null;
       if (langCode !== 'fr') {
         const transRes = await groq.chat.completions.create({
-          model: "llama-3.3-8b-instant", // Modèle léger pour la traduction
+          model: "llama-3.3-8b-instant",
           messages: [{ role: 'system', content: "Traduis en FR." }, { role: 'user', content: lastUserMsg }],
         });
         translatedMsg = transRes.choices[0].message.content;
