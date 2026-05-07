@@ -135,7 +135,7 @@ export default function Settings() {
           <div className="settings-card">
             <h2>🔔 Alertes & Urgences</h2>
             <p style={{fontSize: '14px', color: '#64748b', marginBottom: '20px', lineHeight: '1.5'}}>
-              MajorMarc utilise Telegram pour vous prévenir instantanément (et gratuitement) si l'IA détecte une urgence ou un client mécontent dans l'un de vos logements.
+              MajorMarc utilise Telegram pour vous prévenir instantanément si l'IA détecte une urgence ou un client mécontent dans l'un de vos logements.
             </p>
             
             <div className="telegram-box">
