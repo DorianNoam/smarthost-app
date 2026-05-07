@@ -1,12 +1,10 @@
 import { Mistral } from '@mistralai/mistralai';
 import { supabase } from '../../lib/supabase';
 
-// 1. Fonction d'alerte Telegram (Format Premium + Traduction conditionnelle)
+// 1. Fonction d'alerte Telegram (Format Premium)
 async function sendTelegramAlert(originalMsg, translatedMsg, propertyData, lang) {
   const token = process.env.TELEGRAM_BOT_TOKEN;
-  
   try {
-    // Récupération dynamique du Chat ID via le propriétaire
     const { data: profile } = await supabase
       .from('profiles')
       .select('telegram_chat_id')
@@ -15,25 +13,19 @@ async function sendTelegramAlert(originalMsg, translatedMsg, propertyData, lang)
 
     if (!profile?.telegram_chat_id) return;
 
-    // Construction du message avec émojis
     let text = `🚨 *ALERTE MAJOR MARC*\n\n` +
                `🏠 *Logement :* ${propertyData.name}\n` +
                `🌍 *Langue client :* ${lang}\n\n` +
                `💬 *Message Client :*\n"${originalMsg}"`;
 
-    // On n'ajoute la section traduction QUE si un message traduit existe
     if (translatedMsg) {
-      text += `\n\n🇫🇷 *Traduction Marc :*\n"${translatedMsg}"`;
+      text += `\n\n` + `🇫🇷 *Traduction Marc :*\n"${translatedMsg}"`;
     }
 
     await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        chat_id: profile.telegram_chat_id, 
-        text: text, 
-        parse_mode: 'Markdown' 
-      })
+      body: JSON.stringify({ chat_id: profile.telegram_chat_id, text, parse_mode: 'Markdown' })
     });
   } catch (e) { console.error("Erreur Telegram:", e); }
 }
@@ -46,13 +38,25 @@ export default async function handler(req, res) {
   const langCode = userLanguage ? userLanguage.split('-')[0] : 'fr';
 
   try {
+    // 🧠 LE SYSTÈME : On verrouille la ville et on impose le style aéré
     const systemMessage = { 
       role: 'system', 
-      content: `Tu es Marc, le majordome raffiné de "${propertyData.name}". 
-      LANGUE : Répondre en (Code : ${langCode}).
-      TON : Chaleureux, élégant.
-      INFOS : Wifi ${propertyData.wifi_name} / ${propertyData.wifi_password} | Check-in/out : ${propertyData.check_in_hour} / ${propertyData.check_out_hour}
-      INCIDENTS : Si le client a un problème (technique, urgence, mécontentement), dis que tu préviens immédiatement son hôte.`
+      content: `Tu es Marc, le majordome raffiné de "${propertyData.name}" situé à ${propertyData.city}. 
+
+      IMPORTANT : 
+      - Réponds TOUJOURS en utilisant des listes à puces pour les instructions. 
+      - Utilise le **gras** pour les informations clés (mots de passe, numéros, lieux).
+      - Saute des lignes entre chaque idée pour que ce soit très lisible.
+      - Tu es à ${propertyData.city}. N'invente JAMAIS d'informations sur Paris ou la RATP si tu n'es pas à Paris.
+
+      INFOS LOGEMENT (Utilise UNIQUEMENT celles-ci) :
+      - Adresse : ${propertyData.address}, ${propertyData.city}
+      - Wifi : ${propertyData.wifi_name} / ${propertyData.wifi_password}
+      - Transports : ${propertyData.parking_info || 'Non renseigné'}
+      - Instructions : ${propertyData.trash_instructions || 'Se référer au guide.'}
+
+      INCIDENTS : 
+      - Si tu n'as pas la réponse ou s'il y a un problème, dis poliment que tu préviens l'hôte.`
     };
 
     const formattedHistory = messagesHistory.map(msg => ({
@@ -81,8 +85,6 @@ export default async function handler(req, res) {
 
     // --- 🔔 DÉTECTION ET ALERTE TELEGRAM ---
     const lastUserMsg = messagesHistory[messagesHistory.length - 1]?.text || "";
-    
-    // Condition de ton code du matin
     const shouldAlert = responseText.toLowerCase().includes("hôte") || 
                         responseText.toLowerCase().includes("navré") || 
                         responseText.toLowerCase().includes("sorry") || 
@@ -90,26 +92,22 @@ export default async function handler(req, res) {
 
     if (shouldAlert) {
       let translatedMsg = null;
-
-      // Traduction uniquement si la langue n'est pas le français
       if (langCode !== 'fr') {
         const transRes = await mistral.chat.complete({
           model: 'mistral-small-2506',
           messages: [
-            { role: 'system', content: "Traduis en Français simple pour l'hôte. Ne donne que la traduction." }, 
+            { role: 'system', content: "Traduis en Français simple pour l'hôte." }, 
             { role: 'user', content: lastUserMsg }
           ],
         });
         translatedMsg = transRes.choices[0].message.content;
       }
-
       await sendTelegramAlert(lastUserMsg, translatedMsg, propertyData, langCode);
     }
 
     res.status(200).json({ answer: responseText });
 
   } catch (error) {
-    console.error("Erreur API:", error);
-    res.status(500).json({ answer: "Une difficulté technique est survenue." });
+    res.status(500).json({ answer: "Désolé, j'ai une difficulté technique." });
   }
 }
