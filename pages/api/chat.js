@@ -1,7 +1,7 @@
 import { Mistral } from '@mistralai/mistralai';
 import { supabase } from '../../lib/supabase';
 
-// 1. Fonction d'alerte Telegram (Ta version fonctionnelle)
+// 1. Fonction d'alerte Telegram avec le visuel "Premium"
 async function sendTelegramAlert(originalMsg, translatedMsg, propertyData, lang) {
   const token = process.env.TELEGRAM_BOT_TOKEN;
   try {
@@ -14,7 +14,13 @@ async function sendTelegramAlert(originalMsg, translatedMsg, propertyData, lang)
     if (error || !profile?.telegram_chat_id) return;
 
     const chatId = profile.telegram_chat_id;
-    const text = `🚨 *ALERTE MAJOR MARC*\n\n*Logement :* ${propertyData.name}\n\n*Demande Client (${lang}) :*\n"${originalMsg}"\n\n*Traduction (FR) :*\n"${translatedMsg}"`;
+
+    // --- LE FORMAT VISUEL AVEC EMOJIS ---
+    const text = `🚨 *ALERTE MAJOR MARC*\n\n` +
+                 `🏠 *Logement :* ${propertyData.name}\n` +
+                 `🌍 *Langue :* ${lang}\n\n` +
+                 `💬 *Message Client :*\n"${originalMsg}"\n\n` +
+                 `🇫🇷 *Traduction Marc :*\n"${translatedMsg}"`;
 
     await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
       method: 'POST',
@@ -54,10 +60,9 @@ export default async function handler(req, res) {
     const responseText = chatResponse.choices[0].message.content;
 
     // --- 💾 SAUVEGARDE DANS LA COLONNE HISTORY (JSONB) ---
-    // On prépare le nouvel historique à enregistrer
     const newHistory = [
       ...messagesHistory,
-      { role: 'marc', text: responseText, created_at: new Date().toISOString() }
+      { role: 'marc', text: responseText, timestamp: new Date().toISOString() }
     ];
 
     await supabase
@@ -73,8 +78,6 @@ export default async function handler(req, res) {
     // --- 🔔 DÉTECTION D'INCIDENT (Version affinée) ---
     const lastUserMsg = messagesHistory[messagesHistory.length - 1]?.text || "";
     
-    // On ne déclenche l'alerte que si des mots de "vrai" problème apparaissent
-    // pour éviter les notifs quand Marc est juste poli (ex: "Je suis navré de ne pas comprendre")
     const triggerWords = ["urgence", "problème", "panne", "fuite", "cassé", "dysfonctionnement", "préviens votre hôte"];
     const shouldAlert = triggerWords.some(word => responseText.toLowerCase().includes(word));
 
@@ -87,6 +90,8 @@ export default async function handler(req, res) {
         ],
       });
       const translatedMsg = translationResponse.choices[0].message.content;
+      
+      // On utilise le format visuel défini plus haut
       await sendTelegramAlert(lastUserMsg, translatedMsg, propertyData, langCode);
     }
 
