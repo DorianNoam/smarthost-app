@@ -10,6 +10,7 @@ export default function SuperAdminDashboard() {
     totalUsers: 0,
     totalProperties: 0,
     totalConversations: 0,
+    totalLicenses: 0, // Nouveau compteur
     monthlyRevenue: 0,
   });
   const [recentUsers, setRecentUsers] = useState([]);
@@ -28,17 +29,15 @@ export default function SuperAdminDashboard() {
 
   const fetchDashboardData = async () => {
     try {
-      // 1. Compter les utilisateurs, logements et conversations
       const { count: usersCount } = await supabase.from('profiles').select('*', { count: 'exact', head: true });
       const { count: propertiesCount } = await supabase.from('properties').select('*', { count: 'exact', head: true });
       const { count: conversationsCount } = await supabase.from('conversations').select('*', { count: 'exact', head: true });
       
-      // 2. Calculer le MRR RÉEL (Somme des licences payées)
+      // Calcul du nombre total de licences et du MRR
       const { data: profilesData } = await supabase.from('profiles').select('active_licenses');
-      const totalLicenses = profilesData?.reduce((acc, curr) => acc + (curr.active_licenses || 0), 0) || 0;
-      const realMRR = totalLicenses * 24.90;
+      const totalLicensesCount = profilesData?.reduce((acc, curr) => acc + (curr.active_licenses || 0), 0) || 0;
+      const realMRR = totalLicensesCount * 24.90;
 
-      // 3. Récupérer les 5 derniers inscrits
       const { data: users } = await supabase
         .from('profiles')
         .select('id, email, created_at, active_licenses')
@@ -49,17 +48,17 @@ export default function SuperAdminDashboard() {
         totalUsers: usersCount || 0,
         totalProperties: propertiesCount || 0,
         totalConversations: conversationsCount || 0,
+        totalLicenses: totalLicensesCount,
         monthlyRevenue: realMRR,
       });
       setRecentUsers(users || []);
     } catch (error) {
-      console.error("Erreur de chargement :", error);
+      console.error("Erreur :", error);
     } finally {
       setLoading(false);
     }
   };
 
-  // On génère un graphique qui part de 0 jusqu'à ton MRR actuel pour l'esthétique
   const chartData = [
     { name: 'Lancement', revenus: 0 },
     { name: 'Aujourd\'hui', revenus: stats.monthlyRevenue },
@@ -74,12 +73,21 @@ export default function SuperAdminDashboard() {
         .header { margin-bottom: 40px; }
         h1 { font-size: 32px; font-weight: 800; color: #f8fafc; margin: 0; }
         p.subtitle { color: #94a3b8; font-size: 16px; margin-top: 5px; }
-        .loading-screen { display: flex; justify-content: center; align-items: center; height: 100vh; background: #0f172a; color: white; font-size: 18px; }
-        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 40px; }
+        
+        /* Grille adaptative pour 5 cartes */
+        .grid { 
+          display: grid; 
+          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+          gap: 20px; 
+          margin-bottom: 40px; 
+        }
+        
         .stat-card { background: #1e293b; padding: 25px; border-radius: 16px; border: 1px solid #334155; }
         .stat-title { color: #94a3b8; font-size: 13px; font-weight: 600; text-transform: uppercase; margin-bottom: 10px; }
         .stat-value { color: #f8fafc; font-size: 36px; font-weight: 800; }
         .stat-value.revenue { color: #10b981; }
+        .stat-value.license { color: #fbbf24; } /* Couleur or pour les licences */
+        
         .charts-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
         .chart-container, .table-container { background: #1e293b; padding: 25px; border-radius: 16px; border: 1px solid #334155; }
         h2 { font-size: 18px; margin-top: 0; margin-bottom: 25px; color: #f8fafc; }
@@ -88,20 +96,15 @@ export default function SuperAdminDashboard() {
         th { color: #94a3b8; font-weight: 600; font-size: 13px; text-transform: uppercase; }
         td { color: #cbd5e1; font-size: 14px; }
         .badge { background: #10b981; color: white; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; margin-left: 5px; }
+        .loading-screen { display: flex; justify-content: center; align-items: center; height: 100vh; background: #0f172a; color: white; font-size: 18px; }
 
-        @media (max-width: 1024px) {
-          .grid { grid-template-columns: repeat(2, 1fr); }
-          .charts-grid { grid-template-columns: 1fr; }
-        }
-        @media (max-width: 600px) {
-          .admin-container { padding: 20px; }
-          .grid { grid-template-columns: 1fr; }
-        }
+        @media (max-width: 1024px) { .charts-grid { grid-template-columns: 1fr; } }
+        @media (max-width: 600px) { .admin-container { padding: 20px; } }
       `}</style>
 
       <div className="header">
         <h1>Tour de Contrôle</h1>
-        <p className="subtitle">Données réelles issues de Stripe & Supabase.</p>
+        <p className="subtitle">Mise à jour en temps réel des performances de Major Marc.</p>
       </div>
 
       <div className="grid">
@@ -112,6 +115,10 @@ export default function SuperAdminDashboard() {
         <div className="stat-card">
           <div className="stat-title">Logements Créés</div>
           <div className="stat-value">{stats.totalProperties}</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-title">Licences Actives</div>
+          <div className="stat-value license">{stats.totalLicenses}</div>
         </div>
         <div className="stat-card">
           <div className="stat-title">Messages IA</div>
@@ -125,7 +132,7 @@ export default function SuperAdminDashboard() {
 
       <div className="charts-grid">
         <div className="chart-container">
-          <h2>Évolution du MRR</h2>
+          <h2>Évolution des Revenus</h2>
           <div style={{ width: '100%', height: 300 }}>
             <ResponsiveContainer>
               <LineChart data={chartData}>
