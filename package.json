@@ -13,9 +13,9 @@
     "@supabase/supabase-js": "latest",
     "@mistralai/mistralai": "latest",
     "groq-sdk": "latest",
-    "recharts": "latest"
+    "recharts": "latest",
     "stripe": "latest",
-"@stripe/stripe-js": "latest"
+"@stripe/stripe-js": "latest",
     
   }
 }
