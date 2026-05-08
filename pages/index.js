@@ -129,7 +129,7 @@ export default function Home() {
       {/* HERO SECTION */}
       <section className="hero">
         <div className="hero-content">
-          <span className="badge-hero">L'Intelligence Artificielle de location</span>
+          
           <h1>Dormez sur vos deux oreilles.<br/>Marc gère vos voyageurs.</h1>
           <p className="subtitle">
             Le premier majordome IA qui répond aux questions 24h/24, recommande les meilleurs restaurants locaux, et vous alerte uniquement en cas d'urgence.
