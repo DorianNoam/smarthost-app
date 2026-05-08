@@ -15,7 +15,6 @@
     "groq-sdk": "latest",
     "recharts": "latest",
     "stripe": "latest",
-"@stripe/stripe-js": "latest",
-    
+    "@stripe/stripe-js": "latest"
   }
 }
