@@ -3,12 +3,10 @@ import { supabase } from '../../lib/supabase';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-// ⚠️ Configuration obligatoire pour Next.js avec les Webhooks Stripe
 export const config = {
   api: { bodyParser: false },
 };
 
-// Fonction pour lire le message brut (nécessaire pour la sécurité Stripe)
 async function buffer(readable) {
   const chunks = [];
   for await (const chunk of readable) {
@@ -22,56 +20,70 @@ export default async function handler(req, res) {
 
   const buf = await buffer(req);
   const sig = req.headers['stripe-signature'];
-  
-  // Clé secrète du Webhook (à ajouter sur Vercel)
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
   let event;
 
   try {
-    // On vérifie que le message vient bien de Stripe (Sécurité)
     event = stripe.webhooks.constructEvent(buf, sig, webhookSecret);
   } catch (err) {
-    console.error('Erreur de signature Webhook:', err.message);
+    console.error('Erreur signature:', err.message);
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
-  // Si le paiement est réussi
+  // ✅ CAS 1 : PAIEMENT RÉUSSI (Ajouter une licence)
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object;
-    
-    // On récupère l'ID Supabase de l'hôte (qu'on avait caché dans client_reference_id)
     const userId = session.client_reference_id; 
-    const customerId = session.customer;
-    const subscriptionId = session.subscription;
 
     if (userId) {
-      // On met à jour le profil de l'hôte dans Supabase
-      const { error } = await supabase
+      // On récupère le nombre actuel de licences
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('active_licenses')
+        .eq('id', userId)
+        .single();
+
+      const newCount = (profile?.active_licenses || 0) + 1;
+
+      // Mise à jour du profil
+      await supabase
         .from('profiles')
         .update({
-          stripe_customer_id: customerId,
-          stripe_subscription_id: subscriptionId,
+          active_licenses: newCount,
           subscription_status: 'active'
         })
         .eq('id', userId);
-
-      if (error) console.error('Erreur de mise à jour Supabase:', error);
-      else console.log(`✅ Abonnement activé pour l'utilisateur ${userId}`);
+      
+      console.log(`✅ +1 licence pour ${userId}. Total: ${newCount}`);
     }
   }
 
-  // Si le client annule son abonnement plus tard
+  // ❌ CAS 2 : ABONNEMENT ANNULÉ (Retirer une licence)
   if (event.type === 'customer.subscription.deleted') {
     const subscription = event.data.object;
     
-    // On repasse le profil en inactif
-    const { error } = await supabase
+    // On cherche l'utilisateur par son ID client Stripe
+    const { data: profile } = await supabase
       .from('profiles')
-      .update({ subscription_status: 'inactive' })
-      .eq('stripe_subscription_id', subscription.id);
+      .select('id, active_licenses')
+      .eq('stripe_customer_id', subscription.customer)
+      .single();
+
+    if (profile) {
+      const newCount = Math.max(0, (profile.active_licenses || 0) - 1);
+      const newStatus = newCount === 0 ? 'inactive' : 'active';
+
+      await supabase
+        .from('profiles')
+        .update({ 
+          active_licenses: newCount,
+          subscription_status: newStatus 
+        })
+        .eq('id', profile.id);
       
-    if (error) console.error('Erreur désactivation Supabase:', error);
+      console.log(`❌ -1 licence pour ${profile.id}. Restant: ${newCount}`);
+    }
   }
 
   res.status(200).json({ received: true });
