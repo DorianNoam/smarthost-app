@@ -3,7 +3,6 @@ import { supabase } from '../../lib/supabase';
 import { useRouter } from 'next/router';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-// Fausse donnée temporelle pour avoir un beau graphique en attendant Stripe
 const mockRevenueData = [
   { name: 'Semaine 1', revenus: 290 },
   { name: 'Semaine 2', revenus: 580 },
@@ -27,7 +26,6 @@ export default function SuperAdminDashboard() {
   useEffect(() => {
     const checkAdmin = async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      // 🔒 SÉCURITÉ VERROUILLÉE SUR TON EMAIL
       if (!user || user.email !== 'dorian33270@hotmail.fr') {
         router.push('/'); 
       } else {
@@ -70,7 +68,14 @@ export default function SuperAdminDashboard() {
   return (
     <div className="admin-container">
       <style jsx>{`
-        .admin-container { padding: 40px; background: #0f172a; min-height: 100vh; font-family: 'Inter', sans-serif; color: white; }
+        .admin-container { 
+          padding: 40px; 
+          background: #0f172a; 
+          min-height: 100vh; 
+          font-family: 'Inter', sans-serif; 
+          color: white; 
+          overflow-x: hidden; /* Empêche le débordement horizontal */
+        }
         .header { margin-bottom: 40px; }
         h1 { font-size: 32px; font-weight: 800; color: #f8fafc; margin: 0; }
         p.subtitle { color: #94a3b8; font-size: 16px; margin-top: 5px; }
@@ -90,6 +95,20 @@ export default function SuperAdminDashboard() {
         th, td { text-align: left; padding: 12px 10px; border-bottom: 1px solid #334155; }
         th { color: #94a3b8; font-weight: 600; font-size: 13px; text-transform: uppercase; }
         td { color: #cbd5e1; font-size: 14px; }
+
+        /* --- MEDIA QUERIES (OPTIMISATION MOBILE) --- */
+        @media (max-width: 1024px) {
+          .grid { grid-template-columns: repeat(2, 1fr); } /* 2 colonnes sur tablette */
+          .charts-grid { grid-template-columns: 1fr; } /* Le graphique et le tableau s'empilent */
+        }
+
+        @media (max-width: 600px) {
+          .admin-container { padding: 20px; } /* Moins de marge sur petit écran */
+          h1 { font-size: 24px; }
+          .grid { grid-template-columns: 1fr; } /* 1 seule colonne sur mobile */
+          .stat-card { padding: 20px; }
+          .chart-container, .table-container { padding: 15px; }
+        }
       `}</style>
 
       <div className="header">
@@ -162,5 +181,5 @@ export default function SuperAdminDashboard() {
       </div>
     </div>
   );
-    }
+  }
   
