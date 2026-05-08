@@ -4,7 +4,6 @@ export default function Home() {
   return (
     <div className="container">
       <style jsx>{`
-        /* Nouvelles polices ultra-modernes (SaaS tech & Premium) */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
 
         :global(a) { text-decoration: none; color: inherit; }
@@ -103,15 +102,25 @@ export default function Home() {
         /* --- FOOTER --- */
         footer { padding: 40px 5%; text-align: center; background: #0f172a; color: #64748b; font-size: 14px; }
 
-        /* --- OPTIMISATION MOBILE GLOBALE --- */
+        /* --- OPTIMISATION MOBILE GLOBALE CORRIGÉE --- */
         @media (max-width: 768px) {
-          .nav-links { display: none; /* Cacher les liens sur mobile pour plus de clarté ou faire un burger menu */ }
+          nav { padding: 15px 20px; }
+          .brand { font-size: 20px; }
+          .nav-links { gap: 15px; } /* On garde les liens visibles, mais plus rapprochés */
+          .nav-link { font-size: 14px; }
+          .nav-login { padding: 8px 16px; font-size: 13px; }
+          
           .hero { padding: 120px 15px 60px; }
           .pain-section { padding: 60px 5%; }
           .demo-section { padding: 60px 5%; }
           .killer-feature { flex-direction: column; padding: 30px 20px; margin: 40px auto 0; text-align: center; }
           .notif-mockup { padding: 15px; }
           .demo-features { text-align: left; }
+        }
+
+        /* Sur les très petits téléphones, on cache "Tarifs" pour garantir que le bouton "Espace Hôte" reste sur la même ligne */
+        @media (max-width: 380px) {
+          .nav-link { display: none; }
         }
       `}</style>
 
@@ -129,7 +138,7 @@ export default function Home() {
       {/* HERO SECTION */}
       <section className="hero">
         <div className="hero-content">
-          
+          <span className="badge-hero">L'Intelligence Artificielle de location</span>
           <h1>Dormez sur vos deux oreilles.<br/>Marc gère vos voyageurs.</h1>
           <p className="subtitle">
             Le premier majordome IA qui répond aux questions 24h/24, recommande les meilleurs restaurants locaux, et vous alerte uniquement en cas d'urgence.
@@ -230,7 +239,7 @@ export default function Home() {
           </div>
         </div>
 
-        {/* KILLER FEATURE (ALERTE) - Repensé pour mobile */}
+        {/* KILLER FEATURE (ALERTE) */}
         <div className="killer-feature">
           <div className="kf-text">
             <span>Le Filet de Sécurité</span>
