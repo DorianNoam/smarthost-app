@@ -8,6 +8,7 @@ export default function Dashboard() {
   const [properties, setProperties] = useState([]);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showLimitModal, setShowLimitModal] = useState(false); // État pour le nouveau modal
 
   useEffect(() => {
     fetchData();
@@ -37,8 +38,8 @@ export default function Dashboard() {
     const activeLicenses = profile?.active_licenses || 0;
     
     if (properties.length >= activeLicenses) {
-      alert(`Limite atteinte (${activeLicenses} licence active). Merci d'activer un nouvel abonnement pour ajouter ce logement.`);
-      router.push('/pricing');
+      // On remplace l'alerte par l'affichage du modal
+      setShowLimitModal(true);
     } else {
       router.push('/add-property');
     }
@@ -104,11 +105,22 @@ export default function Dashboard() {
         .btn-outline { background: white; color: #1a2a6c; border: 1px solid #cbd5e1; }
         .btn-light { background: #f8fafc; color: #64748b; font-size: 11px; }
 
-        .btn-add { background: #fbbf24; color: #1a2a6c; padding: 12px 24px; border-radius: 12px; font-weight: 800; font-size: 15px; display: inline-block; cursor: pointer; border: none; }
+        .btn-add { background: #fbbf24; color: #1a2a6c; padding: 12px 24px; border-radius: 12px; font-weight: 800; font-size: 15px; display: inline-block; cursor: pointer; border: none; box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3); }
 
         .danger-zone { margin-top: 80px; padding: 30px; background: #fff5f5; border: 1px solid #fee2e2; border-radius: 20px; }
         .danger-zone h2 { color: #991b1b; font-size: 18px; margin-top: 0; }
         .btn-delete-account { background: #dc2626; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; margin-top: 10px; }
+
+        /* --- STYLES DU MODAL --- */
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
+        .modal-card { background: white; border-radius: 32px; padding: 40px; max-width: 450px; width: 100%; text-align: center; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); border: 1px solid #e2e8f0; }
+        .modal-icon { font-size: 54px; margin-bottom: 20px; display: block; }
+        .modal-card h2 { color: #1a2a6c; font-size: 26px; font-weight: 800; margin-bottom: 15px; font-family: 'Playfair Display', serif; }
+        .modal-card p { color: #64748b; line-height: 1.6; margin-bottom: 35px; font-size: 16px; }
+        .modal-buttons { display: flex; flex-direction: column; gap: 12px; }
+        .btn-upgrade { background: #fbbf24; color: #1a2a6c; padding: 18px; border-radius: 16px; font-weight: 800; font-size: 16px; border: none; cursor: pointer; transition: 0.3s; }
+        .btn-upgrade:hover { transform: translateY(-2px); background: #e5c158; box-shadow: 0 10px 20px rgba(251, 191, 36, 0.2); }
+        .btn-cancel { background: transparent; color: #94a3b8; padding: 10px; border-radius: 14px; font-weight: 600; font-size: 14px; border: none; cursor: pointer; }
 
         @media (max-width: 900px) {
           nav { width: 100%; height: 75px; position: fixed; bottom: 0; left: 0; top: auto; flex-direction: row; padding: 0; justify-content: space-around; align-items: center; z-index: 1000; padding-bottom: env(safe-area-inset-bottom, 10px); }
@@ -148,13 +160,34 @@ export default function Dashboard() {
           ))}
         </div>
 
-        {/* ZONE DE DANGER */}
         <div className="danger-zone">
           <h2>Zone de danger</h2>
           <p style={{color: '#b91c1c', fontSize: '14px'}}>La suppression de votre compte effacera toutes vos données. Cette action est définitive.</p>
           <button onClick={handleDeleteAccount} className="btn-delete-account">Supprimer mon compte</button>
         </div>
       </main>
+
+      {/* --- LE MODAL PRESTIGE --- */}
+      {showLimitModal && (
+        <div className="modal-overlay">
+          <div className="modal-card">
+            <span className="modal-icon">🎩</span>
+            <h2>Limite atteinte</h2>
+            <p>
+              Vous avez utilisé vos <b>{profile?.active_licenses || 0} licence(s)</b> actives.<br/><br/>
+              Pour activer le Majordome sur une nouvelle propriété, vous devez ajouter un emplacement supplémentaire.
+            </p>
+            <div className="modal-buttons">
+              <button className="btn-upgrade" onClick={() => router.push('/pricing')}>
+                Ajouter un emplacement (24,90€)
+              </button>
+              <button className="btn-cancel" onClick={() => setShowLimitModal(false)}>
+                Plus tard
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
