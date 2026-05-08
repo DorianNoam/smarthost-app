@@ -1,6 +1,6 @@
 import Stripe from 'stripe';
 
-// Initialisation de Stripe avec ta clé secrète Vercel
+// Initialisation de Stripe avec ta clé secrète stockée sur Vercel
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export default async function handler(req, res) {
@@ -10,17 +10,17 @@ export default async function handler(req, res) {
   }
 
   try {
-    // On récupère l'email et l'ID de l'hôte depuis la requête
+    // On récupère l'email et l'ID de l'hôte depuis la requête envoyée par le bouton
     const { userEmail, userId } = req.body;
 
     // Création de la session de paiement Stripe
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       customer_email: userEmail,
-      client_reference_id: userId, // Très important pour relier le paiement au bon compte Supabase
+      client_reference_id: userId, // Relie le paiement au compte utilisateur dans Supabase
       line_items: [
         {
-          price: 'price_XXXXX', // ⚠️ Remplacer par ton vrai ID de Prix Stripe
+          price: 'price_1TUuCMBkbQjki47UurlknUvJ', // Ton identifiant de produit réel
           quantity: 1,
         },
       ],
@@ -30,7 +30,7 @@ export default async function handler(req, res) {
       cancel_url: `${req.headers.origin}/pricing?canceled=true`,
     });
 
-    // On renvoie l'URL de la page de paiement Stripe au navigateur
+    // Renvoie l'URL sécurisée vers Stripe pour la redirection
     res.status(200).json({ url: session.url });
   } catch (error) {
     console.error('Erreur Stripe:', error);
