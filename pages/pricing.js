@@ -1,6 +1,52 @@
+import { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
+import { useRouter } from 'next/router';
 import Link from 'next/link';
 
 export default function Pricing() {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const [user, setUser] = useState(null);
+
+  // On vérifie si l'utilisateur est connecté pour la logique du bouton
+  useEffect(() => {
+    const checkUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+    };
+    checkUser();
+  }, []);
+
+  const handleCheckout = async () => {
+    // Si pas connecté, on redirige vers l'inscription
+    if (!user) {
+      router.push('/register');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // Appel à l'API Stripe
+      const res = await fetch('/api/create-checkout-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userEmail: user.email, userId: user.id }),
+      });
+      
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url; // Go vers Stripe
+      } else {
+        console.error("Erreur API:", data.error);
+        alert("Erreur lors de l'initialisation du paiement.");
+      }
+    } catch (err) {
+      console.error("Erreur réseau:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="container">
       <style jsx>{`
@@ -27,61 +73,62 @@ export default function Pricing() {
         
         .brand { display: flex; align-items: center; font-family: 'Playfair Display', serif; font-size: 24px; font-weight: 700; color: #1a2a6c !important; text-decoration: none; }
         .gold { color: #d4af37; }
+        .nav-back { color: #555; font-weight: 600; text-decoration: none; font-size: 14px; transition: 0.3s; }
+        .nav-back:hover { color: #1a2a6c; }
         
         .pricing-header { padding: 150px 20px 60px; text-align: center; background: white; }
         h1 { font-family: 'Playfair Display', serif; font-size: clamp(32px, 5vw, 48px); margin-bottom: 20px; }
         .subtitle { max-width: 700px; margin: 0 auto; color: #555; line-height: 1.6; }
         
-        .pricing-grid { 
-          display: grid; 
-          grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); 
-          gap: 40px; 
+        .pricing-wrapper { 
+          display: flex; 
+          justify-content: center; 
           max-width: 1200px; 
           margin: -50px auto 80px; 
           padding: 0 20px; 
-          align-items: stretch; 
         }
         
         .price-card { 
           background: white; 
           padding: 50px 40px; 
           border-radius: 20px; 
-          box-shadow: 0 20px 40px rgba(0,0,0,0.05); 
+          box-shadow: 0 20px 40px rgba(0,0,0,0.08); 
           text-align: center; 
-          border: 1px solid #eee; 
+          border: 2px solid #d4af37; /* Mise en avant de l'offre unique */
           transition: 0.3s; 
           display: flex; 
           flex-direction: column; 
           position: relative; 
-        }
-        
-        .price-card.featured { border: 2px solid #d4af37; transform: scale(1.05); z-index: 2; }
-        
-        .savings-badge { 
-          background: #d4af37; 
-          color: #1a2a6c; 
-          font-weight: 800; 
-          font-size: 11px; 
-          padding: 8px 18px; 
-          border-radius: 50px; 
-          position: absolute; 
-          top: -18px; 
-          left: 50%; 
-          transform: translateX(-50%); 
-          white-space: nowrap; 
-          box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4); 
+          width: 100%;
+          max-width: 450px;
         }
         
         .plan-name { font-weight: 700; text-transform: uppercase; letter-spacing: 2px; font-size: 13px; color: #d4af37; margin-bottom: 15px; }
         .price { font-family: 'Playfair Display', serif; font-size: 52px; font-weight: 700; margin-bottom: 5px; color: #1a2a6c; }
         .price span { font-size: 18px; font-weight: 400; color: #777; }
+        .billing-cycle { color: #555; font-size: 14px; margin-bottom: 20px; }
         
         .features-list { text-align: left; margin-bottom: 40px; flex-grow: 1; border-top: 1px solid #f9f9f9; padding-top: 30px; }
-        .feature { margin-bottom: 18px; font-size: 14px; display: flex; align-items: center; gap: 12px; color: #333; }
-        .check { color: #d4af37; font-weight: bold; }
+        .feature { margin-bottom: 18px; font-size: 15px; display: flex; align-items: center; gap: 12px; color: #333; }
+        .check { color: #d4af37; font-weight: bold; font-size: 18px; }
         
-        .cta-pricing { background: #1a2a6c; color: white; padding: 18px; border-radius: 50px; text-decoration: none; font-weight: 700; transition: 0.3s; text-align: center; }
-        .price-card.featured .cta-pricing { background: #d4af37; color: #1a2a6c; }
+        .cta-pricing { 
+          background: #d4af37; 
+          color: #1a2a6c; 
+          padding: 18px; 
+          border-radius: 50px; 
+          text-decoration: none; 
+          font-weight: 700; 
+          font-size: 16px;
+          transition: 0.3s; 
+          text-align: center; 
+          border: none;
+          cursor: pointer;
+          font-family: 'Montserrat', sans-serif;
+          width: 100%;
+        }
+        .cta-pricing:hover:not(:disabled) { background: #e5c158; transform: translateY(-2px); box-shadow: 0 10px 20px rgba(212, 175, 55, 0.2); }
+        .cta-pricing:disabled { background: #ccc; color: #666; cursor: not-allowed; transform: none; box-shadow: none; }
         
         footer { padding: 40px; text-align: center; background: #fdfbf7; font-size: 13px; color: #777; }
       `}</style>
@@ -93,59 +140,38 @@ export default function Pricing() {
           </svg>
           Major<span className="gold">Marc</span>
         </Link>
+        <Link href="/" className="nav-back">← Accueil</Link>
       </nav>
 
       <header className="pricing-header">
         <h1>Investissez dans votre <span className="gold">Sérénité</span></h1>
-        <p className="subtitle">L'excellence au service de vos voyageurs, sans barrière de la langue.</p>
+        <p className="subtitle">L'excellence au service de vos voyageurs, sans barrière de la langue. <br/>Une tarification simple, par logement.</p>
       </header>
 
-      <div className="pricing-grid">
-        {/* PACK SOLO */}
+      <div className="pricing-wrapper">
         <div className="price-card">
-          <div className="plan-name">Solo</div>
+          <div className="plan-name">Forfait Unique</div>
           <div className="price">24,90€<span>/mois</span></div>
-          <div className="billing-cycle">Pour 1 logement LCD</div>
+          <div className="billing-cycle">Sans aucun engagement.</div>
+          
           <div className="features-list">
-            <div className="feature"><span className="check">✔</span> 1 Logement unique</div>
-            <div className="feature"><span className="check">✔</span> Majordome 24h/24</div>
-            <div className="feature"><span className="check">✔</span> Majordome Polyglotte</div>
-            <div className="feature"><span className="check">✔</span> Alertes Telegram Urgences</div>
+            <div className="feature"><span className="check">✔</span> Majordome IA 24h/24</div>
+            <div className="feature"><span className="check">✔</span> Traduction multi-langues automatique</div>
+            <div className="feature"><span className="check">✔</span> Alertes d'urgence sur Telegram</div>
+            <div className="feature"><span className="check">✔</span> Recherche web locale intégrée</div>
             <div className="feature"><span className="check">✔</span> Lien de Conciergerie Privé</div>
           </div>
-          <Link href="/register?plan=solo" className="cta-pricing">Démarrer maintenant</Link>
-        </div>
 
-        {/* PACK MULTI */}
-        <div className="price-card featured">
-          <div className="savings-badge">ÉCONOMISEZ 24,60€ / MOIS</div>
-          <div className="plan-name">Multi-Prestige</div>
-          <div className="price">99,90€<span>/mois</span></div>
-          <div className="billing-cycle">Jusqu'à 5 logements</div>
-          <div className="features-list">
-            <div className="feature"><span className="check">✔</span> Jusqu'à 5 logements</div>
-            <div className="feature"><span className="check">✔</span> <b>Tout le Pack Solo</b></div>
-            <div className="feature"><span className="check">✔</span> Support Hôte Prioritaire</div>
-            <div className="feature"><span className="check">✔</span> Personnalisation du Majordome</div>
-          </div>
-          <Link href="/register?plan=multi" className="cta-pricing">Choisir Multi-Prestige</Link>
-        </div>
-
-        {/* PACK EMPIRE */}
-        <div className="price-card">
-          <div className="savings-badge">ÉCONOMISEZ 148,60€ / MOIS</div>
-          <div className="plan-name">Empire LCD</div>
-          <div className="price">224,90€<span>/mois</span></div>
-          <div className="billing-cycle">Jusqu'à 15 logements</div>
-          <div className="features-list">
-            <div className="feature"><span className="check">✔</span> Jusqu'à 15 logements</div>
-            <div className="feature"><span className="check">✔</span> <b>Tout le Pack Multi-Prestige</b></div>
-            <div className="feature"><span className="check">✔</span> Accès VIP Prioritaire</div>
-            <div className="feature"><span className="check">✔</span> Configuration assistée offerte</div>
-          </div>
-          <Link href="/register?plan=empire" className="cta-pricing">Lancer mon Empire</Link>
+          <button 
+            className="cta-pricing" 
+            onClick={handleCheckout}
+            disabled={loading}
+          >
+            {loading ? 'Redirection en cours...' : (user ? 'Activer mon Majordome' : 'Démarrer maintenant')}
+          </button>
         </div>
       </div>
+      
       <footer>© 2026 MajorMarc - L'élégance technologique pour vos séjours.</footer>
     </div>
   );
