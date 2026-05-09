@@ -17,7 +17,7 @@ export default function Register() {
     setError(null);
 
     try {
-      // 1. Création de l'utilisateur
+      // 1. Création ou récupération de l'utilisateur technique
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
@@ -26,19 +26,19 @@ export default function Register() {
       if (authError) throw authError;
 
       if (authData.user) {
-        // 2. Création immédiate du profil (ESSENTIEL)
+        // 2. Utilisation de UPSERT au lieu de INSERT
+        // Cela écrase l'ancien profil s'il existait déjà, évitant l'erreur de doublon.
         const { error: profileError } = await supabase
           .from('profiles')
-          .insert([{ 
+          .upsert([{ 
             id: authData.user.id, 
             full_name: fullName, 
             email: email,
             active_licenses: 0 
-          }]);
+          }], { onConflict: 'email' }); // On gère le conflit sur l'email
 
         if (profileError) throw profileError;
         
-        // 3. Redirection vers le Wizard
         router.push('/add-property?first=true');
       }
     } catch (err) {
@@ -59,11 +59,13 @@ export default function Register() {
         label { font-size: 11px; font-weight: 700; text-transform: uppercase; color: #999; text-align: left; display: block; }
         input { width: 100%; padding: 12px; border: 1px solid #eee; border-radius: 10px; background: #f9f9f9; box-sizing: border-box; }
         .btn-register { background: #d4af37; color: #1a2a6c; border: none; padding: 15px; border-radius: 50px; font-weight: 700; cursor: pointer; margin-top: 10px; }
-        .error-msg { background: #fee2e2; color: #b91c1c; padding: 10px; border-radius: 8px; font-size: 13px; }
+        .error-msg { background: #fee2e2; color: #b91c1c; padding: 10px; border-radius: 8px; font-size: 13px; margin-bottom: 15px; }
       `}</style>
 
       <div className="register-box">
-        <Link href="/"><h1>Major<span className="gold">Marc</span></h1></Link>
+        <Link href="/" legacyBehavior>
+          <a style={{textDecoration: 'none'}}><h1>Major<span className="gold">Marc</span></h1></a>
+        </Link>
         <form onSubmit={handleRegister}>
           {error && <div className="error-msg">{error}</div>}
           <label>Nom complet</label>
