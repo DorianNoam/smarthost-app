@@ -38,23 +38,13 @@ export default function Dashboard() {
         body: JSON.stringify({ userId: profile.id }),
       });
       const data = await res.json();
-      if (data.url) {
-        window.location.href = data.url; 
-      } else {
-        alert(data.error || "Une erreur est survenue lors de l'accès au portail.");
-      }
-    } catch (err) {
-      console.error(err);
-      alert("Erreur réseau. Veuillez réessayer.");
-    } finally {
-      setLoading(false);
-    }
+      if (data.url) window.location.href = data.url;
+    } catch (err) { console.error(err); } finally { setLoading(false); }
   };
 
   const handleAddClick = (e) => {
     e.preventDefault();
     const activeLicenses = profile?.active_licenses || 0;
-    
     if (properties.length >= activeLicenses) {
       setShowLimitModal(true);
     } else {
@@ -67,21 +57,6 @@ export default function Dashboard() {
     if (window.confirm(`Supprimer "${name}" ?`)) {
       const { error } = await supabase.from('properties').delete().eq('id', id);
       if (!error) setProperties(properties.filter(p => p.id !== id));
-    }
-  };
-
-  const handleDeleteAccount = async () => {
-    const confirm = window.confirm("ATTENTION : Voulez-vous vraiment supprimer votre compte ?");
-    if (!confirm) return;
-    const check = window.prompt("Tapez 'SUPPRIMER' pour confirmer :");
-    if (check !== "SUPPRIMER") return;
-
-    try {
-      await supabase.from('profiles').delete().eq('id', profile.id);
-      await supabase.auth.signOut();
-      router.push('/');
-    } catch (err) {
-      alert("Erreur lors de la suppression.");
     }
   };
 
@@ -99,59 +74,30 @@ export default function Dashboard() {
         .logo { font-size: 22px; font-weight: 900; margin-bottom: 50px; text-align: center; }
         .nav-item { padding: 14px 18px; border-radius: 12px; display: flex; align-items: center; gap: 12px; font-weight: 600; opacity: 0.8; margin-bottom: 10px; cursor: pointer; color: white;}
         .nav-item.active { background: rgba(255,255,255,0.15); color: #fbbf24; opacity: 1; }
-
         main { flex: 1; margin-left: 260px; padding: 50px; box-sizing: border-box; }
         .header-area { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
         h1 { margin: 0; color: #1e293b; font-size: 32px; font-weight: 800; }
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 25px; }
-
-        .card { background: white; border-radius: 24px; padding: 25px; border: 1px solid #e2e8f0; position: relative; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: 0.2s; }
-        .card:hover { transform: translateY(-3px); box-shadow: 0 10px 15px rgba(0,0,0,0.1); }
-        .btn-delete { position: absolute; top: 15px; right: 15px; background: #fff1f2; color: #e11d48; border: none; width: 34px; height: 34px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;}
-        
+        .card { background: white; border-radius: 24px; padding: 25px; border: 1px solid #e2e8f0; position: relative; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .btn-delete { position: absolute; top: 15px; right: 15px; background: none; border: none; cursor: pointer; color: #94a3b8; }
         h3 { margin: 0 0 5px 0; color: #1a2a6c; font-size: 22px; font-weight: 800; }
-        .address { color: #64748b; font-size: 14px; margin-bottom: 20px; line-height: 1.5; }
-
+        .address { color: #64748b; font-size: 14px; margin-bottom: 20px; }
         .btn-stack { display: flex; flex-direction: column; gap: 10px; }
-        .action-btn { padding: 12px; border-radius: 12px; font-weight: 700; font-size: 13px; text-align: center; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; border: none; width: 100%; box-sizing: border-box; }
+        .action-btn { padding: 12px; border-radius: 12px; font-weight: 700; font-size: 13px; text-align: center; display: flex; align-items: center; justify-content: center; gap: 8px; border: none; width: 100%; box-sizing: border-box; cursor: pointer; }
         .btn-primary { background: #1a2a6c; color: white; }
-        .btn-light { background: #f8fafc; color: #64748b; font-size: 11px; }
-
-        .btn-add { background: #fbbf24; color: #1a2a6c; padding: 12px 24px; border-radius: 12px; font-weight: 800; font-size: 15px; display: inline-block; cursor: pointer; border: none; box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3); }
-
-        .subscription-card { margin-top: 60px; padding: 30px; background: white; border-radius: 24px; border: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; gap: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
-        .sub-info h3 { margin: 0; color: #1a2a6c; font-size: 20px; }
-        .sub-info p { margin: 8px 0 0; color: #64748b; font-size: 14px; line-height: 1.5; }
-        .btn-portal { background: #1a2a6c; color: white; border: none; padding: 14px 24px; border-radius: 14px; font-weight: 700; cursor: pointer; transition: 0.3s; white-space: nowrap; font-size: 14px; }
-        .btn-portal:hover { background: #d4af37; color: #1a2a6c; transform: translateY(-2px); }
-
-        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
-        .modal-card { background: white; border-radius: 32px; padding: 40px; max-width: 480px; width: 100%; text-align: center; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
-        .modal-icon { font-size: 54px; margin-bottom: 20px; display: block; }
-        .modal-card h2 { color: #1a2a6c; font-size: 26px; font-weight: 800; margin-bottom: 15px; }
-        .modal-card p { color: #64748b; line-height: 1.6; margin-bottom: 35px; font-size: 16px; }
-        .modal-buttons { display: flex; flex-direction: column; gap: 12px; }
-        .btn-upgrade { background: #fbbf24; color: #1a2a6c; padding: 18px; border-radius: 16px; font-weight: 800; font-size: 16px; border: none; cursor: pointer; }
-        .btn-cancel { background: transparent; color: #94a3b8; padding: 10px; border-radius: 14px; font-weight: 600; font-size: 14px; border: none; cursor: pointer; }
-
-        .danger-zone { margin-top: 40px; padding: 30px; background: #fff5f5; border: 1px solid #fee2e2; border-radius: 20px; }
-        .danger-zone h2 { color: #991b1b; font-size: 18px; margin-top: 0; }
-        .btn-delete-account { background: #dc2626; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; margin-top: 10px; }
-
-        @media (max-width: 900px) {
-          nav { width: 100%; height: 75px; position: fixed; bottom: 0; left: 0; top: auto; flex-direction: row; padding: 0; justify-content: space-around; align-items: center; }
-          .logo, .nav-text { display: none; }
-          main { margin-left: 0; padding: 20px; padding-bottom: 120px; }
-          .grid { grid-template-columns: 1fr; }
-          .subscription-card { flex-direction: column; text-align: center; padding: 20px; }
-          .btn-portal { width: 100%; }
-        }
+        .btn-history { background: #fdf2f8; color: #be185d; }
+        .btn-light { background: #f1f5f9; color: #475569; }
+        .btn-add { background: #fbbf24; color: #1a2a6c; padding: 12px 24px; border-radius: 12px; font-weight: 800; cursor: pointer; border: none; }
+        .activation-zone { background: #fffbeb; padding: 20px; border-radius: 16px; border: 1px solid #fef3c7; text-align: center; }
+        .btn-activate { background: #fbbf24; border: none; padding: 14px; width: 100%; border-radius: 12px; font-weight: 800; color: #1a2a6c; cursor: pointer; }
+        .subscription-card { margin-top: 60px; padding: 30px; background: white; border-radius: 24px; border: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; }
+        .btn-portal { background: #1a2a6c; color: white; padding: 14px 24px; border-radius: 14px; font-weight: 700; cursor: pointer; border: none; }
       `}</style>
 
       <nav>
         <div className="logo">MajorMarc 🎩</div>
-        <Link href="/dashboard" legacyBehavior><a className="nav-item active">🏠 <span className="nav-text">Mes Logements</span></a></Link>
-        <Link href="/settings" legacyBehavior><a className="nav-item">⚙️ <span className="nav-text">Paramètres</span></a></Link>
+        <Link href="/dashboard" legacyBehavior><a className="nav-item active">🏠 Mes Logements</a></Link>
+        <Link href="/settings" legacyBehavior><a className="nav-item">⚙️ Paramètres</a></Link>
       </nav>
 
       <main>
@@ -165,12 +111,20 @@ export default function Dashboard() {
             <div key={prop.id} className="card">
               <button className="btn-delete" onClick={(e) => deleteProperty(e, prop.id, prop.name)}>🗑️</button>
               <h3>{prop.name}</h3>
-              {/* CORRECTION : AJOUT DE LA VILLE ICI */}
-              <div className="address">📍 {prop.street_number} {prop.address}, {prop.city}</div>
-              <div className="btn-stack">
-                <Link href={`/property/${prop.id}`} legacyBehavior><a className="action-btn btn-primary">📊 Configurer le logement</a></Link>
-                <Link href={`/chat/${prop.id}`} legacyBehavior><a className="action-btn btn-light">Simuler voyageur</a></Link>
-              </div>
+              <div className="address">📍 {prop.street_number} {prop.address}{prop.city ? `, ${prop.city}` : ''}</div>
+              
+              {!prop.is_active ? (
+                <div className="activation-zone">
+                  <p style={{fontSize: '13px', color: '#92400e', marginBottom: '15px', fontWeight: 600}}>Votre Majordome Major Marc est prêt à entrer en service.</p>
+                  <button onClick={() => router.push('/pricing')} className="btn-activate">Activer ce logement</button>
+                </div>
+              ) : (
+                <div className="btn-stack">
+                  <Link href={`/property/${prop.id}`} legacyBehavior><a className="action-btn btn-primary">📊 Configurer le logement</a></Link>
+                  <Link href={`/history/${prop.id}`} legacyBehavior><a className="action-btn btn-history">📜 Historique des échanges</a></Link>
+                  <Link href={`/chat/${prop.id}`} legacyBehavior><a className="action-btn btn-light">🎭 Simuler un voyageur</a></Link>
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -178,40 +132,11 @@ export default function Dashboard() {
         <div className="subscription-card">
           <div className="sub-info">
             <h3>Gestion des abonnements</h3>
-            <p>Mettez à jour vos moyens de paiement ou gérez vos factures via notre portail sécurisé.</p>
+            <p>Mettez à jour vos moyens de paiement ou gérez vos factures.</p>
           </div>
-          <button onClick={handleManageSubscription} className="btn-portal">
-            Accéder au portail sécurisé
-          </button>
-        </div>
-
-        <div className="danger-zone">
-          <h2>Zone de danger</h2>
-          <p style={{color: '#b91c1c', fontSize: '14px'}}>La suppression de votre compte effacera toutes vos données. Cette action est définitive.</p>
-          <button onClick={handleDeleteAccount} className="btn-delete-account">Supprimer mon compte</button>
+          <button onClick={handleManageSubscription} className="btn-portal">Accéder au portail</button>
         </div>
       </main>
-
-      {showLimitModal && (
-        <div className="modal-overlay">
-          <div className="modal-card">
-            <span className="modal-icon">🎩</span>
-            <h2>Nouvel abonnement requis</h2>
-            <p>
-              Vous avez atteint votre limite de <b>{profile?.active_licenses || 0} abonnement(s)</b> actif(s).<br/><br/>
-              Pour gérer un nouveau logement avec Major Marc, vous devez souscrire à un abonnement supplémentaire.
-            </p>
-            <div className="modal-buttons">
-              <button className="btn-upgrade" onClick={() => router.push('/pricing')}>
-                Prendre un nouvel abonnement (24,90€)
-              </button>
-              <button className="btn-cancel" onClick={() => setShowLimitModal(false)}>
-                Plus tard
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
