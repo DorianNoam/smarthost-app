@@ -93,20 +93,45 @@ export default function AddPropertyWizard() {
       <div className="wizard-card">
         <div className="progress-bar"><div className="progress-fill"></div></div>
 
-        {/* ÉTAPE 1 : IDENTITÉ */}
-        {step === 1 && (
-          <div className="step">
-            <h2>1. Identité du logement</h2>
-            <div className="grid">
-              <div className="input-group full"><label>Nom du logement</label><input name="name" value={formData.name} onChange={handleChange} placeholder="ex: Villa Noam" /></div>
-              <div className="input-group"><label>N° de rue</label><input name="street_number" value={formData.street_number} onChange={handleChange} /></div>
-              <div className="input-group"><label>Ville</label><input name="city" value={formData.city} onChange={handleChange} /></div>
-              <div className="input-group full"><label>Adresse complète</label><input name="address" value={formData.address} onChange={handleChange} /></div>
-              <div className="input-group"><label>Bâtiment</label><input name="building" value={formData.building} onChange={handleChange} /></div>
-              <div className="input-group"><label>Étage</label><input name="floor" value={formData.floor} onChange={handleChange} /></div>
-            </div>
-          </div>
-        )}
+      {/* 1. IDENTITÉ */}
+{step === 1 && (
+  <div className="step">
+    <h2>1. Identité du logement</h2>
+    <div className="grid">
+      {/* Ligne 1 : Nom du projet */}
+      <div className="input-group full">
+        <label>Nom du logement (ex: Villa Noam)</label>
+        <input name="name" value={formData.name} onChange={handleChange} placeholder="Ce nom apparaîtra sur votre tableau de bord" />
+      </div>
+
+      {/* Ligne 2 : Adresse précise */}
+      <div className="input-group">
+        <label>N° de rue</label>
+        <input name="street_number" value={formData.street_number} onChange={handleChange} placeholder="ex: 12 bis" />
+      </div>
+      <div className="input-group">
+        <label>Ville</label>
+        <input name="city" value={formData.city} onChange={handleChange} placeholder="ex: Paris" />
+      </div>
+
+      {/* Ligne 3 : La rue */}
+      <div className="input-group full">
+        <label>Rue / Nom de la voie</label>
+        <input name="address" value={formData.address} onChange={handleChange} placeholder="ex: Avenue des Champs-Élysées" />
+      </div>
+
+      {/* Ligne 4 : Compléments de localisation */}
+      <div className="input-group">
+        <label>Bâtiment / Résidence</label>
+        <input name="building" value={formData.building} onChange={handleChange} placeholder="ex: Bâtiment C" />
+      </div>
+      <div className="input-group">
+        <label>Étage / Porte</label>
+        <input name="floor" value={formData.floor} onChange={handleChange} placeholder="ex: 4ème étage, porte gauche" />
+      </div>
+    </div>
+  </div>
+)}
 
         {/* ÉTAPE 2 : ACCÈS */}
         {step === 2 && (
