@@ -29,6 +29,29 @@ export default function Dashboard() {
     setLoading(false);
   };
 
+  // --- NOUVELLE FONCTION : PORTAIL STRIPE ---
+  const handleManageSubscription = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/create-portal-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: profile.id }),
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url; // Redirection vers Stripe
+      } else {
+        alert(data.error || "Une erreur est survenue lors de l'accès au portail.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Erreur réseau. Veuillez réessayer.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleAddClick = (e) => {
     e.preventDefault();
     const activeLicenses = profile?.active_licenses || 0;
@@ -97,6 +120,13 @@ export default function Dashboard() {
 
         .btn-add { background: #fbbf24; color: #1a2a6c; padding: 12px 24px; border-radius: 12px; font-weight: 800; font-size: 15px; display: inline-block; cursor: pointer; border: none; box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3); }
 
+        /* --- SECTION ABONNEMENT --- */
+        .subscription-card { margin-top: 60px; padding: 30px; background: white; border-radius: 24px; border: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; gap: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
+        .sub-info h3 { margin: 0; color: #1a2a6c; font-size: 20px; }
+        .sub-info p { margin: 8px 0 0; color: #64748b; font-size: 14px; line-height: 1.5; }
+        .btn-portal { background: #1a2a6c; color: white; border: none; padding: 14px 24px; border-radius: 14px; font-weight: 700; cursor: pointer; transition: 0.3s; white-space: nowrap; font-size: 14px; }
+        .btn-portal:hover { background: #d4af37; color: #1a2a6c; transform: translateY(-2px); }
+
         /* --- MODAL --- */
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
         .modal-card { background: white; border-radius: 32px; padding: 40px; max-width: 480px; width: 100%; text-align: center; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
@@ -107,14 +137,17 @@ export default function Dashboard() {
         .btn-upgrade { background: #fbbf24; color: #1a2a6c; padding: 18px; border-radius: 16px; font-weight: 800; font-size: 16px; border: none; cursor: pointer; }
         .btn-cancel { background: transparent; color: #94a3b8; padding: 10px; border-radius: 14px; font-weight: 600; font-size: 14px; border: none; cursor: pointer; }
 
-        .danger-zone { margin-top: 80px; padding: 30px; background: #fff5f5; border: 1px solid #fee2e2; border-radius: 20px; }
-        .btn-delete-account { background: #dc2626; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; }
+        .danger-zone { margin-top: 40px; padding: 30px; background: #fff5f5; border: 1px solid #fee2e2; border-radius: 20px; }
+        .danger-zone h2 { color: #991b1b; font-size: 18px; margin-top: 0; }
+        .btn-delete-account { background: #dc2626; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; margin-top: 10px; }
 
         @media (max-width: 900px) {
           nav { width: 100%; height: 75px; position: fixed; bottom: 0; left: 0; top: auto; flex-direction: row; padding: 0; justify-content: space-around; align-items: center; }
           .logo, .nav-text { display: none; }
           main { margin-left: 0; padding: 20px; padding-bottom: 120px; }
           .grid { grid-template-columns: 1fr; }
+          .subscription-card { flex-direction: column; text-align: center; padding: 20px; }
+          .btn-portal { width: 100%; }
         }
       `}</style>
 
@@ -144,12 +177,26 @@ export default function Dashboard() {
           ))}
         </div>
 
+        {/* --- SECTION GESTION ABONNEMENT --- */}
+        <div className="subscription-card">
+          <div className="sub-info">
+            <h3>Gestion des abonnements</h3>
+            <p>Mettez à jour vos moyens de paiement ou gérez vos factures via notre portail sécurisé.</p>
+          </div>
+          <button onClick={handleManageSubscription} className="btn-portal">
+            Accéder au portail sécurisé
+          </button>
+        </div>
+
+        {/* --- ZONE DE DANGER --- */}
         <div className="danger-zone">
+          <h2>Zone de danger</h2>
+          <p style={{color: '#b91c1c', fontSize: '14px'}}>La suppression de votre compte effacera toutes vos données. Cette action est définitive.</p>
           <button onClick={handleDeleteAccount} className="btn-delete-account">Supprimer mon compte</button>
         </div>
       </main>
 
-      {/* --- MODAL AVEC TEXTE CORRIGÉ --- */}
+      {/* --- MODAL LIMITE --- */}
       {showLimitModal && (
         <div className="modal-overlay">
           <div className="modal-card">
