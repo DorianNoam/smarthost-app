@@ -1,88 +1,64 @@
 import { useState } from 'react';
-import Link from 'next/link';
+import { supabase } from '../lib/supabase';
 import { useRouter } from 'next/router';
-import { supabase } from '../lib/supabase'; 
+import Link from 'next/link';
 
 export default function Register() {
-  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const router = useRouter();
 
-  const handleRegister = async (e) => {
+  const handleSignUp = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError(null);
 
-    try {
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-      });
+    // 1. Inscription Auth
+    const { data, error } = await supabase.auth.signUp({ 
+      email, 
+      password,
+    });
 
-      if (authError) throw authError;
-
-      if (authData.user) {
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert([{ id: authData.user.id, full_name: fullName, email: email }]);
-
-        if (profileError) throw profileError;
-        router.push('/dashboard');
-      }
-    } catch (err) {
-      setError(err.message || "Une erreur est survenue.");
-    } finally {
+    if (error) {
+      alert("Erreur : " + error.message);
       setLoading(false);
+      return;
+    }
+
+    // 2. Création du profil & Redirection immédiate
+    if (data.user) {
+      await supabase.from('profiles').insert([
+        { id: data.user.id, email: email, active_licenses: 0 }
+      ]);
+      // On l'envoie direct configurer sa villa sans passer par le login
+      router.push('/add-property?first=true');
     }
   };
 
   return (
-    <div className="container">
+    <div className="auth-container">
       <style jsx>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Montserrat:wght@300;400;600;700&display=swap');
-        :global(a) { text-decoration: none; color: inherit; }
-        .container { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #1a2a6c; font-family: 'Montserrat', sans-serif; padding: 20px; }
-        .register-box { background: white; width: 100%; max-width: 450px; padding: 50px 40px; border-radius: 30px; box-shadow: 0 25px 50px rgba(0,0,0,0.2); text-align: center; }
-        h1 { font-family: 'Playfair Display', serif; color: #1a2a6c; margin-bottom: 10px; }
-        .gold { color: #d4af37; }
-        form { display: flex; flex-direction: column; gap: 15px; margin-top: 25px; }
-        .input-group { text-align: left; }
-        label { font-size: 11px; font-weight: 700; text-transform: uppercase; color: #999; margin-bottom: 5px; display: block; }
-        input { width: 100%; padding: 12px; border: 1px solid #eee; border-radius: 10px; background: #f9f9f9; outline: none; box-sizing: border-box; }
-        input:focus { border-color: #d4af37; }
-        .btn-register { background: #d4af37; color: #1a2a6c; border: none; padding: 15px; border-radius: 50px; font-weight: 700; cursor: pointer; margin-top: 10px; }
-        .btn-register:disabled { opacity: 0.5; }
-        .error-msg { background: #fee2e2; color: #b91c1c; padding: 10px; border-radius: 8px; font-size: 13px; margin-bottom: 15px; }
+        .auth-container { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #fdfbf7; font-family: 'Inter', sans-serif; }
+        .auth-box { background: white; padding: 40px; border-radius: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); width: 100%; max-width: 400px; text-align: center; }
+        h1 { color: #1a2a6c; margin-bottom: 10px; font-weight: 800; font-size: 24px; }
+        p { color: #64748b; margin-bottom: 30px; font-size: 14px; }
+        input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #e2e8f0; border-radius: 12px; box-sizing: border-box; font-size: 16px; }
+        button { width: 100%; padding: 14px; background: #1a2a6c; color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; transition: 0.3s; }
+        button:hover { background: #fbbf24; color: #1a2a6c; }
+        .footer-link { margin-top: 20px; color: #64748b; font-size: 14px; }
       `}</style>
-
-      <div className="register-box">
-        <Link href="/" legacyBehavior passHref>
-          <a style={{cursor: 'pointer'}}><h1>Major<span className="gold">Marc</span></h1></a>
-        </Link>
-        <form onSubmit={handleRegister}>
-          {error && <div className="error-msg">{error}</div>}
-          <div className="input-group">
-            <label>Nom complet</label>
-            <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} required />
-          </div>
-          <div className="input-group">
-            <label>Email</label>
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-          </div>
-          <div className="input-group">
-            <label>Mot de passe</label>
-            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-          </div>
-          <button type="submit" className="btn-register" disabled={loading}>
-            {loading ? 'Création...' : 'Créer mon compte'}
-          </button>
+      
+      <div className="auth-box">
+        <h1>Bienvenue chez Major Marc 🎩</h1>
+        <p>Créez votre compte pour commencer la configuration.</p>
+        <form onSubmit={handleSignUp}>
+          <input type="email" placeholder="Votre email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+          <input type="password" placeholder="Mot de passe" value={password} onChange={(e) => setPassword(e.target.value)} required />
+          <button disabled={loading}>{loading ? 'Création...' : 'Accéder à ma Villa'}</button>
         </form>
-        <p style={{marginTop: '25px', fontSize: '13px'}}>
-          Déjà un compte ? <Link href="/login" style={{color: '#1a2a6c', fontWeight: '700'}}>Se connecter</Link>
-        </p>
+        <div className="footer-link">
+          Déjà un compte ? <Link href="/login">Se connecter</Link>
+        </div>
       </div>
     </div>
   );
