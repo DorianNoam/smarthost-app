@@ -56,7 +56,7 @@ export default function AddPropertyWizard() {
     setLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      // On ajoute is_active: false pour bloquer l'activation tant que ce n'est pas payé
+      // On force is_active: false pour le tunnel de vente
       const payload = { owner_id: user.id, ...formData, is_active: false };
       if (propertyId) payload.id = propertyId;
 
@@ -100,7 +100,6 @@ export default function AddPropertyWizard() {
       <div className="wizard-card">
         <div className="progress-bar"><div className="progress-fill"></div></div>
 
-        {/* ÉTAPE 1 : Identité */}
         {step === 1 && (
           <div className="step">
             <h2>1. Identité du logement</h2>
@@ -116,7 +115,6 @@ export default function AddPropertyWizard() {
           </div>
         )}
 
-        {/* ÉTAPE 2 : Accès & Stationnement */}
         {step === 2 && (
           <div className="step">
             <h2>2. Accès & Stationnement</h2>
@@ -130,7 +128,6 @@ export default function AddPropertyWizard() {
           </div>
         )}
 
-        {/* ÉTAPE 3 : Wifi & Confort */}
         {step === 3 && (
           <div className="step">
             <h2>3. Wifi & Confort</h2>
@@ -142,7 +139,6 @@ export default function AddPropertyWizard() {
           </div>
         )}
 
-        {/* ÉTAPE 4 : Entretien & Santé */}
         {step === 4 && (
           <div className="step">
             <h2>4. Entretien & Santé</h2>
@@ -155,7 +151,6 @@ export default function AddPropertyWizard() {
           </div>
         )}
 
-        {/* ÉTAPE 5 : Guide Local */}
         {step === 5 && (
           <div className="step">
             <h2>5. Guide Local</h2>
@@ -167,7 +162,6 @@ export default function AddPropertyWizard() {
           </div>
         )}
 
-        {/* ÉTAPE 6 : Départ & Avis */}
         {step === 6 && (
           <div className="step">
             <h2>6. Départ & Avis</h2>
@@ -179,7 +173,6 @@ export default function AddPropertyWizard() {
           </div>
         )}
 
-        {/* ÉTAPE 7 : Divertissement & Appareils */}
         {step === 7 && (
           <div className="step">
             <h2>7. Divertissement & Appareils</h2>
@@ -192,7 +185,6 @@ export default function AddPropertyWizard() {
           </div>
         )}
 
-        {/* ÉTAPE 8 : Inventaire & Linge */}
         {step === 8 && (
           <div className="step">
             <h2>8. Inventaire & Linge</h2>
@@ -204,7 +196,6 @@ export default function AddPropertyWizard() {
           </div>
         )}
 
-        {/* ÉTAPE 9 : Particularités */}
         {step === 9 && (
           <div className="step">
             <h2>9. Particularités (Quirks)</h2>
@@ -215,7 +206,6 @@ export default function AddPropertyWizard() {
           </div>
         )}
 
-        {/* ÉTAPE 10 : Familles & Règles */}
         {step === 10 && (
           <div className="step">
             <h2>10. Familles, Règles & Taxes</h2>
@@ -231,6 +221,11 @@ export default function AddPropertyWizard() {
           <button className="btn-next" onClick={() => saveProgress(step === 10)}>
             {loading ? 'Sauvegarde...' : step === 10 ? 'Terminer & Publier' : 'Continuer'}
           </button>
-          <Link href="/dashboard" className="btn-later">
-            Plus tard
+          <Link href="/dashboard">
+            <a className="btn-later">Plus tard</a>
           </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
