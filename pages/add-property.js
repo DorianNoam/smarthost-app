@@ -93,16 +93,46 @@ export default function AddPropertyWizard() {
       <div className="wizard-card">
         <div className="progress-bar"><div className="progress-fill"></div></div>
 
-      {/* 1. IDENTITÉ */}
-{step === 1 && (
-  <div className="step">
-    <h2>1. Identité du logement</h2>
-    <div className="grid">
-      {/* Ligne 1 : Nom du projet */}
-      <div className="input-group full">
-        <label>Nom du logement (ex: Villa Noam)</label>
-        <input name="name" value={formData.name} onChange={handleChange} placeholder="Ce nom apparaîtra sur votre tableau de bord" />
-      </div>
+{/* --- ÉTAPE 1 : IDENTITÉ (ORDRE CORRIGÉ) --- */}
+        {step === 1 && (
+          <div className="step">
+            <h2>1. Identité du logement</h2>
+            <div className="grid">
+              <div className="input-group full">
+                <label>Nom du projet (ex: Villa Noam)</label>
+                <input name="name" value={formData.name} onChange={handleChange} />
+              </div>
+              
+              <div className="input-group">
+                <label>Numéro de rue</label>
+                <input name="street_number" value={formData.street_number} onChange={handleChange} />
+              </div>
+              <div className="input-group">
+                <label>Nom de la voie</label>
+                <input name="address" value={formData.address} onChange={handleChange} placeholder="ex: Avenue Jean Jaurès" />
+              </div>
+
+              <div className="input-group">
+                <label>Étage</label>
+                <input name="floor" value={formData.floor} onChange={handleChange} />
+              </div>
+              <div className="input-group">
+                <label>Bâtiment</label>
+                <input name="building" value={formData.building} onChange={handleChange} />
+              </div>
+
+              <div className="input-group full">
+                <label>Complément d'adresse</label>
+                <input name="address_complement" value={formData.address_complement} onChange={handleChange} placeholder="ex: Résidence les Cyprès, Code portail..." />
+              </div>
+
+              <div className="input-group full">
+                <label>Ville</label>
+                <input name="city" value={formData.city} onChange={handleChange} />
+              </div>
+            </div>
+          </div>
+        )}
 
       {/* Ligne 2 : Adresse précise */}
       <div className="input-group">
