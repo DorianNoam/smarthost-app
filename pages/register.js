@@ -1,48 +1,80 @@
 import { useState } from 'react';
-import { supabase } from '../lib/supabase';
-import { useRouter } from 'next/router';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
+import { supabase } from '../lib/supabase'; 
 
 export default function Register() {
+  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
+  const [error, setError] = useState(null);
 
-  const handleSignUp = async (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setError(null);
 
-    const { data, error } = await supabase.auth.signUp({ email, password });
+    try {
+      // 1. Création de l'utilisateur
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email,
+        password,
+      });
 
-    if (error) {
-      alert("Erreur : " + error.message);
+      if (authError) throw authError;
+
+      if (authData.user) {
+        // 2. Création immédiate du profil (ESSENTIEL)
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert([{ 
+            id: authData.user.id, 
+            full_name: fullName, 
+            email: email,
+            active_licenses: 0 
+          }]);
+
+        if (profileError) throw profileError;
+        
+        // 3. Redirection vers le Wizard
+        router.push('/add-property?first=true');
+      }
+    } catch (err) {
+      setError(err.message || "Une erreur est survenue.");
+    } finally {
       setLoading(false);
-      return;
-    }
-
-    if (data.user) {
-      await supabase.from('profiles').insert([{ id: data.user.id, email: email, active_licenses: 0 }]);
-      // Redirection immédiate pour engager le client
-      router.push('/add-property?first=true');
     }
   };
 
   return (
-    <div className="auth-container">
+    <div className="container">
       <style jsx>{`
-        .auth-container { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #fdfbf7; font-family: 'Inter', sans-serif; }
-        .auth-box { background: white; padding: 40px; border-radius: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); width: 100%; max-width: 400px; text-align: center; }
-        h1 { color: #1a2a6c; margin-bottom: 30px; font-weight: 800; font-size: 24px; }
-        input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #e2e8f0; border-radius: 12px; width: 100%; box-sizing: border-box; }
-        button { width: 100%; padding: 14px; background: #1a2a6c; color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; }
+        .container { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #1a2a6c; font-family: 'Montserrat', sans-serif; padding: 20px; }
+        .register-box { background: white; width: 100%; max-width: 450px; padding: 50px 40px; border-radius: 30px; box-shadow: 0 25px 50px rgba(0,0,0,0.2); text-align: center; }
+        h1 { color: #1a2a6c; margin-bottom: 10px; font-weight: 800; }
+        .gold { color: #d4af37; }
+        form { display: flex; flex-direction: column; gap: 15px; margin-top: 25px; }
+        label { font-size: 11px; font-weight: 700; text-transform: uppercase; color: #999; text-align: left; display: block; }
+        input { width: 100%; padding: 12px; border: 1px solid #eee; border-radius: 10px; background: #f9f9f9; box-sizing: border-box; }
+        .btn-register { background: #d4af37; color: #1a2a6c; border: none; padding: 15px; border-radius: 50px; font-weight: 700; cursor: pointer; margin-top: 10px; }
+        .error-msg { background: #fee2e2; color: #b91c1c; padding: 10px; border-radius: 8px; font-size: 13px; }
       `}</style>
-      <div className="auth-box">
-        <h1>Bienvenue chez Major Marc 🎩</h1>
-        <form onSubmit={handleSignUp}>
-          <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-          <input type="password" placeholder="Mot de passe" value={password} onChange={(e) => setPassword(e.target.value)} required />
-          <button disabled={loading}>{loading ? 'Création...' : 'Accéder à mon Dashboard'}</button>
+
+      <div className="register-box">
+        <Link href="/"><h1>Major<span className="gold">Marc</span></h1></Link>
+        <form onSubmit={handleRegister}>
+          {error && <div className="error-msg">{error}</div>}
+          <label>Nom complet</label>
+          <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} required />
+          <label>Email</label>
+          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+          <label>Mot de passe</label>
+          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+          <button type="submit" className="btn-register" disabled={loading}>
+            {loading ? 'Création...' : 'Créer mon compte'}
+          </button>
         </form>
       </div>
     </div>
