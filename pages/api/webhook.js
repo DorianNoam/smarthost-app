@@ -1,8 +1,16 @@
 import Stripe from 'stripe';
-import { supabase } from '../../lib/supabase';
+import { createClient } from '@supabase/supabase-js';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+
+// Configuration Vercel pour Stripe
 export const config = { api: { bodyParser: false } };
+
+// Client Admin pour bypasser les sécurités RLS en production
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
 
 async function buffer(readable) {
   const chunks = [];
@@ -13,6 +21,8 @@ async function buffer(readable) {
 }
 
 export default async function handler(req, res) {
+  if (req.method !== 'POST') return res.status(405).end();
+
   const buf = await buffer(req);
   const sig = req.headers['stripe-signature'];
   let event;
@@ -20,6 +30,7 @@ export default async function handler(req, res) {
   try {
     event = stripe.webhooks.constructEvent(buf, sig, process.env.STRIPE_WEBHOOK_SECRET);
   } catch (err) {
+    console.error(`Erreur de signature Webhook: ${err.message}`);
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
@@ -29,32 +40,37 @@ export default async function handler(req, res) {
     const stripeCustomerId = session.customer;
 
     if (userId) {
-      // 1. Mise à jour du profil
-      const { data: profile } = await supabase.from('profiles').select('active_licenses').eq('id', userId).single();
-      const newCount = (profile?.active_licenses || 0) + 1;
+      try {
+        // 1. Mise à jour du profil (Ajout d'une licence)
+        const { data: profile } = await supabaseAdmin.from('profiles').select('active_licenses').eq('id', userId).single();
+        const newCount = (profile?.active_licenses || 0) + 1;
 
-      await supabase.from('profiles').update({ 
-        stripe_customer_id: stripeCustomerId, 
-        active_licenses: newCount,
-        subscription_status: 'active'
-      }).eq('id', userId);
+        await supabaseAdmin.from('profiles').update({ 
+          stripe_customer_id: stripeCustomerId, 
+          active_licenses: newCount,
+          subscription_status: 'active'
+        }).eq('id', userId);
 
-      // 2. ACTIVATION AUTOMATIQUE DU LOGEMENT
-      const { data: inactiveProp } = await supabase
-        .from('properties')
-        .select('id')
-        .eq('owner_id', userId)
-        .eq('is_active', false)
-        .order('created_at', { ascending: true })
-        .limit(1)
-        .single();
+        // 2. Activation du logement le plus ancien en attente
+        const { data: inactiveProp } = await supabaseAdmin
+          .from('properties')
+          .select('id')
+          .eq('owner_id', userId)
+          .eq('is_active', false)
+          .order('created_at', { ascending: true })
+          .limit(1)
+          .single();
 
-      if (inactiveProp) {
-        await supabase.from('properties').update({ is_active: true }).eq('id', inactiveProp.id);
+        if (inactiveProp) {
+          await supabaseAdmin.from('properties').update({ is_active: true }).eq('id', inactiveProp.id);
+        }
+
+        // 3. Enregistrement de l'événement pour l'admin
+        await supabaseAdmin.from('license_events').insert([{ user_id: userId }]);
+
+      } catch (error) {
+        console.error("Erreur Webhook Database:", error);
       }
-
-      // 3. Stats pour l'admin
-      await supabase.from('license_events').insert([{ user_id: userId }]);
     }
   }
 
