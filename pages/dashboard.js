@@ -12,7 +12,11 @@ export default function Dashboard() {
 
   useEffect(() => {
     fetchData();
-  }, []);
+    if (router.query.success) {
+      const timer = setTimeout(() => fetchData(), 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [router.query]);
 
   const fetchData = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -29,6 +33,19 @@ export default function Dashboard() {
     setLoading(false);
   };
 
+  const handleAddClick = (e) => {
+    e.preventDefault();
+    
+    // 🔥 NOUVELLE LOGIQUE : On vérifie s'il y a un logement non activé
+    const hasInactive = properties.some(prop => !prop.is_active);
+    
+    if (hasInactive) {
+      setShowLimitModal(true);
+    } else {
+      router.push('/add-property');
+    }
+  };
+
   const handleManageSubscription = async () => {
     setLoading(true);
     try {
@@ -39,24 +56,26 @@ export default function Dashboard() {
       });
       const data = await res.json();
       if (data.url) window.location.href = data.url;
-    } catch (err) { console.error(err); } finally { setLoading(false); }
-  };
-
-  const handleAddClick = (e) => {
-    e.preventDefault();
-    const activeLicenses = profile?.active_licenses || 0;
-    if (properties.length >= activeLicenses) {
-      setShowLimitModal(true);
-    } else {
-      router.push('/add-property');
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
   };
 
   const deleteProperty = async (e, id, name) => {
     e.stopPropagation();
-    if (window.confirm(`Supprimer "${name}" ?`)) {
+    if (window.confirm(`Supprimer définitivement "${name}" ?`)) {
       const { error } = await supabase.from('properties').delete().eq('id', id);
       if (!error) setProperties(properties.filter(p => p.id !== id));
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (window.confirm("Supprimer votre compte ?") && window.prompt("Tapez 'SUPPRIMER' :") === "SUPPRIMER") {
+      await supabase.from('profiles').delete().eq('id', profile.id);
+      await supabase.auth.signOut();
+      router.push('/');
     }
   };
 
@@ -74,24 +93,36 @@ export default function Dashboard() {
         .logo { font-size: 22px; font-weight: 900; margin-bottom: 50px; text-align: center; }
         .nav-item { padding: 14px 18px; border-radius: 12px; display: flex; align-items: center; gap: 12px; font-weight: 600; opacity: 0.8; margin-bottom: 10px; cursor: pointer; color: white;}
         .nav-item.active { background: rgba(255,255,255,0.15); color: #fbbf24; opacity: 1; }
+
         main { flex: 1; margin-left: 260px; padding: 50px; box-sizing: border-box; }
         .header-area { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
         h1 { margin: 0; color: #1e293b; font-size: 32px; font-weight: 800; }
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 25px; }
+
         .card { background: white; border-radius: 24px; padding: 25px; border: 1px solid #e2e8f0; position: relative; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        .btn-delete { position: absolute; top: 15px; right: 15px; background: none; border: none; cursor: pointer; color: #94a3b8; }
-        h3 { margin: 0 0 5px 0; color: #1a2a6c; font-size: 22px; font-weight: 800; }
-        .address { color: #64748b; font-size: 14px; margin-bottom: 20px; }
+        .btn-delete { position: absolute; top: 15px; right: 15px; border: none; background: none; cursor: pointer; color: #94a3b8; }
+        
+        h3 { margin: 0 0 5px 0; color: #1a2a6c; font-size: 20px; font-weight: 800; }
+        .address { color: #64748b; font-size: 13px; margin-bottom: 20px; }
+
         .btn-stack { display: flex; flex-direction: column; gap: 10px; }
-        .action-btn { padding: 12px; border-radius: 12px; font-weight: 700; font-size: 13px; text-align: center; display: flex; align-items: center; justify-content: center; gap: 8px; border: none; width: 100%; box-sizing: border-box; cursor: pointer; }
+        .action-btn { padding: 12px; border-radius: 10px; font-weight: 700; font-size: 13px; text-align: center; border: none; cursor: pointer; }
         .btn-primary { background: #1a2a6c; color: white; }
         .btn-history { background: #fdf2f8; color: #be185d; }
         .btn-light { background: #f1f5f9; color: #475569; }
+
         .btn-add { background: #fbbf24; color: #1a2a6c; padding: 12px 24px; border-radius: 12px; font-weight: 800; cursor: pointer; border: none; }
-        .activation-zone { background: #fffbeb; padding: 20px; border-radius: 16px; border: 1px solid #fef3c7; text-align: center; }
+
+        .activation-zone { background: #fffbeb; padding: 20px; border-radius: 16px; border: 1px solid #fef3c7; text-align: center; margin-top: 15px; }
         .btn-activate { background: #fbbf24; border: none; padding: 14px; width: 100%; border-radius: 12px; font-weight: 800; color: #1a2a6c; cursor: pointer; }
+
         .subscription-card { margin-top: 60px; padding: 30px; background: white; border-radius: 24px; border: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; }
-        .btn-portal { background: #1a2a6c; color: white; padding: 14px 24px; border-radius: 14px; font-weight: 700; cursor: pointer; border: none; }
+        .btn-portal { background: #1a2a6c; color: white; padding: 14px 24px; border-radius: 12px; font-weight: 700; cursor: pointer; border: none; }
+
+        /* MODAL */
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
+        .modal-card { background: white; border-radius: 32px; padding: 40px; max-width: 480px; width: 100%; text-align: center; }
+        .btn-close-modal { background: #fbbf24; border: none; padding: 15px; width: 100%; border-radius: 14px; font-weight: 800; color: #1a2a6c; cursor: pointer; margin-top: 25px; }
       `}</style>
 
       <nav>
@@ -132,11 +163,29 @@ export default function Dashboard() {
         <div className="subscription-card">
           <div className="sub-info">
             <h3>Gestion des abonnements</h3>
-            <p>Mettez à jour vos moyens de paiement ou gérez vos factures.</p>
+            <p>Gérez vos factures et vos moyens de paiement.</p>
           </div>
           <button onClick={handleManageSubscription} className="btn-portal">Accéder au portail</button>
         </div>
+
+        <button onClick={handleDeleteAccount} style={{background:'none', border:'none', color:'#94a3b8', cursor:'pointer', marginTop:'40px', textDecoration:'underline'}}>Supprimer mon compte</button>
       </main>
+
+      {showLimitModal && (
+        <div className="modal-overlay" onClick={() => setShowLimitModal(false)}>
+          <div className="modal-card" onClick={e => e.stopPropagation()}>
+            <span style={{fontSize: '54px', marginBottom: '20px', display: 'block'}}>🎩</span>
+            <h2 style={{color: '#1a2a6c', fontWeight: 800}}>Activation requise</h2>
+            <p style={{color: '#64748b', lineHeight: 1.6}}>
+              Vous avez déjà un logement en attente de configuration.<br/><br/>
+              <b>Veuillez activer votre logement actuel</b> (bouton jaune sur votre tableau de bord) avant de pouvoir en ajouter un nouveau.
+            </p>
+            <button className="btn-close-modal" onClick={() => setShowLimitModal(false)}>
+              D'accord, j'ai compris
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
