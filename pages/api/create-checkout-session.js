@@ -16,14 +16,19 @@ export default async function handler(req, res) {
       client_reference_id: userId,
       line_items: [
         {
-          // ✅ CORRECTION : On utilise la variable d'environnement au lieu de l'ID fixe
           price: process.env.STRIPE_PRICE_ID, 
           quantity: 1,
         },
       ],
       mode: 'subscription',
+      
+      // 👇 AJOUT DE LA RÉDUCTION ICI 👇
+      discounts: [{
+        coupon: 'promo_990', 
+      }],
+
       success_url: `${req.headers.origin}/dashboard?success=true`,
-      cancel_url: `${req.headers.origin}/dashboard?canceled=true`, // Redirection plus logique vers le dashboard
+      cancel_url: `${req.headers.origin}/dashboard?canceled=true`, 
     });
 
     res.status(200).json({ url: session.url });
