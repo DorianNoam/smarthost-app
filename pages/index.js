@@ -1,10 +1,9 @@
 import Link from 'next/link';
-import Head from 'next/head'; // 🔴 NOUVEAU : Pour le SEO et les partages
+import Head from 'next/head';
 
 export default function Home() {
   return (
     <div className="container">
-      {/* 🔴 NOUVEAU : META TAGS SEO */}
       <Head>
         <title>Major Marc | Le Majordome IA pour vos locations Airbnb</title>
         <meta name="description" content="Déléguez la gestion de vos voyageurs à Marc, l'IA qui répond 24h/24, recommande des adresses locales et vous alerte uniquement en cas d'urgence." />
@@ -77,38 +76,27 @@ export default function Home() {
         .pain-card h3 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 20px; color: #0f172a; margin-bottom: 15px; font-weight: 700; }
         .pain-card p { color: #475569; line-height: 1.6; font-size: 15px; }
 
-        /* --- DEMO SECTION --- */
-        .demo-section { padding: 100px 5%; background: #0f172a; color: white; overflow: hidden; }
-        .demo-header { text-align: center; margin-bottom: 70px; }
-        .demo-header h2 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: clamp(28px, 5vw, 42px); margin-bottom: 20px; font-weight: 800; letter-spacing: -1px; }
-        .demo-layout { display: flex; flex-direction: column; gap: 60px; max-width: 1100px; margin: 0 auto; align-items: center; }
-        @media (min-width: 1024px) { .demo-layout { flex-direction: row; justify-content: space-between; align-items: center; } }
+        /* --- FEATURES SECTION (EX-DEMO) --- */
+        .features-section { padding: 100px 5%; background: #0f172a; color: white; text-align: center; }
+        .features-header { margin-bottom: 60px; }
+        .features-header h2 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: clamp(28px, 5vw, 42px); margin-bottom: 20px; font-weight: 800; letter-spacing: -1px; }
         
-        .phone-wrapper { position: relative; width: 100%; max-width: 340px; margin: 0 auto; }
-        .phone-frame { border: 10px solid #1e293b; border-radius: 40px; background: white; height: 650px; overflow: hidden; position: relative; box-shadow: 0 30px 60px rgba(0,0,0,0.5); }
-        .phone-notch { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 120px; height: 25px; background: #1e293b; border-bottom-left-radius: 15px; border-bottom-right-radius: 15px; z-index: 10; }
-        
-        .chat-app { display: flex; flex-direction: column; height: 100%; background: #f0f2f5; }
-        .chat-header { background: #075e54; color: white; padding: 40px 20px 15px; text-align: center; font-weight: 600; font-size: 15px; font-family: 'Plus Jakarta Sans', sans-serif; }
-        .chat-body { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
-        .msg { padding: 12px 16px; border-radius: 15px; font-size: 13.5px; line-height: 1.5; max-width: 85%; position: relative; color: #111; }
-        .msg-user { background: #dcf8c6; align-self: flex-end; border-bottom-right-radius: 2px; }
-        .msg-marc { background: white; align-self: flex-start; border-bottom-left-radius: 2px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
-
-        .demo-features { flex: 1; max-width: 500px; }
-        .feat-row { margin-bottom: 40px; display: flex; gap: 20px; align-items: flex-start; }
-        .feat-icon-wrapper { background: rgba(212, 175, 55, 0.1); color: #d4af37; width: 50px; height: 50px; border-radius: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-        .feat-text h4 { font-size: 20px; margin-bottom: 10px; color: white; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; }
-        .feat-text p { color: #94a3b8; line-height: 1.6; font-size: 15px; margin: 0; }
+        .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 30px; max-width: 1000px; margin: 0 auto 50px; }
+        .feat-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); padding: 40px 30px; border-radius: 20px; text-align: center; transition: 0.3s; }
+        .feat-card:hover { background: rgba(255,255,255,0.06); transform: translateY(-5px); }
+        .feat-icon-wrapper { background: rgba(212, 175, 55, 0.1); color: #d4af37; width: 60px; height: 60px; border-radius: 16px; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; }
+        .feat-card h4 { font-size: 22px; margin-bottom: 15px; color: white; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; }
+        .feat-card p { color: #94a3b8; line-height: 1.6; font-size: 15px; margin: 0; }
 
         /* --- THE KILLER FEATURE --- */
-        .killer-feature { background: #fff; padding: 60px 40px; margin: 80px auto 0; max-width: 1000px; border-radius: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.08); display: flex; flex-wrap: wrap; align-items: center; gap: 40px; }
+        .killer-feature { background: #fff; padding: 60px 40px; margin: 80px auto 0; max-width: 1000px; border-radius: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.08); display: flex; flex-wrap: wrap; align-items: center; gap: 40px; text-align: left; }
         .kf-text { flex: 1; min-width: 300px; color: #0f172a;}
         .kf-text span { color: #ef4444; font-weight: 700; letter-spacing: 1px; font-size: 13px; text-transform: uppercase; }
         .kf-text h3 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: clamp(24px, 4vw, 32px); color: #0f172a; margin: 15px 0; font-weight: 800; letter-spacing: -0.5px; }
         .kf-text p { color: #475569; line-height: 1.6; font-size: 15px; margin-bottom: 15px; }
         .notif-mockup { flex: 1; min-width: 300px; background: #f8fafc; padding: 25px; border-radius: 20px; border: 1px solid #e2e8f0; width: 100%; box-sizing: border-box; }
         .notif-bubble { background: white; padding: 20px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border-left: 4px solid #ef4444; }
+        .notif-head { display: flex; justify-content: space-between; font-size: 12px; color: #64748b; font-weight: 600; margin-bottom: 10px; }
 
         /* --- TESTIMONIALS (SOCIAL PROOF) --- */
         .testimonials { padding: 100px 5%; background: #f8fafc; text-align: center; }
@@ -145,7 +133,6 @@ export default function Home() {
           .nav-links { gap: 15px; }
           .hero { padding: 120px 15px 60px; }
           .killer-feature { flex-direction: column; padding: 30px 20px; margin: 40px auto 0; text-align: center; }
-          .demo-features { text-align: left; }
           .footer-content { flex-direction: column; }
         }
         @media (max-width: 380px) { .nav-link { display: none; } }
@@ -157,7 +144,7 @@ export default function Home() {
           <a className="brand">Major<span className="gold">Marc</span></a>
         </Link>
         <div className="nav-links">
-          <a href="#demo" className="nav-link">Démo</a>
+          <a href="#fonctionnement" className="nav-link">Fonctionnement</a>
           <Link href="/pricing" passHref legacyBehavior><a className="nav-link">Tarifs</a></Link>
           <Link href="/login" passHref legacyBehavior><a className="nav-login">Espace Hôte</a></Link>
         </div>
@@ -172,7 +159,7 @@ export default function Home() {
             Le premier majordome IA qui répond aux questions 24h/24, recommande les meilleurs restaurants locaux, et vous alerte uniquement en cas d'urgence.
           </p>
           <Link href="/register" passHref legacyBehavior>
-            <a className="cta-main">Activer mon Majordome (Essai gratuit) <span>→</span></a>
+            <a className="cta-main">Activer mon Majordome (1er mois offert) <span>→</span></a>
           </Link>
           <div className="trust-banner">⭐ Déjà adopté par plus de 500 hôtes en France</div>
         </div>
@@ -224,7 +211,7 @@ export default function Home() {
           </div>
           <div className="pain-card">
             <div className="pain-icon-wrapper">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
             </div>
             <h3>La barrière de la langue</h3>
             <p>Marc parle couramment plus de 30 langues pour assister vos touristes étrangers sans aucun effort de traduction.</p>
@@ -239,61 +226,35 @@ export default function Home() {
         </div>
       </section>
 
-      {/* DEMO SECTION */}
-      <section id="demo" className="demo-section">
-        <div className="demo-header">
+      {/* EX-DEMO SECTION -> FEATURES */}
+      <section id="fonctionnement" className="features-section">
+        <div className="features-header">
           <h2>L'illusion parfaite d'une conciergerie</h2>
           <p style={{fontSize: '16px', color: '#cbd5e1', maxWidth: '700px', margin: '0 auto'}}>Marc comprend le contexte, cherche des recommandations locales et répond naturellement.</p>
         </div>
 
-        <div className="demo-layout">
-          <div className="phone-wrapper">
-            <div className="phone-frame">
-              <div className="phone-notch"></div>
-              <div className="chat-app">
-                <div className="chat-header">La Villa Noam</div>
-                <div className="chat-body">
-                  <div className="msg msg-user">
-                    Hi! Where can I park my car and do you know a good pizza place nearby?
-                    <span className="msg-time">19:42</span>
-                  </div>
-                  <div className="msg msg-marc">
-                    Welcome to Villa Noam! 🎩<br/><br/>
-                    You can park in the private driveway (Code: 1985). For a great pizza, "Pizzeria Da Luigi" is just 5 mins away!
-                    <span className="msg-time">19:42</span>
-                  </div>
-                </div>
-              </div>
+        <div className="features-grid">
+          <div className="feat-card">
+            <div className="feat-icon-wrapper">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
             </div>
+            <h4>Réponses Instantanées</h4>
+            <p>Vos voyageurs n'attendent plus. Marc répond dans la seconde en piochant dans votre base de données sécurisée.</p>
           </div>
+          <div className="feat-card">
+            <div className="feat-icon-wrapper">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            </div>
+            <h4>Recherche Web Intégrée</h4>
+            <p>Marc scanne les environs du logement sur internet pour faire des recommandations précises (restos, pharmacies...).</p>
+          </div>
+        </div>
 
-          <div className="demo-features">
-            <div className="feat-row">
-              <div className="feat-icon-wrapper">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
-              </div>
-              <div className="feat-text">
-                <h4>Réponses Instantanées</h4>
-                <p>Vos voyageurs n'attendent plus. Marc répond dans la seconde en piochant dans votre base de données sécurisée.</p>
-              </div>
-            </div>
-            <div className="feat-row">
-              <div className="feat-icon-wrapper">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-              </div>
-              <div className="feat-text">
-                <h4>Recherche Web Intégrée</h4>
-                <p>Marc scanne les environs du logement sur internet pour faire des recommandations précises (restos, pharmacies...).</p>
-              </div>
-            </div>
-            
-            {/* BOUTON INTERMÉDIAIRE SUGGÉRÉ PAR CLAUDE */}
-            <div style={{marginTop: '30px'}}>
-              <Link href="/register" passHref legacyBehavior>
-                <a className="cta-main" style={{backgroundColor: '#fff', color: '#1a2a6c'}}>Tester l'interface hôte gratuitement</a>
-              </Link>
-            </div>
-          </div>
+        {/* BOUTON INTERMÉDIAIRE POUR CEUX QUI SCROLLENT */}
+        <div style={{marginTop: '20px', paddingBottom: '30px'}}>
+          <Link href="/register" passHref legacyBehavior>
+            <a className="cta-main" style={{backgroundColor: '#fff', color: '#1a2a6c'}}>Activer mon Majordome (1er mois offert)</a>
+          </Link>
         </div>
 
         <div className="killer-feature">
@@ -347,7 +308,7 @@ export default function Home() {
           </div>
           <div className="testi-card">
             <div className="stars">★★★★★</div>
-            <p className="testi-quote">"J'hésitais à prendre une conciergerie à 20%. Pour 19,90€, j'ai le même niveau de service client pour mes locataires. Imbattable."</p>
+            <p className="testi-quote">"J'hésitais à prendre une conciergerie à 20%. Pour moins de 20€, j'ai le même niveau de service client pour mes locataires. Imbattable."</p>
             <div className="testi-author">
               <div className="avatar">J</div>
               <div className="author-info">
@@ -367,7 +328,7 @@ export default function Home() {
           <span className="price-highlight">19,90€ <span>/ logement / mois</span></span>
           <p style={{fontSize: '14px', marginTop: '-10px', color: '#94a3b8', marginBottom: '30px'}}>Sans engagement. Offre de lancement (Places limitées).</p>
           <Link href="/register" passHref legacyBehavior>
-            <a className="cta-main">Créer mon compte maintenant <span>→</span></a>
+            <a className="cta-main">Activer mon Majordome (1er mois offert) <span>→</span></a>
           </Link>
         </div>
       </section>
