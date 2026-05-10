@@ -41,7 +41,7 @@ export default function Home() {
           background: linear-gradient(rgba(15, 23, 42, 0.8), rgba(15, 23, 42, 0.9)), url('https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1920&q=80') center/cover;
         }
         .hero-content { max-width: 950px; z-index: 10; margin: 0 auto; display: flex; flex-direction: column; align-items: center; }
-        .badge-hero { background: rgba(212, 175, 55, 0.15); color: #d4af37; padding: 8px 16px; border-radius: 30px; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; display: inline-block; margin-bottom: 25px; border: 1px solid rgba(212, 175, 55, 0.3); }
+        .badge-hero { background: rgba(212, 175, 55, 0.15); color: #d4af37; padding: 8px 16px; border-radius: 30px; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; display: inline-block; margin-bottom: 25px; border: 1px solid rgba(212, 175, 55, 0.3); }
         h1 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: clamp(38px, 6vw, 64px); color: white; margin-bottom: 25px; line-height: 1.1; font-weight: 800; letter-spacing: -1px; }
         .subtitle { font-size: clamp(16px, 3vw, 20px); margin-bottom: 40px; color: #cbd5e1; line-height: 1.6; font-weight: 400; max-width: 800px; }
         
@@ -76,17 +76,31 @@ export default function Home() {
         .pain-card h3 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 20px; color: #0f172a; margin-bottom: 15px; font-weight: 700; }
         .pain-card p { color: #475569; line-height: 1.6; font-size: 15px; }
 
-        /* --- FEATURES SECTION (EX-DEMO) --- */
-        .features-section { padding: 100px 5%; background: #0f172a; color: white; text-align: center; }
-        .features-header { margin-bottom: 60px; }
-        .features-header h2 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: clamp(28px, 5vw, 42px); margin-bottom: 20px; font-weight: 800; letter-spacing: -1px; }
+        /* --- DEMO SECTION (Chat + Features + Telegram) --- */
+        .demo-section { padding: 100px 5%; background: #0f172a; color: white; overflow: hidden; }
+        .demo-header { text-align: center; margin-bottom: 70px; }
+        .demo-header h2 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: clamp(28px, 5vw, 42px); margin-bottom: 20px; font-weight: 800; letter-spacing: -1px; }
         
-        .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 30px; max-width: 1000px; margin: 0 auto 50px; }
-        .feat-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); padding: 40px 30px; border-radius: 20px; text-align: center; transition: 0.3s; }
-        .feat-card:hover { background: rgba(255,255,255,0.06); transform: translateY(-5px); }
-        .feat-icon-wrapper { background: rgba(212, 175, 55, 0.1); color: #d4af37; width: 60px; height: 60px; border-radius: 16px; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; }
-        .feat-card h4 { font-size: 22px; margin-bottom: 15px; color: white; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; }
-        .feat-card p { color: #94a3b8; line-height: 1.6; font-size: 15px; margin: 0; }
+        .demo-layout { display: flex; flex-direction: column; gap: 60px; max-width: 1100px; margin: 0 auto; align-items: center; }
+        @media (min-width: 1024px) { .demo-layout { flex-direction: row; justify-content: space-between; align-items: center; } }
+        
+        .phone-wrapper { position: relative; width: 100%; max-width: 340px; margin: 0 auto; }
+        .phone-frame { border: 10px solid #1e293b; border-radius: 40px; background: white; height: 650px; overflow: hidden; position: relative; box-shadow: 0 30px 60px rgba(0,0,0,0.5); }
+        .phone-notch { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 120px; height: 25px; background: #1e293b; border-bottom-left-radius: 15px; border-bottom-right-radius: 15px; z-index: 10; }
+        
+        .chat-app { display: flex; flex-direction: column; height: 100%; background: #f0f2f5; }
+        .chat-header { background: #075e54; color: white; padding: 40px 20px 15px; text-align: center; font-weight: 600; font-size: 15px; font-family: 'Plus Jakarta Sans', sans-serif; }
+        .chat-body { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
+        .msg { padding: 12px 16px; border-radius: 15px; font-size: 13.5px; line-height: 1.5; max-width: 85%; position: relative; color: #111; }
+        .msg-user { background: #dcf8c6; align-self: flex-end; border-bottom-right-radius: 2px; }
+        .msg-marc { background: white; align-self: flex-start; border-bottom-left-radius: 2px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .msg-time { display: block; font-size: 10px; color: #888; text-align: right; margin-top: 5px; }
+
+        .demo-features { flex: 1; max-width: 500px; }
+        .feat-row { margin-bottom: 40px; display: flex; gap: 20px; align-items: flex-start; }
+        .feat-icon-wrapper { background: rgba(212, 175, 55, 0.1); color: #d4af37; width: 50px; height: 50px; border-radius: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .feat-text h4 { font-size: 20px; margin-bottom: 10px; color: white; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; }
+        .feat-text p { color: #94a3b8; line-height: 1.6; font-size: 15px; margin: 0; }
 
         /* --- THE KILLER FEATURE --- */
         .killer-feature { background: #fff; padding: 60px 40px; margin: 80px auto 0; max-width: 1000px; border-radius: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.08); display: flex; flex-wrap: wrap; align-items: center; gap: 40px; text-align: left; }
@@ -133,6 +147,7 @@ export default function Home() {
           .nav-links { gap: 15px; }
           .hero { padding: 120px 15px 60px; }
           .killer-feature { flex-direction: column; padding: 30px 20px; margin: 40px auto 0; text-align: center; }
+          .demo-features { text-align: left; }
           .footer-content { flex-direction: column; }
         }
         @media (max-width: 380px) { .nav-link { display: none; } }
@@ -144,7 +159,7 @@ export default function Home() {
           <a className="brand">Major<span className="gold">Marc</span></a>
         </Link>
         <div className="nav-links">
-          <a href="#fonctionnement" className="nav-link">Fonctionnement</a>
+          <a href="#demo" className="nav-link">Démo</a>
           <Link href="/pricing" passHref legacyBehavior><a className="nav-link">Tarifs</a></Link>
           <Link href="/login" passHref legacyBehavior><a className="nav-login">Espace Hôte</a></Link>
         </div>
@@ -153,7 +168,7 @@ export default function Home() {
       {/* HERO SECTION */}
       <section className="hero">
         <div className="hero-content">
-          <div className="badge-hero">⚡ Lancement : Tarif bloqué à vie pour les 100 premiers inscrits</div>
+          <div className="badge-hero">⚡ En ce moment : Votre 1er mois est offert</div>
           <h1>Dormez sur vos deux oreilles.<br/>Marc gère vos voyageurs.</h1>
           <p className="subtitle">
             Le premier majordome IA qui répond aux questions 24h/24, recommande les meilleurs restaurants locaux, et vous alerte uniquement en cas d'urgence.
@@ -226,35 +241,60 @@ export default function Home() {
         </div>
       </section>
 
-      {/* EX-DEMO SECTION -> FEATURES */}
-      <section id="fonctionnement" className="features-section">
-        <div className="features-header">
+      {/* DEMO SECTION */}
+      <section id="demo" className="demo-section">
+        <div className="demo-header">
           <h2>L'illusion parfaite d'une conciergerie</h2>
           <p style={{fontSize: '16px', color: '#cbd5e1', maxWidth: '700px', margin: '0 auto'}}>Marc comprend le contexte, cherche des recommandations locales et répond naturellement.</p>
         </div>
 
-        <div className="features-grid">
-          <div className="feat-card">
-            <div className="feat-icon-wrapper">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+        <div className="demo-layout">
+          <div className="phone-wrapper">
+            <div className="phone-frame">
+              <div className="phone-notch"></div>
+              <div className="chat-app">
+                <div className="chat-header">La Villa Noam</div>
+                <div className="chat-body">
+                  <div className="msg msg-user">
+                    Hi! We just arrived. Where are the trash bins and do you have a restaurant recommendation?
+                    <span className="msg-time">19:42</span>
+                  </div>
+                  <div className="msg msg-marc">
+                    Welcome to Villa Noam! 🎩<br/><br/>
+                    The grey and green bins are under the sink. For dinner, I highly recommend "Pizzeria Da Luigi", located just a 5-minute walk from the villa! 🍕
+                    <span className="msg-time">19:42</span>
+                  </div>
+                </div>
+              </div>
             </div>
-            <h4>Réponses Instantanées</h4>
-            <p>Vos voyageurs n'attendent plus. Marc répond dans la seconde en piochant dans votre base de données sécurisée.</p>
           </div>
-          <div className="feat-card">
-            <div className="feat-icon-wrapper">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-            </div>
-            <h4>Recherche Web Intégrée</h4>
-            <p>Marc scanne les environs du logement sur internet pour faire des recommandations précises (restos, pharmacies...).</p>
-          </div>
-        </div>
 
-        {/* BOUTON INTERMÉDIAIRE POUR CEUX QUI SCROLLENT */}
-        <div style={{marginTop: '20px', paddingBottom: '30px'}}>
-          <Link href="/register" passHref legacyBehavior>
-            <a className="cta-main" style={{backgroundColor: '#fff', color: '#1a2a6c'}}>Activer mon Majordome (1er mois offert)</a>
-          </Link>
+          <div className="demo-features">
+            <div className="feat-row">
+              <div className="feat-icon-wrapper">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+              </div>
+              <div className="feat-text">
+                <h4>Réponses Instantanées</h4>
+                <p>Vos voyageurs n'attendent plus. Marc répond dans la seconde en piochant dans votre base de données sécurisée.</p>
+              </div>
+            </div>
+            <div className="feat-row">
+              <div className="feat-icon-wrapper">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+              </div>
+              <div className="feat-text">
+                <h4>Recherche Web Intégrée</h4>
+                <p>Marc scanne les environs du logement sur internet pour faire des recommandations précises (restos, pharmacies...).</p>
+              </div>
+            </div>
+            
+            <div style={{marginTop: '30px'}}>
+              <Link href="/register" passHref legacyBehavior>
+                <a className="cta-main" style={{backgroundColor: '#fff', color: '#1a2a6c'}}>Activer mon Majordome (1er mois offert)</a>
+              </Link>
+            </div>
+          </div>
         </div>
 
         <div className="killer-feature">
@@ -308,7 +348,7 @@ export default function Home() {
           </div>
           <div className="testi-card">
             <div className="stars">★★★★★</div>
-            <p className="testi-quote">"J'hésitais à prendre une conciergerie à 20%. Pour moins de 20€, j'ai le même niveau de service client pour mes locataires. Imbattable."</p>
+            <p className="testi-quote">"J'hésitais à prendre une conciergerie à 20%. Pour 19,90€, j'ai le même niveau de service client pour mes locataires. Imbattable."</p>
             <div className="testi-author">
               <div className="avatar">J</div>
               <div className="author-info">
@@ -326,7 +366,7 @@ export default function Home() {
           <h2>L'excellence accessible.</h2>
           <p>Profitez du service d'un majordome privé 24h/24 pour une fraction du coût d'une conciergerie traditionnelle.</p>
           <span className="price-highlight">19,90€ <span>/ logement / mois</span></span>
-          <p style={{fontSize: '14px', marginTop: '-10px', color: '#94a3b8', marginBottom: '30px'}}>Sans engagement. Offre de lancement (Places limitées).</p>
+          <p style={{fontSize: '14px', marginTop: '-10px', color: '#94a3b8', marginBottom: '30px'}}>Sans engagement.</p>
           <Link href="/register" passHref legacyBehavior>
             <a className="cta-main">Activer mon Majordome (1er mois offert) <span>→</span></a>
           </Link>
