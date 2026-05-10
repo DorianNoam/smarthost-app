@@ -59,7 +59,7 @@ export default function Pricing() {
         :global(html), :global(body) { margin: 0; padding: 0; overflow-x: hidden; width: 100%; background-color: #f8fafc; }
         .container { font-family: 'Inter', sans-serif; color: #0f172a; min-height: 100vh; display: flex; flex-direction: column; }
         
-        /* --- NAVBAR (Identique à l'accueil) --- */
+        /* --- NAVBAR --- */
         nav { 
           display: flex; justify-content: space-between; align-items: center; padding: 15px 5%; 
           position: fixed; top: 0; left: 0; right: 0; background: rgba(255, 255, 255, 0.95); 
@@ -93,9 +93,7 @@ export default function Pricing() {
         }
 
         .plan-name { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 22px; color: #1a2a6c; margin-bottom: 15px; }
-        .price-container { margin-bottom: 5px; }
-        .price-strike { text-decoration: line-through; color: #94a3b8; font-size: 20px; font-weight: 600; margin-right: 10px; }
-        .price { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 56px; font-weight: 800; color: #0f172a; letter-spacing: -2px; }
+        .price { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 56px; font-weight: 800; color: #0f172a; letter-spacing: -2px; margin-bottom: 5px; }
         .price span { font-size: 18px; font-weight: 600; color: #64748b; letter-spacing: 0; }
         .billing-cycle { color: #64748b; font-size: 14px; margin-bottom: 30px; font-weight: 500; }
         
@@ -141,10 +139,8 @@ export default function Pricing() {
           <div className="badge-free">🎁 Votre 1er mois offert</div>
           <div className="plan-name">Licence Unique</div>
           
-          <div className="price-container">
-            <span className="price-strike">24,90€</span>
-            <span className="price">19,90€<span>/mois</span></span>
-          </div>
+          <div className="price">19,90€<span>/mois</span></div>
+          
           <div className="billing-cycle">Facturé par logement. Sans engagement.</div>
           
           <div className="features-list">
