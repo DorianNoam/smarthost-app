@@ -32,6 +32,7 @@ export default function Home() {
           background: linear-gradient(rgba(15, 23, 42, 0.8), rgba(15, 23, 42, 0.9)), url('https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1920&q=80') center/cover;
         }
         .hero-content { max-width: 950px; z-index: 10; margin: 0 auto; display: flex; flex-direction: column; align-items: center; }
+        .badge-hero { background: rgba(212, 175, 55, 0.15); color: #d4af37; padding: 8px 16px; border-radius: 30px; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; display: inline-block; margin-bottom: 25px; border: 1px solid rgba(212, 175, 55, 0.3); }
         h1 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: clamp(38px, 6vw, 64px); color: white; margin-bottom: 25px; line-height: 1.1; font-weight: 800; letter-spacing: -1px; }
         .subtitle { font-size: clamp(16px, 3vw, 20px); margin-bottom: 40px; color: #cbd5e1; line-height: 1.6; font-weight: 400; max-width: 800px; }
         
@@ -79,7 +80,7 @@ export default function Home() {
         .feat-text h4 { font-size: 20px; margin-bottom: 10px; color: white; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; }
         .feat-text p { color: #94a3b8; line-height: 1.6; font-size: 15px; margin: 0; }
 
-        /* --- THE KILLER FEATURE (L'alerte) --- */
+        /* --- THE KILLER FEATURE --- */
         .killer-feature { background: #fff; padding: 60px 40px; margin: 80px auto 0; max-width: 1000px; border-radius: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.08); display: flex; flex-wrap: wrap; align-items: center; gap: 40px; }
         .kf-text { flex: 1; min-width: 300px; }
         .kf-text span { color: #ef4444; font-weight: 700; letter-spacing: 1px; font-size: 13px; text-transform: uppercase; }
@@ -128,6 +129,7 @@ export default function Home() {
       {/* HERO SECTION */}
       <section className="hero">
         <div className="hero-content">
+          <div className="badge-hero">Nouveau : Majordome IA 2.0</div>
           <h1>Dormez sur vos deux oreilles.<br/>Marc gère vos voyageurs.</h1>
           <p className="subtitle">
             Le premier majordome IA qui répond aux questions 24h/24, recommande les meilleurs restaurants locaux, et vous alerte uniquement en cas d'urgence.
@@ -155,14 +157,14 @@ export default function Home() {
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
             </div>
             <h3>La barrière de la langue</h3>
-            <p>Marc parle couramment plus de 30 langues pour assister vos touristes étrangers sans effort.</p>
+            <p>Marc parle couramment plus de 30 langues pour assister vos touristes étrangers sans aucun effort de traduction.</p>
           </div>
           <div className="pain-card">
             <div className="pain-icon-wrapper">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="1 4 1 10 7 10"></polyline><polyline points="23 20 23 14 17 14"></polyline><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"></path></svg>
             </div>
             <h3>Les questions répétées</h3>
-            <p>Départ, poubelles, commerces... Marc répond à tout, instantanément, avec une politesse irréprochable.</p>
+            <p>Départ, poubelles, commerces... Marc répond inlassablement à toutes les demandes avec une politesse irréprochable.</p>
           </div>
         </div>
       </section>
@@ -171,7 +173,7 @@ export default function Home() {
       <section className="demo-section">
         <div className="demo-header">
           <h2>L'illusion parfaite d'une conciergerie</h2>
-          <p style={{fontSize: '16px', color: '#cbd5e1', maxWidth: '700px', margin: '0 auto'}}>Marc comprend le contexte et répond dans un langage naturel impeccable.</p>
+          <p style={{fontSize: '16px', color: '#cbd5e1', maxWidth: '700px', margin: '0 auto'}}>Marc comprend le contexte, cherche des recommandations locales et répond naturellement.</p>
         </div>
 
         <div className="demo-layout">
@@ -187,7 +189,7 @@ export default function Home() {
                   </div>
                   <div className="msg msg-marc">
                     Welcome to Villa Noam! 🎩<br/><br/>
-                    You can park in the private driveway (Code: 1985). For pizza, "Pizzeria Da Luigi" is just 5 mins away!
+                    You can park in the private driveway (Code: 1985). For a great pizza, "Pizzeria Da Luigi" is just 5 mins away!
                     <span className="msg-time">19:42</span>
                   </div>
                 </div>
@@ -202,22 +204,53 @@ export default function Home() {
               </div>
               <div className="feat-text">
                 <h4>Réponses Instantanées</h4>
-                <p>Marc répond dans la seconde en piochant dans votre base de données sécurisée.</p>
+                <p>Vos voyageurs n'attendent plus. Marc répond dans la seconde en piochant dans votre base de données sécurisée.</p>
               </div>
+            </div>
+            <div className="feat-row">
+              <div className="feat-icon-wrapper">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+              </div>
+              <div className="feat-text">
+                <h4>Recherche Web Intégrée</h4>
+                <p>Marc scanne les environs du logement sur internet pour faire des recommandations précises (restos, pharmacies...).</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="killer-feature">
+          <div className="kf-text">
+            <span>Le Filet de Sécurité</span>
+            <h3>Vous n'êtes dérangé que lorsque c'est vital.</h3>
+            <p>Si un client signale une urgence (fuite d'eau, panne), Marc vous transfère immédiatement l'information via Telegram.</p>
+            <p><b>Résultat :</b> Vous filtrez 95% du bruit quotidien et gardez le contrôle sur l'essentiel.</p>
+          </div>
+          <div className="notif-mockup">
+            <div className="notif-bubble">
+              <div className="notif-head">
+                <span>Telegram</span>
+                <span>Maintenant</span>
+              </div>
+              <p style={{fontSize: '13px', margin: 0, color: '#475569', lineHeight: '1.5'}}>
+                🚨 <b>ALERTE MAJOR MARC</b><br/><br/>
+                🏠 Logement : La Villa Noam<br/>
+                💬 Client : "Il y a une énorme fuite sous l'évier !"
+              </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* PRICING ANCHOR - UPDATED PRICE */}
+      {/* PRICING ANCHOR */}
       <section className="pricing-anchor">
         <div className="anchor-box">
-          <h2>Pour le prix d'un seul frais de ménage.</h2>
-          <p>Offrez-vous le service d'un majordome privé 24h/24 pour une fraction du coût d'une conciergerie.</p>
+          <h2>L'excellence accessible.</h2>
+          <p>Profitez du service d'un majordome privé 24h/24 pour une fraction du coût d'une conciergerie traditionnelle.</p>
           <span className="price-highlight">19,90€ <span>/ logement / mois</span></span>
-          <p style={{fontSize: '14px', marginTop: '-10px', color: '#94a3b8', marginBottom: '30px'}}>Sans engagement. Activation instantanée.</p>
+          <p style={{fontSize: '14px', marginTop: '-10px', color: '#94a3b8', marginBottom: '30px'}}>Sans engagement. Offre de lancement.</p>
           <Link href="/register" passHref legacyBehavior>
-            <a className="cta-main">Créer mon compte maintenant</a>
+            <a className="cta-main">Engager mon Majordome maintenant</a>
           </Link>
         </div>
       </section>
