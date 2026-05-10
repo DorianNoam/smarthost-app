@@ -32,7 +32,6 @@ export default function Home() {
           background: linear-gradient(rgba(15, 23, 42, 0.8), rgba(15, 23, 42, 0.9)), url('https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1920&q=80') center/cover;
         }
         .hero-content { max-width: 950px; z-index: 10; margin: 0 auto; display: flex; flex-direction: column; align-items: center; }
-        .badge-hero { background: rgba(212, 175, 55, 0.15); color: #d4af37; padding: 8px 16px; border-radius: 30px; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; display: inline-block; margin-bottom: 25px; border: 1px solid rgba(212, 175, 55, 0.3); }
         h1 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: clamp(38px, 6vw, 64px); color: white; margin-bottom: 25px; line-height: 1.1; font-weight: 800; letter-spacing: -1px; }
         .subtitle { font-size: clamp(16px, 3vw, 20px); margin-bottom: 40px; color: #cbd5e1; line-height: 1.6; font-weight: 400; max-width: 800px; }
         
@@ -89,7 +88,6 @@ export default function Home() {
         .notif-mockup { flex: 1; min-width: 300px; background: #f8fafc; padding: 25px; border-radius: 20px; border: 1px solid #e2e8f0; width: 100%; box-sizing: border-box; }
         .notif-bubble { background: white; padding: 20px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border-left: 4px solid #ef4444; }
         .notif-head { display: flex; justify-content: space-between; font-size: 12px; color: #64748b; font-weight: 600; margin-bottom: 10px; }
-        .notif-bubble b { color: #0f172a; }
 
         /* --- PRICING ANCHOR --- */
         .pricing-anchor { padding: 100px 5%; background: #f8fafc; text-align: center; }
@@ -102,23 +100,15 @@ export default function Home() {
         /* --- FOOTER --- */
         footer { padding: 40px 5%; text-align: center; background: #0f172a; color: #64748b; font-size: 14px; }
 
-        /* --- OPTIMISATION MOBILE GLOBALE CORRIGÉE --- */
         @media (max-width: 768px) {
           nav { padding: 15px 20px; }
           .brand { font-size: 20px; }
-          .nav-links { gap: 15px; } /* On garde les liens visibles, mais plus rapprochés */
-          .nav-link { font-size: 14px; }
-          .nav-login { padding: 8px 16px; font-size: 13px; }
-          
+          .nav-links { gap: 15px; }
           .hero { padding: 120px 15px 60px; }
-          .pain-section { padding: 60px 5%; }
-          .demo-section { padding: 60px 5%; }
           .killer-feature { flex-direction: column; padding: 30px 20px; margin: 40px auto 0; text-align: center; }
-          .notif-mockup { padding: 15px; }
           .demo-features { text-align: left; }
         }
 
-        /* Sur les très petits téléphones, on cache "Tarifs" pour garantir que le bouton "Espace Hôte" reste sur la même ligne */
         @media (max-width: 380px) {
           .nav-link { display: none; }
         }
@@ -138,7 +128,6 @@ export default function Home() {
       {/* HERO SECTION */}
       <section className="hero">
         <div className="hero-content">
-          
           <h1>Dormez sur vos deux oreilles.<br/>Marc gère vos voyageurs.</h1>
           <p className="subtitle">
             Le premier majordome IA qui répond aux questions 24h/24, recommande les meilleurs restaurants locaux, et vous alerte uniquement en cas d'urgence.
@@ -149,7 +138,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* PAIN POINTS avec SVG modernes */}
+      {/* PAIN POINTS */}
       <section className="pain-section">
         <h2 className="pain-title">La gestion locative réinventée</h2>
         <p className="pain-subtitle">Déléguez les tâches chronophages à une IA parfaitement formée.</p>
@@ -166,14 +155,14 @@ export default function Home() {
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
             </div>
             <h3>La barrière de la langue</h3>
-            <p>Oubliez Google Translate pour expliquer les poubelles à des touristes étrangers. Marc parle couramment plus de 30 langues.</p>
+            <p>Marc parle couramment plus de 30 langues pour assister vos touristes étrangers sans effort.</p>
           </div>
           <div className="pain-card">
             <div className="pain-icon-wrapper">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="1 4 1 10 7 10"></polyline><polyline points="23 20 23 14 17 14"></polyline><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"></path></svg>
             </div>
             <h3>Les questions répétées</h3>
-            <p>"Où est le supermarché ?", "À quelle heure est le départ ?". Marc répond inlassablement, avec la même politesse.</p>
+            <p>Départ, poubelles, commerces... Marc répond à tout, instantanément, avec une politesse irréprochable.</p>
           </div>
         </div>
       </section>
@@ -182,11 +171,10 @@ export default function Home() {
       <section className="demo-section">
         <div className="demo-header">
           <h2>L'illusion parfaite d'une conciergerie</h2>
-          <p style={{fontSize: '16px', color: '#cbd5e1', maxWidth: '700px', margin: '0 auto'}}>Marc comprend le contexte, cherche sur le web pour des recommandations locales, et répond dans un langage naturel impeccable.</p>
+          <p style={{fontSize: '16px', color: '#cbd5e1', maxWidth: '700px', margin: '0 auto'}}>Marc comprend le contexte et répond dans un langage naturel impeccable.</p>
         </div>
 
         <div className="demo-layout">
-          {/* Faux Téléphone */}
           <div className="phone-wrapper">
             <div className="phone-frame">
               <div className="phone-notch"></div>
@@ -194,29 +182,19 @@ export default function Home() {
                 <div className="chat-header">La Villa Noam</div>
                 <div className="chat-body">
                   <div className="msg msg-user">
-                    Hi! Just arrived. Where can I park my car and do you know a good place to eat pizza around here?
+                    Hi! Where can I park my car and do you know a good pizza place nearby?
                     <span className="msg-time">19:42</span>
                   </div>
                   <div className="msg msg-marc">
                     Welcome to Villa Noam! 🎩<br/><br/>
-                    You can park safely in the private driveway behind the white gate. The code to enter is 1985.<br/><br/>
-                    For a great pizza, I highly recommend "Pizzeria Da Luigi", located just a 5-minute walk from the villa. It's excellent! 🍕
+                    You can park in the private driveway (Code: 1985). For pizza, "Pizzeria Da Luigi" is just 5 mins away!
                     <span className="msg-time">19:42</span>
-                  </div>
-                  <div className="msg msg-user">
-                    Amazing, thanks! One last thing, I can't find the trash bins.
-                    <span className="msg-time">19:45</span>
-                  </div>
-                  <div className="msg msg-marc">
-                    You're very welcome! The grey bin (regular trash) is collected on Monday evenings, and the green one (recycling) on Wednesdays.
-                    <span className="msg-time">19:45</span>
                   </div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Explications des features avec SVG */}
           <div className="demo-features">
             <div className="feat-row">
               <div className="feat-icon-wrapper">
@@ -224,64 +202,29 @@ export default function Home() {
               </div>
               <div className="feat-text">
                 <h4>Réponses Instantanées</h4>
-                <p>Vos voyageurs n'attendent plus. Marc répond dans la seconde en piochant dans votre base de données sécurisée.</p>
+                <p>Marc répond dans la seconde en piochant dans votre base de données sécurisée.</p>
               </div>
-            </div>
-            <div className="feat-row">
-              <div className="feat-icon-wrapper">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-              </div>
-              <div className="feat-text">
-                <h4>Recherche Web Intégrée</h4>
-                <p>Besoin d'un restaurant ou d'une pharmacie ? Marc scanne les environs du logement sur internet pour faire des recommandations précises.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* KILLER FEATURE (ALERTE) */}
-        <div className="killer-feature">
-          <div className="kf-text">
-            <span>Le Filet de Sécurité</span>
-            <h3>Vous n'êtes dérangé que lorsque c'est vital.</h3>
-            <p>Marc est intelligent. Si un client signale une fuite d'eau, une panne de courant, ou une urgence, il vous transfère immédiatement l'information.</p>
-            <p><b>Résultat :</b> Vous filtrez 95% du bruit quotidien, et gardez le contrôle sur les 5% qui comptent vraiment.</p>
-          </div>
-          <div className="notif-mockup">
-            <div className="notif-bubble">
-              <div className="notif-head">
-                <span>Telegram</span>
-                <span>Maintenant</span>
-              </div>
-              <p style={{fontSize: '13px', margin: 0, color: '#475569', lineHeight: '1.5'}}>
-                🚨 <b>ALERTE MAJOR MARC</b><br/><br/>
-                🏠 Logement : La Villa Noam<br/>
-                💬 Client : "Il y a une énorme fuite sous l'évier !"<br/><br/>
-                <i>Marc a indiqué la vanne et vous demande de prendre le relais.</i>
-              </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* PRICING ANCHOR */}
+      {/* PRICING ANCHOR - UPDATED PRICE */}
       <section className="pricing-anchor">
         <div className="anchor-box">
           <h2>Pour le prix d'un seul frais de ménage.</h2>
-          <p>La plupart des conciergeries traditionnelles prennent 20% de vos revenus. Offrez-vous le service d'un majordome privé 24h/24 pour une fraction de ce coût, et conservez vos marges.</p>
-          <span className="price-highlight">24,90€ <span>/ logement / mois</span></span>
-          <p style={{fontSize: '14px', marginTop: '-10px', color: '#94a3b8', marginBottom: '30px'}}>Sans engagement. Facturation simple.</p>
+          <p>Offrez-vous le service d'un majordome privé 24h/24 pour une fraction du coût d'une conciergerie.</p>
+          <span className="price-highlight">19,90€ <span>/ logement / mois</span></span>
+          <p style={{fontSize: '14px', marginTop: '-10px', color: '#94a3b8', marginBottom: '30px'}}>Sans engagement. Activation instantanée.</p>
           <Link href="/register" passHref legacyBehavior>
             <a className="cta-main">Créer mon compte maintenant</a>
           </Link>
         </div>
       </section>
 
-      {/* FOOTER */}
       <footer>
         <p>© 2026 Major Marc - L'excellence de la conciergerie automatisée.</p>
       </footer>
     </div>
   );
-        }
-        
+}
