@@ -9,6 +9,10 @@ export default function Dashboard() {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showLimitModal, setShowLimitModal] = useState(false);
+  
+  // NOUVEAUX ÉTATS POUR LA SUPPRESSION
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [propertyToDelete, setPropertyToDelete] = useState(null);
 
   useEffect(() => {
     fetchData();
@@ -35,10 +39,7 @@ export default function Dashboard() {
 
   const handleAddClick = (e) => {
     e.preventDefault();
-    
-    // 🔥 NOUVELLE LOGIQUE : On vérifie s'il y a un logement non activé
     const hasInactive = properties.some(prop => !prop.is_active);
-    
     if (hasInactive) {
       setShowLimitModal(true);
     } else {
@@ -63,11 +64,21 @@ export default function Dashboard() {
     }
   };
 
-  const deleteProperty = async (e, id, name) => {
+  // DÉCLENCHE LA MODAL DE SUPPRESSION
+  const triggerDeleteRequest = (e, prop) => {
     e.stopPropagation();
-    if (window.confirm(`Supprimer définitivement "${name}" ?`)) {
-      const { error } = await supabase.from('properties').delete().eq('id', id);
-      if (!error) setProperties(properties.filter(p => p.id !== id));
+    setPropertyToDelete(prop);
+    setShowDeleteModal(true);
+  };
+
+  // EXÉCUTE LA SUPPRESSION RÉELLE
+  const confirmDelete = async () => {
+    if (!propertyToDelete) return;
+    const { error } = await supabase.from('properties').delete().eq('id', propertyToDelete.id);
+    if (!error) {
+      setProperties(properties.filter(p => p.id !== propertyToDelete.id));
+      setShowDeleteModal(false);
+      setPropertyToDelete(null);
     }
   };
 
@@ -100,7 +111,8 @@ export default function Dashboard() {
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 25px; }
 
         .card { background: white; border-radius: 24px; padding: 25px; border: 1px solid #e2e8f0; position: relative; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        .btn-delete { position: absolute; top: 15px; right: 15px; border: none; background: none; cursor: pointer; color: #94a3b8; }
+        .btn-delete { position: absolute; top: 15px; right: 15px; border: none; background: none; cursor: pointer; color: #94a3b8; font-size: 18px; transition: 0.2s; }
+        .btn-delete:hover { color: #e11d48; }
         
         h3 { margin: 0 0 5px 0; color: #1a2a6c; font-size: 20px; font-weight: 800; }
         .address { color: #64748b; font-size: 13px; margin-bottom: 20px; }
@@ -119,10 +131,15 @@ export default function Dashboard() {
         .subscription-card { margin-top: 60px; padding: 30px; background: white; border-radius: 24px; border: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; }
         .btn-portal { background: #1a2a6c; color: white; padding: 14px 24px; border-radius: 12px; font-weight: 700; cursor: pointer; border: none; }
 
-        /* MODAL */
+        /* MODALS */
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
-        .modal-card { background: white; border-radius: 32px; padding: 40px; max-width: 480px; width: 100%; text-align: center; }
+        .modal-card { background: white; border-radius: 32px; padding: 40px; max-width: 480px; width: 100%; text-align: center; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
         .btn-close-modal { background: #fbbf24; border: none; padding: 15px; width: 100%; border-radius: 14px; font-weight: 800; color: #1a2a6c; cursor: pointer; margin-top: 25px; }
+
+        .info-box { background: #f1f5f9; padding: 15px; border-radius: 15px; margin-bottom: 25px; font-size: 13px; color: #475569; border-left: 4px solid #fbbf24; text-align: left; }
+        .modal-actions { display: flex; gap: 12px; margin-top: 20px; }
+        .btn-abort { flex: 1; padding: 14px; border-radius: 12px; border: 1px solid #e2e8f0; background: white; color: #64748b; font-weight: 700; cursor: pointer; }
+        .btn-confirm-delete { flex: 1; padding: 14px; border-radius: 12px; border: none; background: #e11d48; color: white; font-weight: 700; cursor: pointer; }
       `}</style>
 
       <nav>
@@ -140,7 +157,7 @@ export default function Dashboard() {
         <div className="grid">
           {properties.map((prop) => (
             <div key={prop.id} className="card">
-              <button className="btn-delete" onClick={(e) => deleteProperty(e, prop.id, prop.name)}>🗑️</button>
+              <button className="btn-delete" onClick={(e) => triggerDeleteRequest(e, prop)}>🗑️</button>
               <h3>{prop.name}</h3>
               <div className="address">📍 {prop.street_number} {prop.address}{prop.city ? `, ${prop.city}` : ''}</div>
               
@@ -171,6 +188,7 @@ export default function Dashboard() {
         <button onClick={handleDeleteAccount} style={{background:'none', border:'none', color:'#94a3b8', cursor:'pointer', marginTop:'40px', textDecoration:'underline'}}>Supprimer mon compte</button>
       </main>
 
+      {/* MODAL : LIMITE / ACTIVATION REQUISE */}
       {showLimitModal && (
         <div className="modal-overlay" onClick={() => setShowLimitModal(false)}>
           <div className="modal-card" onClick={e => e.stopPropagation()}>
@@ -178,11 +196,34 @@ export default function Dashboard() {
             <h2 style={{color: '#1a2a6c', fontWeight: 800}}>Activation requise</h2>
             <p style={{color: '#64748b', lineHeight: 1.6}}>
               Vous avez déjà un logement en attente de configuration.<br/><br/>
-              <b>Veuillez activer votre logement actuel</b> (bouton jaune sur votre tableau de bord) avant de pouvoir en ajouter un nouveau.
+              <b>Veuillez activer votre logement actuel</b> avant de pouvoir en ajouter un nouveau.
             </p>
             <button className="btn-close-modal" onClick={() => setShowLimitModal(false)}>
               D'accord, j'ai compris
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL : CONFIRMATION DE SUPPRESSION */}
+      {showDeleteModal && (
+        <div className="modal-overlay" onClick={() => setShowDeleteModal(false)}>
+          <div className="modal-card" onClick={e => e.stopPropagation()}>
+            <span style={{fontSize: '50px', marginBottom: '15px', display: 'block'}}>⚠️</span>
+            <h2 style={{color: '#1a2a6c', fontWeight: 800}}>Supprimer {propertyToDelete?.name} ?</h2>
+            <p style={{color: '#64748b', fontSize: '14px', marginBottom: '20px'}}>
+              Êtes-vous sûr de vouloir supprimer ce logement ? Toute la configuration de Marc pour cette villa sera effacée.
+            </p>
+            
+            <div className="info-box">
+              <strong>📌 Note sur votre abonnement :</strong><br/>
+              Votre licence reste active jusqu'à la fin de la période de facturation en cours. Vous pourrez configurer un nouveau logement sur cet emplacement vide à tout moment.
+            </div>
+
+            <div className="modal-actions">
+              <button className="btn-abort" onClick={() => setShowDeleteModal(false)}>Annuler</button>
+              <button className="btn-confirm-delete" onClick={confirmDelete}>Supprimer</button>
+            </div>
           </div>
         </div>
       )}
