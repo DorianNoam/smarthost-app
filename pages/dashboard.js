@@ -8,9 +8,10 @@ export default function Dashboard() {
   const [properties, setProperties] = useState([]);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [paymentLoading, setPaymentLoading] = useState(false); // État spécifique pour le bouton Stripe
   const [showLimitModal, setShowLimitModal] = useState(false);
   
-  // NOUVEAUX ÉTATS POUR LA SUPPRESSION
+  // ÉTATS POUR LA SUPPRESSION
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [propertyToDelete, setPropertyToDelete] = useState(null);
 
@@ -47,6 +48,38 @@ export default function Dashboard() {
     }
   };
 
+  // NOUVELLE FONCTION : PAIEMENT DIRECT STRIPE
+  const handlePayment = async (e) => {
+    e.preventDefault();
+    setPaymentLoading(true);
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      const res = await fetch('/api/create-checkout-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user.id,
+          userEmail: user.email,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        alert("Erreur Stripe : " + (data.error || "Impossible de générer le lien de paiement."));
+        setPaymentLoading(false);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Erreur lors de la connexion à Stripe.");
+      setPaymentLoading(false);
+    }
+  };
+
   const handleManageSubscription = async () => {
     setLoading(true);
     try {
@@ -64,14 +97,12 @@ export default function Dashboard() {
     }
   };
 
-  // DÉCLENCHE LA MODAL DE SUPPRESSION
   const triggerDeleteRequest = (e, prop) => {
     e.stopPropagation();
     setPropertyToDelete(prop);
     setShowDeleteModal(true);
   };
 
-  // EXÉCUTE LA SUPPRESSION RÉELLE
   const confirmDelete = async () => {
     if (!propertyToDelete) return;
     const { error } = await supabase.from('properties').delete().eq('id', propertyToDelete.id);
@@ -126,7 +157,8 @@ export default function Dashboard() {
         .btn-add { background: #fbbf24; color: #1a2a6c; padding: 12px 24px; border-radius: 12px; font-weight: 800; cursor: pointer; border: none; }
 
         .activation-zone { background: #fffbeb; padding: 20px; border-radius: 16px; border: 1px solid #fef3c7; text-align: center; margin-top: 15px; }
-        .btn-activate { background: #fbbf24; border: none; padding: 14px; width: 100%; border-radius: 12px; font-weight: 800; color: #1a2a6c; cursor: pointer; }
+        .btn-activate { background: #fbbf24; border: none; padding: 14px; width: 100%; border-radius: 12px; font-weight: 800; color: #1a2a6c; cursor: pointer; transition: 0.2s; }
+        .btn-activate:hover { background: #f59e0b; }
 
         .subscription-card { margin-top: 60px; padding: 30px; background: white; border-radius: 24px; border: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; }
         .btn-portal { background: #1a2a6c; color: white; padding: 14px 24px; border-radius: 12px; font-weight: 700; cursor: pointer; border: none; }
@@ -164,7 +196,9 @@ export default function Dashboard() {
               {!prop.is_active ? (
                 <div className="activation-zone">
                   <p style={{fontSize: '13px', color: '#92400e', marginBottom: '15px', fontWeight: 600}}>Votre Majordome Major Marc est prêt à entrer en service.</p>
-                  <button onClick={() => router.push('/pricing')} className="btn-activate">Activer ce logement</button>
+                  <button onClick={handlePayment} className="btn-activate">
+                    {paymentLoading ? 'Connexion à Stripe...' : 'Activer ce logement'}
+                  </button>
                 </div>
               ) : (
                 <div className="btn-stack">
