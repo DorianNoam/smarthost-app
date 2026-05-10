@@ -76,7 +76,7 @@ export default function Home() {
         .pain-card h3 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 20px; color: #0f172a; margin-bottom: 15px; font-weight: 700; }
         .pain-card p { color: #475569; line-height: 1.6; font-size: 15px; }
 
-        /* --- DEMO SECTION (Chat + Features + Telegram) --- */
+        /* --- DEMO SECTION --- */
         .demo-section { padding: 100px 5%; background: #0f172a; color: white; overflow: hidden; }
         .demo-header { text-align: center; margin-bottom: 70px; }
         .demo-header h2 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: clamp(28px, 5vw, 42px); margin-bottom: 20px; font-weight: 800; letter-spacing: -1px; }
@@ -147,7 +147,6 @@ export default function Home() {
           .nav-links { gap: 15px; }
           .hero { padding: 120px 15px 60px; }
           .killer-feature { flex-direction: column; padding: 30px 20px; margin: 40px auto 0; text-align: center; }
-          .demo-features { text-align: left; }
           .footer-content { flex-direction: column; }
         }
         @media (max-width: 380px) { .nav-link { display: none; } }
@@ -159,7 +158,6 @@ export default function Home() {
           <a className="brand">Major<span className="gold">Marc</span></a>
         </Link>
         <div className="nav-links">
-          <a href="#demo" className="nav-link">Démo</a>
           <Link href="/pricing" passHref legacyBehavior><a className="nav-link">Tarifs</a></Link>
           <Link href="/login" passHref legacyBehavior><a className="nav-login">Espace Hôte</a></Link>
         </div>
@@ -173,7 +171,7 @@ export default function Home() {
           <p className="subtitle">
             Le premier majordome IA qui répond aux questions 24h/24, recommande les meilleurs restaurants locaux, et vous alerte uniquement en cas d'urgence.
           </p>
-          <Link href="/register" passHref legacyBehavior>
+          <Link href="/pricing" passHref legacyBehavior>
             <a className="cta-main">Activer mon Majordome (1er mois offert) <span>→</span></a>
           </Link>
           <div className="trust-banner">⭐ Déjà adopté par plus de 500 hôtes en France</div>
@@ -290,7 +288,7 @@ export default function Home() {
             </div>
             
             <div style={{marginTop: '30px'}}>
-              <Link href="/register" passHref legacyBehavior>
+              <Link href="/pricing" passHref legacyBehavior>
                 <a className="cta-main" style={{backgroundColor: '#fff', color: '#1a2a6c'}}>Activer mon Majordome (1er mois offert)</a>
               </Link>
             </div>
@@ -367,7 +365,7 @@ export default function Home() {
           <p>Profitez du service d'un majordome privé 24h/24 pour une fraction du coût d'une conciergerie traditionnelle.</p>
           <span className="price-highlight">19,90€ <span>/ logement / mois</span></span>
           <p style={{fontSize: '14px', marginTop: '-10px', color: '#94a3b8', marginBottom: '30px'}}>Sans engagement.</p>
-          <Link href="/register" passHref legacyBehavior>
+          <Link href="/pricing" passHref legacyBehavior>
             <a className="cta-main">Activer mon Majordome (1er mois offert) <span>→</span></a>
           </Link>
         </div>
