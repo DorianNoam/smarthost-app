@@ -1,5 +1,3 @@
-
-
 import Groq from 'groq-sdk';
 import { supabase } from '../../lib/supabase';
 
@@ -55,6 +53,36 @@ async function sendTelegramAlert(originalMsg, translatedMsg, propertyData) {
   }
 }
 
+// --- 3. DÉTECTION D'INTENTION LOCALE (côté code, sans IA) ---
+// On détecte directement dans le message si c'est une question locale
+// Plus fiable que le llama-8b qui peut rater les questions en français
+function isLocalQuery(msg) {
+  const lower = msg.toLowerCase();
+  const localKeywords = [
+    // Transports
+    'transport', 'bus', 'tram', 'tramway', 'métro', 'metro', 'taxi', 'uber',
+    'train', 'gare', 'arrêt', 'ligne', 'navette', 'vélo', 'trotinette',
+    // Commerces & services
+    'restaurant', 'boulangerie', 'supermarché', 'supermarche', 'épicerie',
+    'epicerie', 'pharmacie', 'médecin', 'docteur', 'hôpital', 'hopital',
+    'bar', 'café', 'cafe', 'pizzeria', 'sushi', 'brasserie', 'bistrot',
+    'magasin', 'boutique', 'commerce', 'courses', 'marché', 'marche',
+    // Activités & lieux
+    'plage', 'parc', 'musée', 'musee', 'monument', 'visite', 'activité',
+    'activite', 'sortie', 'loisir', 'balade', 'promenade', 'randonnée',
+    'piscine', 'spa', 'sport', 'cinema', 'théâtre', 'theatre',
+    // Anglais
+    'bakery', 'grocery', 'store', 'shop', 'pharmacy', 'hospital', 'subway',
+    'nearby', 'close', 'near', 'around', 'walk', 'distance',
+    // Questions de proximité
+    'proche', 'près', 'autour', 'alentour', 'quartier', 'coin', 'environs',
+    'à pied', 'minutes', 'kilomètre', 'kilometre', 'recommande', 'conseil',
+    'bon plan', 'adresse', 'où manger', 'ou manger', 'où aller', 'ou aller'
+  ];
+
+  return localKeywords.some(keyword => lower.includes(keyword));
+}
+
 // --- HANDLER PRINCIPAL ---
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).send('Méthode non autorisée');
@@ -82,9 +110,10 @@ export default async function handler(req, res) {
     const formattedKB = knowledgeBase?.map(kb => `${kb.category}: ${kb.content}`).join('\n') || "";
 
     // ── B. RECHERCHE WEB ──
-    // On décide côté CODE si on cherche sur le web — pas dans le prompt
-    // Logique : si l'hôte a renseigné l'info → on l'utilise
-    //           si l'hôte n'a rien mis ET que c'est une question locale → on cherche sur le web
+    // Détection côté code — fiable en toutes langues, sans appel IA supplémentaire
+    const needsLocalSearch = isLocalQuery(lastUserMsg);
+
+    // Infos locales déjà renseignées par l'hôte
     const hostLocalInfo = [
       propertyData.transport_info,
       propertyData.local_shops,
@@ -92,44 +121,26 @@ export default async function handler(req, res) {
       propertyData.pharmacy_info
     ].filter(Boolean).join('\n');
 
-    // Détection d'intention via le petit modèle rapide
-    const intentCheck = await groq.chat.completions.create({
-      model: "llama-3.1-8b-instant",
-      messages: [
-        {
-          role: 'system',
-          content: "Does this message ask for a LOCAL recommendation or info (restaurant, transport, shop, bakery, pharmacy, supermarket, activity, attraction near the property)? Answer ONLY 'YES' or 'NO'. Questions about WiFi, access codes, checkout times, appliances = NO."
-        },
-        { role: 'user', content: lastUserMsg }
-      ],
-      temperature: 0,
-      max_tokens: 3,
-    });
-
-    const isLocalQuery = intentCheck.choices[0].message.content.trim().toUpperCase().includes("YES");
-
-    // On cherche sur le web si :
-    // - C'est une question locale ET
-    // - L'hôte n'a pas déjà renseigné cette info (pour éviter les appels inutiles)
+    // On cherche sur le web si c'est une question locale
     let searchResults = "";
-    if (isLocalQuery) {
+    if (needsLocalSearch) {
       searchResults = await searchLocalInfo(lastUserMsg, fullAddress, city);
     }
 
-    // On construit la section "quartier" intelligemment côté code
-    // Priorité : infos hôte > résultats web
+    // Construction intelligente de la section quartier
+    // Priorité : infos hôte d'abord, web en complément
     const localSection = hostLocalInfo
-      ? `${hostLocalInfo}${searchResults ? `\n\nComplément via recherche web :\n${searchResults}` : ''}`
+      ? `${hostLocalInfo}${searchResults ? `\n\nRésultats complémentaires :\n${searchResults}` : ''}`
       : searchResults || "";
 
-    // ── C. PROMPT SYSTÈME — VERSION DÉFINITIVE ──
+    // ── C. PROMPT SYSTÈME DÉFINITIF ──
     const systemPrompt = `Tu es Marc, le majordome personnel de "${propertyData.name}" à ${city}.
 
 IDENTITÉ — RÈGLE ABSOLUE :
 - Tu es un majordome humain, professionnel et polyglotte. Tu n'es PAS une IA.
 - Si on te demande si tu es une IA, un robot ou un chatbot : réponds que tu es Marc, le concierge personnel du logement, et redirige vers le séjour.
 - Ne mentionne jamais Groq, LLaMA, Claude, GPT ou tout autre modèle d'IA.
-- Ne cite JAMAIS tes sources, tes sections internes, ou le fait que tu cherches sur internet.
+- Ne cite JAMAIS tes sources, tes sections internes, ou le fait que tu cherches sur internet. Réponds comme si tu connaissais la ville par cœur.
 
 LANGUE :
 - Réponds TOUJOURS dans la langue du voyageur, sans exception.
@@ -192,13 +203,13 @@ Départ :
 ${formattedKB || "Aucune consigne particulière."}
 
 ━━━ QUARTIER & ENVIRONS ━━━
-${localSection || "Aucune information disponible pour le moment."}
+${localSection || "Aucune information disponible pour cette question."}
 
 ━━━ RÈGLES CRITIQUES ━━━
 
-1. INFO TECHNIQUE MANQUANTE : Si une info du logement (wifi, code, parking...) est "Non renseigné", réponds : "Je n'ai pas cette information pour le moment, je contacte votre hôte." — jamais autre chose.
+1. INFO TECHNIQUE MANQUANTE : Si une info du logement (wifi, code, parking...) est "Non renseigné", réponds exactement : "Je n'ai pas cette information pour le moment, je contacte votre hôte." — jamais autre chose, jamais de question de suivi.
 
-2. QUARTIER & LOCAL : Si le voyageur demande un restaurant, transport, boulangerie, pharmacie, supermarché ou activité, utilise les informations de la section QUARTIER & ENVIRONS ci-dessus et réponds directement avec ces infos. Ne dis jamais que tu ne sais pas si tu as des résultats.
+2. QUARTIER & LOCAL : Si le voyageur demande un restaurant, transport, boulangerie, pharmacie, supermarché ou activité, utilise les informations de la section QUARTIER & ENVIRONS et réponds directement. Si cette section contient des infos, tu DOIS les utiliser. Ne dis jamais "je ne sais pas" si tu as des données dans cette section.
 
 3. INVENTION INTERDITE : Ne jamais inventer une information. Ne jamais demander un numéro de réservation.
 
