@@ -31,7 +31,7 @@ export default function Home() {
         .nav-links { display: flex; align-items: center; gap: 30px; }
         .nav-link { color: #1e293b; font-weight: 500; font-size: 15px; transition: 0.3s; cursor: pointer; }
         .nav-link:hover { color: #d4af37; }
-        .nav-login { font-weight: 600; color: #1a2a6c; padding: 10px 24px; border: 2px solid #1a2a6c; border-radius: 50px; font-size: 15px; transition: 0.3s; cursor: pointer; }
+        .nav-login { font-weight: 600; color: #1a2a6c; padding: 10px 24px; border: 2px solid #1a2a6c; border-radius: 50px; font-size: 15px; transition: 0.3s; cursor: pointer; white-space: nowrap; }
         .nav-login:hover { background: #1a2a6c; color: white; }
 
         /* --- HERO SECTION --- */
@@ -40,41 +40,41 @@ export default function Home() {
           text-align: center; padding: 140px 20px 80px; box-sizing: border-box;
           background: linear-gradient(rgba(15, 23, 42, 0.8), rgba(15, 23, 42, 0.9)), url('https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1920&q=80') center/cover;
         }
-        .hero-content { max-width: 950px; z-index: 10; margin: 0 auto; display: flex; flex-direction: column; align-items: center; }
+        .hero-content { max-width: 950px; z-index: 10; margin: 0 auto; display: flex; flex-direction: column; align-items: center; width: 100%; }
         .badge-hero { background: rgba(212, 175, 55, 0.15); color: #d4af37; padding: 8px 16px; border-radius: 30px; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; display: inline-block; margin-bottom: 25px; border: 1px solid rgba(212, 175, 55, 0.3); }
-        h1 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: clamp(38px, 6vw, 64px); color: white; margin-bottom: 25px; line-height: 1.1; font-weight: 800; letter-spacing: -1px; }
-        .subtitle { font-size: clamp(16px, 3vw, 20px); margin-bottom: 40px; color: #cbd5e1; line-height: 1.6; font-weight: 400; max-width: 800px; }
+        h1 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: clamp(34px, 6vw, 64px); color: white; margin-bottom: 25px; line-height: 1.1; font-weight: 800; letter-spacing: -1px; }
+        .subtitle { font-size: clamp(15px, 3vw, 20px); margin-bottom: 40px; color: #cbd5e1; line-height: 1.6; font-weight: 400; max-width: 800px; }
         
         .cta-main {
           background-color: #d4af37; color: #1a2a6c; padding: 20px 45px; border-radius: 50px; font-weight: 700; font-size: 16px;
-          box-shadow: 0 10px 30px rgba(212, 175, 55, 0.3); display: inline-flex; align-items: center; gap: 10px; transition: 0.3s; cursor: pointer; letter-spacing: 0.5px;
+          box-shadow: 0 10px 30px rgba(212, 175, 55, 0.3); display: inline-flex; justify-content: center; align-items: center; gap: 10px; transition: 0.3s; cursor: pointer; letter-spacing: 0.5px;
         }
         .cta-main:hover { transform: translateY(-3px); background-color: #fff; box-shadow: 0 15px 40px rgba(255, 255, 255, 0.2); }
-        .trust-banner { margin-top: 25px; font-size: 13px; color: #94a3b8; display: flex; align-items: center; gap: 10px; }
+        .trust-banner { margin-top: 25px; font-size: 13px; color: #94a3b8; display: flex; align-items: center; justify-content: center; gap: 10px; }
 
-        /* --- LOGO BANNER (TRUST) --- */
+        /* --- LOGO BANNER --- */
         .logos-section { background: white; padding: 30px 5%; border-bottom: 1px solid #e2e8f0; text-align: center; }
         .logos-section p { font-size: 13px; color: #64748b; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; margin-bottom: 15px; }
-        .logos-flex { display: flex; justify-content: center; gap: 40px; flex-wrap: wrap; opacity: 0.6; filter: grayscale(100%); }
-        .logos-flex span { font-weight: 800; font-size: 20px; font-family: 'Plus Jakarta Sans', sans-serif; color: #1e293b; }
+        .logos-flex { display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; opacity: 0.6; filter: grayscale(100%); }
+        .logos-flex span { font-weight: 800; font-size: 18px; font-family: 'Plus Jakarta Sans', sans-serif; color: #1e293b; }
 
         /* --- HOW IT WORKS --- */
         .steps-section { padding: 100px 5%; background: #f8fafc; text-align: center; }
         .section-title { font-family: 'Plus Jakarta Sans', sans-serif; font-size: clamp(28px, 5vw, 40px); color: #0f172a; margin-bottom: 15px; font-weight: 800; letter-spacing: -0.5px; }
-        .steps-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; max-width: 1100px; margin: 50px auto 0; }
+        .steps-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 40px; max-width: 1100px; margin: 50px auto 0; }
         .step-card { background: white; padding: 40px 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.03); position: relative; }
         .step-number { position: absolute; top: -20px; left: 50%; transform: translateX(-50%); background: #1a2a6c; color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 18px; border: 4px solid #f8fafc; }
         .step-card h3 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 20px; color: #0f172a; margin-top: 15px; margin-bottom: 15px; font-weight: 700; }
-        .step-card p { color: #475569; line-height: 1.6; font-size: 15px; }
+        .step-card p { color: #475569; line-height: 1.6; font-size: 15px; margin: 0; }
 
         /* --- PAIN POINTS --- */
         .pain-section { padding: 100px 5%; background: #fff; text-align: center; }
-        .pain-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; max-width: 1100px; margin: 0 auto; }
+        .pain-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; max-width: 1100px; margin: 40px auto 0; }
         .pain-card { background: #f8fafc; padding: 40px 30px; border-radius: 20px; text-align: left; transition: 0.3s; border: 1px solid #e2e8f0; }
         .pain-card:hover { transform: translateY(-5px); box-shadow: 0 20px 40px rgba(0,0,0,0.04); border-color: #d4af37; }
         .pain-icon-wrapper { width: 50px; height: 50px; background: rgba(26, 42, 108, 0.05); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; color: #1a2a6c; }
         .pain-card h3 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 20px; color: #0f172a; margin-bottom: 15px; font-weight: 700; }
-        .pain-card p { color: #475569; line-height: 1.6; font-size: 15px; }
+        .pain-card p { color: #475569; line-height: 1.6; font-size: 15px; margin: 0; }
 
         /* --- DEMO SECTION --- */
         .demo-section { padding: 100px 5%; background: #0f172a; color: white; overflow: hidden; }
@@ -85,7 +85,7 @@ export default function Home() {
         @media (min-width: 1024px) { .demo-layout { flex-direction: row; justify-content: space-between; align-items: center; } }
         
         .phone-wrapper { position: relative; width: 100%; max-width: 340px; margin: 0 auto; }
-        .phone-frame { border: 10px solid #1e293b; border-radius: 40px; background: white; height: 650px; overflow: hidden; position: relative; box-shadow: 0 30px 60px rgba(0,0,0,0.5); }
+        .phone-frame { border: 10px solid #1e293b; border-radius: 40px; background: white; height: 600px; overflow: hidden; position: relative; box-shadow: 0 30px 60px rgba(0,0,0,0.5); }
         .phone-notch { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 120px; height: 25px; background: #1e293b; border-bottom-left-radius: 15px; border-bottom-right-radius: 15px; z-index: 10; }
         
         .chat-app { display: flex; flex-direction: column; height: 100%; background: #f0f2f5; }
@@ -94,9 +94,8 @@ export default function Home() {
         .msg { padding: 12px 16px; border-radius: 15px; font-size: 13.5px; line-height: 1.5; max-width: 85%; position: relative; color: #111; }
         .msg-user { background: #dcf8c6; align-self: flex-end; border-bottom-right-radius: 2px; }
         .msg-marc { background: white; align-self: flex-start; border-bottom-left-radius: 2px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
-        .msg-time { display: block; font-size: 10px; color: #888; text-align: right; margin-top: 5px; }
 
-        .demo-features { flex: 1; max-width: 500px; }
+        .demo-features { flex: 1; max-width: 500px; width: 100%; }
         .feat-row { margin-bottom: 40px; display: flex; gap: 20px; align-items: flex-start; }
         .feat-icon-wrapper { background: rgba(212, 175, 55, 0.1); color: #d4af37; width: 50px; height: 50px; border-radius: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
         .feat-text h4 { font-size: 20px; margin-bottom: 10px; color: white; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; }
@@ -104,23 +103,23 @@ export default function Home() {
 
         /* --- THE KILLER FEATURE --- */
         .killer-feature { background: #fff; padding: 60px 40px; margin: 80px auto 0; max-width: 1000px; border-radius: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.08); display: flex; flex-wrap: wrap; align-items: center; gap: 40px; text-align: left; }
-        .kf-text { flex: 1; min-width: 300px; color: #0f172a;}
+        .kf-text { flex: 1; min-width: 250px; color: #0f172a;}
         .kf-text span { color: #ef4444; font-weight: 700; letter-spacing: 1px; font-size: 13px; text-transform: uppercase; }
         .kf-text h3 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: clamp(24px, 4vw, 32px); color: #0f172a; margin: 15px 0; font-weight: 800; letter-spacing: -0.5px; }
         .kf-text p { color: #475569; line-height: 1.6; font-size: 15px; margin-bottom: 15px; }
-        .notif-mockup { flex: 1; min-width: 300px; background: #f8fafc; padding: 25px; border-radius: 20px; border: 1px solid #e2e8f0; width: 100%; box-sizing: border-box; }
+        .notif-mockup { flex: 1; min-width: 250px; background: #f8fafc; padding: 25px; border-radius: 20px; border: 1px solid #e2e8f0; width: 100%; box-sizing: border-box; }
         .notif-bubble { background: white; padding: 20px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border-left: 4px solid #ef4444; }
         .notif-head { display: flex; justify-content: space-between; font-size: 12px; color: #64748b; font-weight: 600; margin-bottom: 10px; }
 
         /* --- BENEFITS --- */
         .benefits { padding: 100px 5%; background: #f8fafc; text-align: center; }
-        .benefits-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; max-width: 1100px; margin: 40px auto 0; }
+        .benefits-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; max-width: 1100px; margin: 40px auto 0; }
         .benefit-card { background: white; padding: 40px; border-radius: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); text-align: left; border-top: 4px solid #1a2a6c; }
         .benefit-icon { font-size: 32px; margin-bottom: 15px; }
         .benefit-card h4 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 18px; color: #0f172a; margin-bottom: 10px; font-weight: 700; }
         .benefit-card p { color: #475569; font-size: 15px; line-height: 1.6; margin: 0; }
 
-        /* --- NOUVELLE PRICING SECTION INTÉGRÉE --- */
+        /* --- PRICING SECTION --- */
         .pricing-section { padding: 100px 5%; background: white; text-align: center; }
         .pricing-header { max-width: 800px; margin: 0 auto 50px; }
         .pricing-header h2 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: clamp(28px, 5vw, 40px); color: #0f172a; margin-bottom: 15px; font-weight: 800; letter-spacing: -1px; }
@@ -130,9 +129,8 @@ export default function Home() {
           background: white; padding: 50px 40px; border-radius: 24px; 
           box-shadow: 0 25px 50px -12px rgba(0,0,0,0.1); text-align: center; 
           border: 2px solid #d4af37; position: relative; width: 100%; max-width: 450px; 
-          margin: 0 auto; display: flex; flex-direction: column; 
+          margin: 0 auto; display: flex; flex-direction: column; box-sizing: border-box;
         }
-        
         .badge-promo {
           position: absolute; top: -18px; left: 50%; transform: translateX(-50%);
           background: #d4af37; color: #1a2a6c; padding: 8px 24px; border-radius: 30px;
@@ -157,7 +155,6 @@ export default function Home() {
           font-weight: 700; font-size: 16px; transition: 0.3s; text-decoration: none; display: block;
         }
         .cta-pricing:hover { transform: translateY(-3px); box-shadow: 0 15px 30px rgba(26, 42, 108, 0.2); background: #1e3280; }
-        
         .guarantee { margin-top: 20px; font-size: 13px; color: #64748b; display: flex; align-items: center; justify-content: center; gap: 8px; }
 
         /* --- FOOTER PRO --- */
@@ -170,17 +167,43 @@ export default function Home() {
         .footer-col ul li a:hover { color: white; }
         .footer-bottom { text-align: center; font-size: 14px; }
 
+        /* 📱 --- CORRECTION RESPONSIVE MOBILE --- 📱 */
         @media (max-width: 768px) {
+          /* Navbar: on cache les liens et on garde que Espace Hôte pour ne pas déborder */
           nav { padding: 15px 20px; }
           .brand { font-size: 20px; }
-          .nav-links { gap: 15px; }
-          .hero { padding: 120px 15px 60px; }
+          .nav-link { display: none; } 
+          .nav-login { padding: 8px 16px; font-size: 13px; }
+
+          /* Sections: on réduit les gros paddings verticaux */
+          .hero { padding: 120px 20px 60px; }
+          .steps-section, .pain-section, .demo-section, .benefits, .pricing-section { padding: 60px 20px; }
+
+          /* Grilles: on force une seule colonne pour éviter le scroll horizontal */
+          .steps-grid, .pain-grid, .benefits-grid { grid-template-columns: 1fr; gap: 20px; }
+          
+          /* Hero / Boutons: on centre et on met en pleine largeur */
+          .cta-main { width: 100%; justify-content: center; font-size: 14px; padding: 18px 20px; box-sizing: border-box; }
+          .badge-hero { font-size: 11px; padding: 6px 12px; }
+
+          /* Layout Démo / Features */
+          .demo-features { text-align: left; margin-top: 20px; }
+          .phone-wrapper { display: none; } /* Optionnel: on peut cacher le gros téléphone sur très petit mobile, ou le garder. On le garde mais redimensionné. */
+          .phone-frame { height: 500px; }
+
+          /* Killer Feature */
           .killer-feature { flex-direction: column; padding: 30px 20px; margin: 40px auto 0; text-align: center; }
-          .demo-features { text-align: left; }
-          .price-card-home { padding: 40px 25px; }
-          .footer-content { flex-direction: column; }
+          .kf-text, .notif-mockup { min-width: 100%; }
+
+          /* Pricing Card */
+          .price-card-home { padding: 40px 20px; }
+          .price { font-size: 44px; }
+          .badge-promo { font-size: 12px; padding: 6px 16px; }
+
+          /* Footer */
+          .footer-content { flex-direction: column; gap: 30px; text-align: center; }
+          .footer-col { display: flex; flex-direction: column; align-items: center; }
         }
-        @media (max-width: 380px) { .nav-link { display: none; } }
       `}</style>
 
       {/* NAVIGATION */}
