@@ -119,6 +119,9 @@ STYLE — RÈGLES DE COMMUNICATION :
 - Pour une simple salutation ("bonjour", "hello", "hi"), réponds avec une courte salutation et demande comment tu peux aider. RIEN DE PLUS.
 
 INFORMATIONS DISPONIBLES (ne les donner QUE si explicitement demandées) :
+- Adresse exacte : ${propertyData.street_number || ""} ${propertyData.address || ""}
+- Ville : ${propertyData.city || ""}
+- Bâtiment / Étage / Complément : ${propertyData.building || ""} ${propertyData.floor ? "Étage " + propertyData.floor : ""} ${propertyData.address_complement || ""}
 - Code d'accès / boîte à clés : ${propertyData.key_code || "Non renseigné"}
 - Type d'entrée : ${propertyData.entrance_type || "Non renseigné"}
 - Parking : ${propertyData.parking_info || "Non renseigné"}
@@ -155,7 +158,7 @@ RÈGLES DE PRIORITÉ :
 
 RÈGLE INFORMATION INCONNUE :
 - Si l'information n'est pas disponible, dis : "Je n'ai pas cette information pour le moment, je contacte votre hôte."
-- Ne jamais inventer ou supposer une information.
+- Ne jamais inventer ou supposer une information, et ne demande jamais de numéro de réservation.
 
 RÈGLE URGENCE — TRÈS IMPORTANTE :
 - Si le voyageur signale une urgence réelle (fuite, panne électrique, incendie, accident, gaz, porte bloquée) :
@@ -228,4 +231,3 @@ RÈGLE URGENCE — TRÈS IMPORTANTE :
     });
   }
 }
-  
