@@ -41,7 +41,7 @@ export default function ChatLocataire() {
     setProperty(data);
     // Message de bienvenue initial
     setMessages([
-      { role: 'marc', text: `Bonjour ! Je suis Marc, votre assistant pour ${data.name}. Comment puis-je vous aider ?` }
+      { role: 'marc', text: `Bonjour ! Je suis Marc, votre assistant pour votre séjour à ${data.name}. Comment puis-je vous aider ?` }
     ]);
     setLoading(false);
   };
