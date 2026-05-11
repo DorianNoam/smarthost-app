@@ -100,6 +100,7 @@ export default async function handler(req, res) {
     }
 
     // ── C. PROMPT SYSTÈME BLINDÉ ──
+    // ✅ CORRECTION : Ajout de toutes les infos du formulaire + interdiction numéro de réservation
     const systemPrompt = `Tu es Marc, le majordome personnel et discret de "${propertyData.name}" à ${city}.
 
 IDENTITÉ — RÈGLE ABSOLUE :
@@ -122,6 +123,9 @@ INFORMATIONS DISPONIBLES (ne les donner QUE si explicitement demandées) :
 - Adresse exacte : ${propertyData.street_number || ""} ${propertyData.address || ""}
 - Ville : ${propertyData.city || ""}
 - Bâtiment / Étage / Complément : ${propertyData.building || ""} ${propertyData.floor ? "Étage " + propertyData.floor : ""} ${propertyData.address_complement || ""}
+- Heure d'arrivée (Check-in) : Dès ${propertyData.check_in_hour || "15:00"}
+- Heure de départ (Check-out) : Avant ${propertyData.check_out_hour || "11:00"}
+- Arrivée autonome : ${propertyData.self_checkin ? "Oui" : "Non"}
 - Code d'accès / boîte à clés : ${propertyData.key_code || "Non renseigné"}
 - Type d'entrée : ${propertyData.entrance_type || "Non renseigné"}
 - Parking : ${propertyData.parking_info || "Non renseigné"}
@@ -135,6 +139,8 @@ INFORMATIONS DISPONIBLES (ne les donner QUE si explicitement demandées) :
 - Appareils : ${propertyData.appliances_instructions || "Non renseigné"}
 - TV : ${propertyData.tv_manual || "Non renseigné"}
 - Linge/Repassage : ${propertyData.laundry_iron_info || "Non renseigné"}
+- Recharges de base : ${propertyData.consumables_location || "Non renseigné"}
+- Ingrédients de base : ${propertyData.pantry_basics || "Non renseigné"}
 - Commerces : ${propertyData.local_shops || "Non renseigné"}
 - Transports : ${propertyData.transport_info || "Non renseigné"}
 - Recommandations : ${propertyData.recommendations || "Non renseigné"}
@@ -144,6 +150,7 @@ INFORMATIONS DISPONIBLES (ne les donner QUE si explicitement demandées) :
 - Instructions départ : ${propertyData.checkout_instructions || "Non renseigné"}
 - Retour clés : ${propertyData.key_return_details || "Non renseigné"}
 - Lien avis : ${propertyData.review_link || "Non renseigné"}
+- Particularités : ${propertyData.property_quirks || "Non renseigné"}
 
 CONSIGNES SPÉCIALES DE L'HÔTE :
 ${formattedKB || "Aucune consigne supplémentaire."}
@@ -167,55 +174,55 @@ RÈGLE URGENCE — TRÈS IMPORTANTE :
   3. Termine OBLIGATOIREMENT par : "Je préviens immédiatement votre hôte."
 - N'utilise JAMAIS cette phrase dans un autre contexte.`;
 
-    // ── D. APPEL IA PRINCIPAL ──
-    const chatResponse = await groq.chat.completions.create({
-      model: "llama-3.3-70b-versatile",
-      messages: [
-        { role: 'system', content: systemPrompt },
-        ...messagesHistory.map(msg => ({
-          role: msg.role === 'marc' ? 'assistant' : 'user',
-          content: msg.text || ''
-        }))
-      ],
-      temperature: 0.15,
-      max_tokens: 400,
-    });
+  // ── D. APPEL IA PRINCIPAL ──
+  const chatResponse = await groq.chat.completions.create({
+    model: "llama-3.3-70b-versatile",
+    messages: [
+      { role: 'system', content: systemPrompt },
+      ...messagesHistory.map(msg => ({
+        role: msg.role === 'marc' ? 'assistant' : 'user',
+        content: msg.text || ''
+      }))
+    ],
+    temperature: 0.15,
+    max_tokens: 400,
+  });
 
-    const responseText = chatResponse.choices[0].message.content;
+  const responseText = chatResponse.choices[0].message.content;
 
-    // ── E. SAUVEGARDE CONVERSATION ──
-    const newHistory = [
-      ...messagesHistory,
-      { role: 'marc', text: responseText, timestamp: new Date().toISOString() }
-    ];
-    await supabase
-      .from('conversations')
-      .upsert(
-        { property_id: propertyData.id, history: newHistory, last_message_at: new Date().toISOString() },
-        { onConflict: 'property_id' }
-      );
+  // ── E. SAUVEGARDE CONVERSATION ──
+  const newHistory = [
+    ...messagesHistory,
+    { role: 'marc', text: responseText, timestamp: new Date().toISOString() }
+  ];
+  await supabase
+    .from('conversations')
+    .upsert(
+      { property_id: propertyData.id, history: newHistory, last_message_at: new Date().toISOString() },
+      { onConflict: 'property_id' }
+    );
 
-    // ── F. ALERTE TELEGRAM ──
-    const triggerPhrase = "je préviens immédiatement votre hôte";
-    if (responseText.toLowerCase().includes(triggerPhrase)) {
-      let translatedMsg = null;
-      if (langCode !== 'fr') {
-        try {
-          const transRes = await groq.chat.completions.create({
-            model: "llama-3.1-8b-instant",
-            messages: [
-              { role: 'system', content: "Traduis ce message en français. Réponds UNIQUEMENT avec la traduction, sans explication." },
-              { role: 'user', content: lastUserMsg }
-            ],
-            max_tokens: 150,
-          });
-          translatedMsg = transRes.choices[0].message.content;
-        } catch (_) {}
-      }
-      await sendTelegramAlert(lastUserMsg, translatedMsg, propertyData);
+  // ── F. ALERTE TELEGRAM ──
+  const triggerPhrase = "je préviens immédiatement votre hôte";
+  if (responseText.toLowerCase().includes(triggerPhrase)) {
+    let translatedMsg = null;
+    if (langCode !== 'fr') {
+      try {
+        const transRes = await groq.chat.completions.create({
+          model: "llama-3.1-8b-instant",
+          messages: [
+            { role: 'system', content: "Traduis ce message en français. Réponds UNIQUEMENT avec la traduction, sans explication." },
+            { role: 'user', content: lastUserMsg }
+          ],
+          max_tokens: 150,
+        });
+        translatedMsg = transRes.choices[0].message.content;
+      } catch (_) {}
     }
+    await sendTelegramAlert(lastUserMsg, translatedMsg, propertyData);
+  }
 
-    res.status(200).json({ answer: responseText });
+  res.status(200).json({ answer: responseText });
 
   } catch (error) {
     console.error("Erreur chat.js:", error);
