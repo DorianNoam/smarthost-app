@@ -444,38 +444,45 @@ export default function Home() {
       </section>
 
       {/* FOOTER COMPLET & LÉGAL */}
-      <footer>
-        <div className="footer-content">
-          <div className="footer-col">
-            <h3>Major<span className="gold">Marc</span></h3>
-            <p style={{maxWidth: '300px', lineHeight: '1.6'}}>Le premier majordome IA qui simplifie la vie des hôtes courte durée.</p>
-          </div>
-          <div className="footer-col">
-            <h4 style={{color: 'white', marginBottom: '15px'}}>Produit</h4>
-            <ul>
-              <li><Link href="/login">Espace Hôte</Link></li>
-              <li><Link href="/register">Inscription</Link></li>
-            </ul>
-          </div>
-          <div className="footer-col">
-            <h4 style={{color: 'white', marginBottom: '15px'}}>Légal</h4>
-            <ul>
-              <li><a href="#">Conditions Générales</a></li>
-              <li><a href="#">Confidentialité (RGPD)</a></li>
-              <li><a href="#">Mentions légales</a></li>
-            </ul>
-          </div>
-          <div className="footer-col">
-            <h4 style={{color: 'white', marginBottom: '15px'}}>Contact</h4>
-            <ul>
-              <li><a href="mailto:contact@majormarc.com">contact@majormarc.com</a></li>
-            </ul>
-          </div>
-        </div>
-        <div className="footer-bottom">
-          <p>© 2026 Major Marc - Tous droits réservés.</p>
-        </div>
-      </footer>
+     <footer>
+  <div className="footer-content">
+    <div className="footer-col">
+      <h3>Major<span className="gold">Marc</span></h3>
+      <p style={{maxWidth: '300px', lineHeight: '1.6'}}>
+        Le premier majordome IA qui simplifie la vie des hôtes courte durée.
+      </p>
+    </div>
+
+    <div className="footer-col">
+      <h4 style={{color: 'white', marginBottom: '15px'}}>Produit</h4>
+      <ul>
+        <li><Link href="/login" passHref legacyBehavior><a>Espace Hôte</a></Link></li>
+        <li><Link href="/register" passHref legacyBehavior><a>Inscription</a></Link></li>
+      </ul>
+    </div>
+
+    <div className="footer-col">
+      <h4 style={{color: 'white', marginBottom: '15px'}}>Légal</h4>
+      <ul>
+        {/* ✅ LIENS MIS À JOUR VERS TES NOUVELLES PAGES */}
+        <li><Link href="/conditions-generales" passHref legacyBehavior><a>Conditions Générales</a></Link></li>
+        <li><Link href="/confidentialite" passHref legacyBehavior><a>Confidentialité (RGPD)</a></Link></li>
+        <li><Link href="/mentions-legales" passHref legacyBehavior><a>Mentions légales</a></Link></li>
+      </ul>
+    </div>
+
+    <div className="footer-col">
+      <h4 style={{color: 'white', marginBottom: '15px'}}>Contact</h4>
+      <ul>
+        <li><a href="mailto:contact@majormarc.com">contact@majormarc.com</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <div className="footer-bottom">
+    <p>© 2026 Major Marc - Tous droits réservés.</p>
+  </div>
+</footer>
     </div>
   );
 }
