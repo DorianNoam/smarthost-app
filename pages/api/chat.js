@@ -1,29 +1,28 @@
 import Groq from 'groq-sdk';
 import { supabase } from '../../lib/supabase';
 
-// --- 1. FONCTION DE RECHERCHE AVEC TRACEUR ---
-async function getGooglePlacesInfo(fullAddress, debugPath) {
+// --- 1. LE MOTEUR DE RECHERCHE UNIVERSEL ---
+async function getGoogleLocalData(category, fullAddress, debugPath) {
   const apiKey = process.env.MAPS_API_KEY;
-  if (!apiKey) return { data: "Clé API manquante", trace: "❌ API_KEY_MISSING" };
+  
+  // Mapping intelligent : On traduit la catégorie en mots-clés optimaux pour Google
+  const queryMap = {
+    transport: "station de transport public, arrêt de bus, tramway",
+    food: "restaurant, boulangerie, café, restaurant ouvert",
+    shopping: "supermarché, épicerie, commerce de proximité",
+    health: "pharmacie, hôpital, médecin"
+  };
+
+  const techQuery = queryMap[category] || "point of interest";
 
   try {
-    // ÉTAPE A : Geocoding
-    debugPath.push(`🔍 Geocoding de l'adresse : "${fullAddress}"`);
+    // A. Point GPS de la villa
     const geoRes = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(fullAddress)}&key=${apiKey}`);
     const geoData = await geoRes.json();
-    
-    if (!geoData.results?.[0]) {
-      debugPath.push(`❌ Geocoding échoué : Google n'a pas trouvé cette adresse.`);
-      return { data: "", trace: "GEOCODING_NOT_FOUND" };
-    }
-
+    if (!geoData.results?.[0]) return { data: "", trace: "❌ ADRESSE_NON_RECONNUE" };
     const { lat, lng } = geoData.results[0].geometry.location;
-    debugPath.push(`📍 Coordonnées GPS trouvées : ${lat}, ${lng}`);
 
-    // ÉTAPE B : Places API (New)
-    const query = "bus stop OR transit station";
-    debugPath.push(`📡 Envoi requête Places : "${query}" dans un rayon de 1000m`);
-
+    // B. Recherche Places (New) avec la catégorie détectée
     const placesRes = await fetch('https://places.googleapis.com/v1/places:searchText', {
       method: 'POST',
       headers: {
@@ -32,88 +31,87 @@ async function getGooglePlacesInfo(fullAddress, debugPath) {
         'X-Goog-FieldMask': 'places.displayName,places.shortFormattedAddress'
       },
       body: JSON.stringify({
-        textQuery: query,
-        locationRestriction: {
-          circle: { center: { latitude: lat, longitude: lng }, radius: 1000.0 }
-        },
+        textQuery: techQuery,
+        locationRestriction: { circle: { center: { latitude: lat, longitude: lng }, radius: 1000.0 } },
         languageCode: 'fr',
-        maxResultCount: 5
+        maxResultCount: 6
       })
     });
 
-    const placesData = await placesRes.json();
+    const data = await placesRes.json();
+    debugPath.push(`✅ Google a trouvé ${data.places?.length || 0} résultats pour "${category}"`);
     
-    if (!placesData.places || placesData.places.length === 0) {
-      debugPath.push(`⚠️ Google Places : 0 résultat trouvé autour de ce point GPS.`);
-      return { data: "", trace: "ZERO_RESULTS_AT_COORDINATES" };
-    }
+    return data.places?.map(p => `- ${p.displayName.text} (${p.shortFormattedAddress})`).join('\n') || "";
+  } catch (e) { return ""; }
+}
 
-    const resultList = placesData.places.map(p => `- ${p.displayName.text} (${p.shortFormattedAddress})`).join('\n');
-    debugPath.push(`✅ Google Places a trouvé ${placesData.places.length} résultats.`);
-    
-    return { data: resultList, trace: "SUCCESS" };
-
-  } catch (e) {
-    debugPath.push(`🔥 Erreur technique : ${e.message}`);
-    return { data: "", trace: "CRASH_DURING_FETCH" };
-  }
+// --- 2. DÉTECTEUR D'INTENTION ---
+function detectCategory(msg) {
+  const m = msg.toLowerCase();
+  if (['bus', 'tram', 'gare', 'transport', 'aller'].some(k => m.includes(k))) return 'transport';
+  if (['manger', 'resto', 'faim', 'dîner', 'déjeuner', 'café', 'boulangerie'].some(k => m.includes(k))) return 'food';
+  if (['course', 'supermarché', 'magasin', 'achat', 'épicerie'].some(k => m.includes(k))) return 'shopping';
+  if (['pharmacie', 'docteur', 'santé', 'urgence'].some(k => m.includes(k))) return 'health';
+  return null;
 }
 
 // --- HANDLER PRINCIPAL ---
 export default async function handler(req, res) {
-  if (req.method !== 'POST') return res.status(405).send('Non autorisé');
-  
   const { messagesHistory, propertyData } = req.body;
   const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
   const lastUserMsg = messagesHistory[messagesHistory.length - 1]?.text || "";
   
-  // Initialisation du cheminement de test
-  let debugPath = ["🚀 Démarrage du diagnostic"];
+  let debugPath = ["🚀 Analyse d'intention"];
 
   try {
     const fullAddress = `${propertyData?.street_number || ''} ${propertyData?.address || ''}, ${propertyData?.city || ''}`.trim();
-    debugPath.push(`🏠 Villa : ${propertyData?.name} | Adresse compilée : ${fullAddress}`);
+    const category = detectCategory(lastUserMsg);
 
-    // 1. Priorité Hôte (DB)
+    // 🎯 1. RECHERCHE EN BASE DE DONNÉES (Propriétaire)
+    // On cherche toutes les infos de l'hôte, l'IA fera le tri
     const { data: kb } = await supabase.from('knowledge_base').select('category, content').eq('property_id', propertyData.id);
-    const ownerInfo = kb?.map(item => `${item.category}: ${item.content}`).join('\n') || "";
-    debugPath.push(kb?.length > 0 ? `📦 DB Hôte : ${kb.length} infos trouvées.` : `📦 DB Hôte : Vide.`);
+    const ownerInfo = kb?.map(item => `[${item.category}] : ${item.content}`).join('\n') || "";
 
-    // 2. Appel Google Maps
-    let googleResults = "";
-    if (['transport', 'bus', 'tram', 'gare', 'proche'].some(k => lastUserMsg.toLowerCase().includes(k))) {
-      const { data, trace } = await getGooglePlacesInfo(fullAddress, debugPath);
-      googleResults = data;
+    // 🎯 2. RECHERCHE GOOGLE (Seulement si une catégorie est détectée)
+    let googleData = "";
+    if (category) {
+      debugPath.push(`🎯 Catégorie détectée : ${category}`);
+      googleData = await getGoogleLocalData(category, fullAddress, debugPath);
+    } else {
+      debugPath.push("ℹ️ Question générale (pas de recherche locale requise)");
     }
 
-    // 3. Prompt avec consigne de transparence
-    const systemPrompt = `Tu es Marc, le majordome. 
-Tu dois répondre au voyageur.
-PRIORITÉ : Utilise les infos de l'HÔTE d'abord, puis GOOGLE MAPS.
+    // 🎯 3. PROMPT DE CONCIERGERIE SANS LIMITE
+    const systemPrompt = `Tu es Marc, le majordome de la villa "${propertyData.name}".
+Ton rôle est de fournir des recommandations locales (restaurants, transports, commerces).
 
-INFOS HÔTE : ${ownerInfo}
-GOOGLE MAPS : ${googleResults || "Rien trouvé"}
+HIÉRARCHIE DES INFOS :
+1. INFOS HÔTE (Priorité absolue) :
+${ownerInfo}
 
-CONSIGNE TEST : À la fin de ta réponse, ajoute TOUJOURS une section "--- CHEMINEMENT TECHNIQUE ---" et recopie les étapes du debug que je vais te donner.`;
+2. INFOS GOOGLE MAPS (Complément en temps réel) :
+${googleData || "Aucune donnée Google trouvée pour cette demande."}
+
+RÈGLES :
+- Si l'hôte a donné une adresse ou un conseil, utilise-le en priorité.
+- Utilise Google Maps pour donner des options supplémentaires ou confirmer que c'est ouvert/proche.
+- Si tu ne trouves rien, propose de demander à l'hôte.
+- Sois pro, chaleureux et précis. Jamais plus de 3-4 phrases.`;
 
     const chatResponse = await groq.chat.completions.create({
       model: "llama-3.3-70b-versatile",
       messages: [
         { role: 'system', content: systemPrompt },
-        { role: 'system', content: `DEBUG_LOGS : ${debugPath.join(' | ')}` },
         ...messagesHistory.map(m => ({ role: m.role === 'marc' ? 'assistant' : 'user', content: m.text }))
       ],
       temperature: 0,
     });
 
-    let responseText = chatResponse.choices[0].message.content;
-    
-    // On s'assure que le debug est visible pour nous
-    const finalResponse = `${responseText}\n\n**🔍 TRACE DE TEST :**\n${debugPath.map(line => `> ${line}`).join('\n')}`;
+    const responseText = chatResponse.choices[0].message.content;
+    const finalResponse = `${responseText}\n\n**🔍 TRACE TECHNIQUE :**\n${debugPath.map(l => `> ${l}`).join('\n')}`;
 
     res.status(200).json({ answer: finalResponse });
-
-  } catch (error) {
-    res.status(200).json({ answer: `Erreur : ${error.message}` });
+  } catch (e) {
+    res.status(200).json({ answer: "Petit souci technique." });
   }
 }
