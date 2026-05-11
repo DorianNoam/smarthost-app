@@ -1,6 +1,6 @@
 import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
-import { supabase } from '../../lib/supabase'; // Ajuste le chemin si besoin (ex: '../lib/supabase')
+import { supabase } from '../../lib/supabase'; 
 import Link from 'next/link';
 
 export default function PropertySpecs() {
@@ -82,10 +82,10 @@ export default function PropertySpecs() {
       <main>
         <div className="left-col">
           
+          {/* ✅ CORRECTION : Le "Slug" technique a été retiré, on garde juste l'essentiel pour le client */}
           <div className="section">
             <h2>📍 Identité & Localisation</h2>
             <div className="data-grid">
-              <DataItem label="Lien simplifié (Slug)" value={property.slug ? `/m/${property.slug}` : null} fullWidth />
               <DataItem label="Adresse" value={`${property.street_number || ''} ${property.address || ''}`} fullWidth />
               <DataItem label="Complément" value={property.address_complement} fullWidth />
               <DataItem label="Ville" value={property.city} />
@@ -189,7 +189,6 @@ export default function PropertySpecs() {
         </div>
 
         <div className="right-col">
-          {/* STATISTIQUES RÉELLES (A 0 pour le moment) */}
           <div className="stat-card">
             <span className="stat-label">Temps gagné</span>
             <span className="stat-value">0h 00</span>
