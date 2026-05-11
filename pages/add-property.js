@@ -11,7 +11,9 @@ export default function AddPropertyWizard() {
   const [propertyId, setPropertyId] = useState(null);
 
   const [formData, setFormData] = useState({
-    name: '', street_number: '', address: '', floor: '', building: '', address_complement: '', city: '',
+    name: '', 
+    slug: '', // ✅ Ajouté pour le lien simplifié
+    street_number: '', address: '', floor: '', building: '', address_complement: '', city: '',
     check_in_hour: '15:00', check_out_hour: '11:00', 
     self_checkin: false, 
     entrance_type: 'Boîte à clés', 
@@ -39,7 +41,19 @@ export default function AddPropertyWizard() {
     if (!error && data) setFormData(data);
   };
 
-  // ✅ LOGIQUE DE SAISIE AVEC FILTRE NUMÉRIQUE
+  // ✅ FONCTION POUR GÉNÉRER LE SLUG (Lien URL)
+  const slugify = (text) => {
+    return text
+      .toString()
+      .toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // Enlever les accents
+      .trim()
+      .replace(/\s+/g, '-')     // Remplacer les espaces par des -
+      .replace(/[^\w-]+/g, '')  // Enlever tout ce qui n'est pas lettre ou chiffre
+      .replace(/--+/g, '-');    // Éviter les doubles --
+  };
+
+  // ✅ LOGIQUE DE SAISIE AVEC FILTRE NUMÉRIQUE ET AUTO-SLUG
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     let finalValue = type === 'checkbox' ? checked : value;
@@ -49,7 +63,16 @@ export default function AddPropertyWizard() {
       finalValue = value.replace(/\D/g, ''); 
     }
 
-    setFormData({ ...formData, [name]: finalValue });
+    // Si on change le nom, on met à jour le slug en même temps
+    if (name === 'name') {
+      setFormData({ 
+        ...formData, 
+        name: value, 
+        slug: slugify(value) 
+      });
+    } else {
+      setFormData({ ...formData, [name]: finalValue });
+    }
   };
 
   // ✅ NAVIGATION ARRIÈRE
@@ -135,7 +158,7 @@ export default function AddPropertyWizard() {
               </div>
               <div className="input-group">
                 <label>Numéro de rue</label>
-                <input name="street_number" value={formData.street_number} onChange={handleChange} inputMode="numeric" placeholder="Chiffres uniquement" />
+                <input name="street_number" value={formData.street_number} onChange={handleChange} inputMode="numeric" placeholder="ex: 12" />
               </div>
               <div className="input-group">
                 <label>Nom de la voie</label>
@@ -175,7 +198,7 @@ export default function AddPropertyWizard() {
                     </select>
                   </div>
                   <div className="input-group">
-                    <label>Code d'accès (chiffres)</label>
+                    <label>Code d'accès (chiffres uniquement)</label>
                     <input name="key_code" value={formData.key_code} onChange={handleChange} inputMode="numeric" />
                   </div>
                 </>
