@@ -20,7 +20,7 @@ async function searchLocalInfo(userQuery, fullAddress, city) {
   } catch (e) { return ""; }
 }
 
-// --- 2. DÉTECTION D'INTENTION (Mots-clés suggérés par Claude) ---
+// --- 2. DÉTECTION D'INTENTION (Correction effectuée ici ✅) ---
 function isLocalQuery(msg) {
   const lower = msg.toLowerCase();
   const keywords = [
@@ -28,7 +28,7 @@ function isLocalQuery(msg) {
     'manger', 'dîner', 'déjeuner', 'pharmacie', 'supermarché', 'courses', 'épicerie', 
     'proche', 'près', 'quartier', 'visiter', 'activité', 'sortie', 'bar', 'café'
   ];
-  return keywords.some(k => lower.includes(keyword));
+  return keywords.some(k => lower.includes(k)); 
 }
 
 // --- 3. ALERTE TELEGRAM ---
@@ -58,7 +58,7 @@ export default async function handler(req, res) {
     const city = propertyData.city || '';
     const fullAddress = `${propertyData.street_number || ''} ${propertyData.address || ''}, ${city}`.trim();
 
-    // A. RECHERCHE WEB (Si besoin détecté par le code)
+    // A. RECHERCHE WEB
     let searchResults = "";
     if (isLocalQuery(lastUserMsg)) {
       searchResults = await searchLocalInfo(lastUserMsg, fullAddress, city);
@@ -68,7 +68,7 @@ export default async function handler(req, res) {
     const { data: kb } = await supabase.from('knowledge_base').select('category, content').eq('property_id', propertyData.id);
     const formattedKB = kb?.map(item => `${item.category}: ${item.content}`).join('\n') || "";
 
-    // C. CONSTRUCTION DU BLOC "ENVIRONNEMENT" (La fameuse logique Claude)
+    // C. CONSTRUCTION DU BLOC ENVIRONNEMENT
     const hostRecos = [propertyData.local_shops, propertyData.transport_info, propertyData.recommendations].filter(Boolean).join('\n');
     const neighborhoodContext = `
 ━━━ INFOS QUARTIER & ALENTOURS ━━━
@@ -76,7 +76,7 @@ ${hostRecos || "L'hôte n'a pas laissé de recommandations spécifiques."}
 ${searchResults ? `\nCompléments trouvés en temps réel :\n${searchResults}` : ""}
 `.trim();
 
-    // D. PROMPT SYSTÈME (Épuré et puissant)
+    // D. PROMPT SYSTÈME
     const systemPrompt = `Tu es Marc, le majordome de "${propertyData.name}" à ${city}.
 Identité : Humain, professionnel, chaleureux. Pas d'IA.
 Règle : Réponds toujours dans la langue du voyageur. Sois concis (3 phrases max).
@@ -95,8 +95,8 @@ ${formattedKB}
 
 RÈGLES D'OR :
 1. Si une info technique (code, wifi, parking) est "Non renseigné", dis que tu contactes l'hôte.
-2. Pour le quartier/transports, utilise les données ci-dessus pour répondre comme un expert local.
-3. Ne cite JAMAIS tes sources ni les noms des sections.
+2. Pour le quartier/transports, utilise les données ci-besoin pour répondre comme un expert local.
+3. Ne cite JAMAIS tes sources ni les noms des sections internes.
 4. Urgence : Termine par "Je préviens immédiatement votre hôte."`;
 
     const chatResponse = await groq.chat.completions.create({
@@ -107,10 +107,11 @@ RÈGLES D'OR :
 
     const responseText = chatResponse.choices[0].message.content;
 
-    // Sauvegarde & Telegram (Inchangé)
+    // Sauvegarde
     const newHistory = [...messagesHistory, { role: 'marc', text: responseText, timestamp: new Date().toISOString() }];
     await supabase.from('conversations').upsert({ property_id: propertyData.id, history: newHistory, last_message_at: new Date().toISOString() }, { onConflict: 'property_id' });
 
+    // Alerte Telegram
     if (responseText.toLowerCase().includes("je préviens immédiatement votre hôte")) {
         let translated = null;
         if (langCode !== 'fr') {
@@ -123,6 +124,7 @@ RÈGLES D'OR :
     res.status(200).json({ answer: responseText });
 
   } catch (error) {
+    console.error("ERREUR API CHAT:", error); // Pour voir le bug dans Vercel Logs
     res.status(200).json({ answer: "Petit souci technique, je reviens vers vous." });
   }
 }
