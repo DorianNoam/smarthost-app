@@ -1,25 +1,29 @@
 import Groq from 'groq-sdk';
 import { supabase } from '../../lib/supabase';
 
-// --- 1. RECHERCHE GOOGLE MAPS (VERSION LARGE & GPS) ---
-async function getGooglePlacesInfo(userMsg, fullAddress) {
+// --- 1. FONCTION DE RECHERCHE AVEC TRACEUR ---
+async function getGooglePlacesInfo(fullAddress, debugPath) {
   const apiKey = process.env.MAPS_API_KEY;
-  if (!apiKey) return "Clé API absente.";
+  if (!apiKey) return { data: "Clé API manquante", trace: "❌ API_KEY_MISSING" };
 
   try {
-    // ÉTAPE A : Geocoding (On trouve le point GPS précis)
+    // ÉTAPE A : Geocoding
+    debugPath.push(`🔍 Geocoding de l'adresse : "${fullAddress}"`);
     const geoRes = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(fullAddress)}&key=${apiKey}`);
     const geoData = await geoRes.json();
     
-    if (!geoData.results || geoData.results.length === 0) {
-      console.error("🚩 Erreur : Adresse non reconnue par Google.");
-      return "";
+    if (!geoData.results?.[0]) {
+      debugPath.push(`❌ Geocoding échoué : Google n'a pas trouvé cette adresse.`);
+      return { data: "", trace: "GEOCODING_NOT_FOUND" };
     }
 
     const { lat, lng } = geoData.results[0].geometry.location;
-    console.log(`🚩 Localisation Villa : ${lat}, ${lng}`);
+    debugPath.push(`📍 Coordonnées GPS trouvées : ${lat}, ${lng}`);
 
-    // ÉTAPE B : Recherche ultra-large (Transit + Bus + Tram)
+    // ÉTAPE B : Places API (New)
+    const query = "bus stop OR transit station";
+    debugPath.push(`📡 Envoi requête Places : "${query}" dans un rayon de 1000m`);
+
     const placesRes = await fetch('https://places.googleapis.com/v1/places:searchText', {
       method: 'POST',
       headers: {
@@ -28,34 +32,30 @@ async function getGooglePlacesInfo(userMsg, fullAddress) {
         'X-Goog-FieldMask': 'places.displayName,places.shortFormattedAddress'
       },
       body: JSON.stringify({
-        // On demande tous les types de transports possibles dans la zone
-        textQuery: "arrêt de bus, station de tram, transports publics",
+        textQuery: query,
         locationRestriction: {
-          circle: {
-            center: { latitude: lat, longitude: lng },
-            radius: 1000.0 // On élargit à 1km pour être SÛR de capter Pellegrin
-          }
+          circle: { center: { latitude: lat, longitude: lng }, radius: 1000.0 }
         },
         languageCode: 'fr',
-        maxResultCount: 10
+        maxResultCount: 5
       })
     });
 
     const placesData = await placesRes.json();
-
+    
     if (!placesData.places || placesData.places.length === 0) {
-      console.log("🚩 Google ne renvoie AUCUN transport dans le rayon de 1km.");
-      return "";
+      debugPath.push(`⚠️ Google Places : 0 résultat trouvé autour de ce point GPS.`);
+      return { data: "", trace: "ZERO_RESULTS_AT_COORDINATES" };
     }
 
-    // On crée la liste pour l'IA
-    const list = placesData.places.map(p => `- ${p.displayName.text} (${p.shortFormattedAddress})`).join('\n');
-    console.log("🚩 Données envoyées à l'IA :\n", list);
-    return list;
+    const resultList = placesData.places.map(p => `- ${p.displayName.text} (${p.shortFormattedAddress})`).join('\n');
+    debugPath.push(`✅ Google Places a trouvé ${placesData.places.length} résultats.`);
+    
+    return { data: resultList, trace: "SUCCESS" };
 
   } catch (e) {
-    console.error("❌ Erreur technique Google :", e.message);
-    return "";
+    debugPath.push(`🔥 Erreur technique : ${e.message}`);
+    return { data: "", trace: "CRASH_DURING_FETCH" };
   }
 }
 
@@ -66,52 +66,54 @@ export default async function handler(req, res) {
   const { messagesHistory, propertyData } = req.body;
   const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
   const lastUserMsg = messagesHistory[messagesHistory.length - 1]?.text || "";
+  
+  // Initialisation du cheminement de test
+  let debugPath = ["🚀 Démarrage du diagnostic"];
 
   try {
-    // On s'assure que l'adresse est complète
     const fullAddress = `${propertyData?.street_number || ''} ${propertyData?.address || ''}, ${propertyData?.city || ''}`.trim();
-    
-    let googleData = "";
-    const isTransportQuery = ['transport', 'bus', 'tram', 'aller', 'proche', 'gare'].some(k => lastUserMsg.toLowerCase().includes(k));
+    debugPath.push(`🏠 Villa : ${propertyData?.name} | Adresse compilée : ${fullAddress}`);
 
-    if (isTransportQuery) {
-      googleData = await getGooglePlacesInfo(lastUserMsg, fullAddress);
+    // 1. Priorité Hôte (DB)
+    const { data: kb } = await supabase.from('knowledge_base').select('category, content').eq('property_id', propertyData.id);
+    const ownerInfo = kb?.map(item => `${item.category}: ${item.content}`).join('\n') || "";
+    debugPath.push(kb?.length > 0 ? `📦 DB Hôte : ${kb.length} infos trouvées.` : `📦 DB Hôte : Vide.`);
+
+    // 2. Appel Google Maps
+    let googleResults = "";
+    if (['transport', 'bus', 'tram', 'gare', 'proche'].some(k => lastUserMsg.toLowerCase().includes(k))) {
+      const { data, trace } = await getGooglePlacesInfo(fullAddress, debugPath);
+      googleResults = data;
     }
 
-    const systemPrompt = `Tu es Marc, le majordome de la villa située au ${fullAddress}.
-Tu es un expert local qui aide les voyageurs.
+    // 3. Prompt avec consigne de transparence
+    const systemPrompt = `Tu es Marc, le majordome. 
+Tu dois répondre au voyageur.
+PRIORITÉ : Utilise les infos de l'HÔTE d'abord, puis GOOGLE MAPS.
 
-DONNÉES RÉELLES GOOGLE MAPS :
-${googleData || "AUCUN RÉSULTAT TROUVÉ À PROXIMITÉ."}
+INFOS HÔTE : ${ownerInfo}
+GOOGLE MAPS : ${googleResults || "Rien trouvé"}
 
-CONSIGNES :
-1. Si les "DONNÉES RÉELLES" contiennent des arrêts (ex: Pellegrin, Barrière d'Ornano, etc.), cite-les impérativement.
-2. Si la liste est vide, dis : "Je ne vois pas d'arrêt de bus immédiat sur la carte du quartier, je vous conseille de demander confirmation à votre hôte."
-3. Ne cite JAMAIS de lieux qui ne sont pas dans la liste ci-dessus.
-4. Réponds de façon concise et élégante (3 phrases max).`;
+CONSIGNE TEST : À la fin de ta réponse, ajoute TOUJOURS une section "--- CHEMINEMENT TECHNIQUE ---" et recopie les étapes du debug que je vais te donner.`;
 
     const chatResponse = await groq.chat.completions.create({
       model: "llama-3.3-70b-versatile",
       messages: [
         { role: 'system', content: systemPrompt },
+        { role: 'system', content: `DEBUG_LOGS : ${debugPath.join(' | ')}` },
         ...messagesHistory.map(m => ({ role: m.role === 'marc' ? 'assistant' : 'user', content: m.text }))
       ],
       temperature: 0,
     });
 
-    const responseText = chatResponse.choices[0].message.content;
+    let responseText = chatResponse.choices[0].message.content;
+    
+    // On s'assure que le debug est visible pour nous
+    const finalResponse = `${responseText}\n\n**🔍 TRACE DE TEST :**\n${debugPath.map(line => `> ${line}`).join('\n')}`;
 
-    // Sauvegarde historique...
-    const newHistory = [...messagesHistory, { role: 'marc', text: responseText, timestamp: new Date().toISOString() }];
-    await supabase.from('conversations').upsert({ 
-        property_id: propertyData.id, 
-        history: newHistory, 
-        last_message_at: new Date().toISOString() 
-    }, { onConflict: 'property_id' });
-
-    res.status(200).json({ answer: responseText });
+    res.status(200).json({ answer: finalResponse });
 
   } catch (error) {
-    res.status(200).json({ answer: "Petit souci technique." });
+    res.status(200).json({ answer: `Erreur : ${error.message}` });
   }
 }
