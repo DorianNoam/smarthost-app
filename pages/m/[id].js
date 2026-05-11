@@ -135,7 +135,7 @@ export default function ChatLocataire() {
 
       <div className="header">
         <div>{property.name}</div>
-        <div className="subtitle">Assistant virtuel disponible 24/7</div>
+        <div className="subtitle">Assistant disponible 24/7</div>
       </div>
 
       <div className="chat-area">
