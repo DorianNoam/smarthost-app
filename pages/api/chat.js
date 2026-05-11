@@ -4,20 +4,20 @@ import { supabase } from '../../lib/supabase';
 // --- 1. FONCTION GOOGLE PLACES (La Source de Vérité) ---
 async function getGooglePlacesInfo(userQuery, fullAddress) {
   const apiKey = process.env.GOOGLE_MAPS_API_KEY;
-  if (!apiKey) return "Erreur: Clé API Google non configurée.";
+  if (!apiKey) return "Erreur: Clé API Google non configurée dans Vercel.";
 
   try {
-    // On interroge Google pour trouver des lieux précis autour de l'adresse
+    // On interroge directement la base de données Google Maps
     const searchUrl = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(userQuery + " à proximité de " + fullAddress)}&key=${apiKey}&language=fr`;
     
     const res = await fetch(searchUrl);
     const data = await res.json();
 
     if (data.status !== "OK" || !data.results.length) {
-      return "Aucun résultat trouvé sur la carte pour cette demande précise.";
+      return "Aucun résultat trouvé sur la carte officielle pour cette demande.";
     }
 
-    // On formate les 5 meilleurs résultats (Nom + Adresse) pour Marc
+    // On extrait les 5 meilleurs résultats réels
     return data.results.slice(0, 5).map(place => {
       return `- ${place.name} (Adresse: ${place.formatted_address})`;
     }).join('\n');
@@ -33,8 +33,7 @@ function isLocalQuery(msg) {
   const lower = msg.toLowerCase();
   const keywords = [
     'transport', 'bus', 'tram', 'gare', 'métro', 'vélo', 'boulangerie', 'restaurant', 
-    'manger', 'pharmacie', 'supermarché', 'courses', 'épicerie', 'proche', 'près', 
-    'quartier', 'visiter', 'activité', 'sortie', 'bar', 'café'
+    'manger', 'pharmacie', 'supermarché', 'proche', 'près', 'quartier'
   ];
   return keywords.some(k => lower.includes(k)); 
 }
@@ -55,10 +54,8 @@ async function sendTelegramAlert(originalMsg, translatedMsg, propertyData) {
   } catch (e) { console.error("Telegram Error:", e); }
 }
 
-// --- HANDLER PRINCIPAL ---
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).send('Non autorisé');
-  
   const { messagesHistory, propertyData, userLanguage } = req.body;
   const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
   const lastUserMsg = messagesHistory[messagesHistory.length - 1]?.text || "";
@@ -68,47 +65,36 @@ export default async function handler(req, res) {
     const city = propertyData.city || '';
     const fullAddress = `${propertyData.street_number || ''} ${propertyData.address || ''}, ${city}`.trim();
 
-    // A. RECHERCHE GOOGLE MAPS
+    // ✅ A. CHANGEMENT ICI : On utilise Google au lieu de Tavily
     let verifiedData = "";
     if (isLocalQuery(lastUserMsg)) {
       verifiedData = await getGooglePlacesInfo(lastUserMsg, fullAddress);
     }
 
-    // B. RÉCUPÉRATION BASE DE CONNAISSANCES (Hôte)
     const { data: kb } = await supabase.from('knowledge_base').select('category, content').eq('property_id', propertyData.id);
     const formattedKB = kb?.map(item => `${item.category}: ${item.content}`).join('\n') || "";
 
-    // C. CONSTRUCTION DU BLOC DE VÉRITÉ
     const hostRecos = [propertyData.local_shops, propertyData.transport_info, propertyData.recommendations].filter(Boolean).join('\n');
+    
+    // ✅ B. BLOC DE VÉRIFICATION SÉCURISÉ
     const neighborhoodContext = `
-━━━ DONNÉES RÉELLES (Google Maps & Hôte) ━━━
-INFOS HÔTE : ${hostRecos || "Aucune information spécifique."}
-RÉSULTATS CARTE : 
-${verifiedData || "Aucune donnée cartographique trouvée pour cette adresse."}
+━━━ DONNÉES RÉELLES (Source: Google Maps & Hôte) ━━━
+INFOS HÔTE : ${hostRecos || "Néant"}
+RÉSULTATS CARTE OFFICIELLE : 
+${verifiedData || "Aucune donnée trouvée à proximité."}
 `.trim();
 
-    // D. PROMPT SYSTÈME "ANTI-HALLUCINATION"
+    // ✅ C. PROMPT "ZÉRO HALLUCINATION"
     const systemPrompt = `Tu es Marc, le majordome de "${propertyData.name}" à ${city}.
-Tu es un majordome humain, factuel et rigoureux.
+Tu es un humain professionnel, pas une IA. Tu ne dois JAMAIS inventer.
 
-RÈGLES D'OR :
-1. Ne cite JAMAIS un transport ou un lieu qui n'est pas écrit dans les "DONNÉES RÉELLES" ci-dessus.
-2. Si un lieu est mentionné dans les résultats carte mais sans distance précise, dis "à proximité" ou "dans les environs". N'invente jamais de minutes.
-3. INTERDICTION : Ne cite jamais le Tramway ou le Bus 1 à Bordeaux par habitude. Si Google ne les liste pas pour cette adresse, ils n'existent pas pour toi.
-4. Si les données sont manquantes, dis : "Je n'ai pas de confirmation précise pour le moment, je préfère demander à votre hôte pour ne pas vous induire en erreur."
-5. Réponds toujours dans la langue du voyageur. Sois concis (3 phrases max).
+RÈGLES ABSOLUES :
+1. Ne cite QUE les lieux ou arrêts présents dans les "DONNÉES RÉELLES" ci-dessus.
+2. Si un lieu n'est pas dans la liste, dis : "Je n'ai pas d'information précise sur ce point, je préfère demander à votre hôte."
+3. INTERDICTION : Ne mentionne jamais de Tramway s'il n'est pas dans la liste "RÉSULTATS CARTE OFFICIELLE".
+4. Ne transforme jamais "Saint-Estèphe" en "Saint-Étienne".
+5. Sois très concis (3 phrases max).`;
 
-DONNÉES LOGEMENT :
-- Adresse : ${fullAddress}
-- WiFi : ${propertyData.wifi_name || "Non renseigné"} / ${propertyData.wifi_password || "Non renseigné"}
-- Accès : ${propertyData.key_code ? `Code ${propertyData.key_code}` : "Non renseigné"}
-
-${neighborhoodContext}
-
-CONSIGNES PARTICULIÈRES :
-${formattedKB}`;
-
-    // E. APPEL IA (Temperature 0 pour la fiabilité maximale)
     const chatResponse = await groq.chat.completions.create({
       model: "llama-3.3-70b-versatile",
       messages: [{ role: 'system', content: systemPrompt }, ...messagesHistory.map(m => ({ role: m.role === 'marc' ? 'assistant' : 'user', content: m.text }))],
@@ -118,7 +104,6 @@ ${formattedKB}`;
 
     const responseText = chatResponse.choices[0].message.content;
 
-    // Sauvegarde & Telegram
     const newHistory = [...messagesHistory, { role: 'marc', text: responseText, timestamp: new Date().toISOString() }];
     await supabase.from('conversations').upsert({ property_id: propertyData.id, history: newHistory, last_message_at: new Date().toISOString() }, { onConflict: 'property_id' });
 
@@ -134,7 +119,7 @@ ${formattedKB}`;
     res.status(200).json({ answer: responseText });
 
   } catch (error) {
-    console.error("ERREUR API CHAT:", error);
+    console.error("ERREUR:", error);
     res.status(200).json({ answer: "Petit souci technique, je reviens vers vous." });
   }
 }
