@@ -1,7 +1,7 @@
 import Groq from 'groq-sdk';
 import { supabase } from '../../lib/supabase';
 
-// --- 1. RECHERCHE WEB (Tavily) ---
+// --- 1. RECHERCHE WEB (Boostée pour la précision) ---
 async function searchLocalInfo(userQuery, fullAddress, city) {
   const apiKey = process.env.TAVILY_API_KEY;
   if (!apiKey) return "";
@@ -11,8 +11,11 @@ async function searchLocalInfo(userQuery, fullAddress, city) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         api_key: apiKey,
-        query: `${userQuery} à proximité de ${fullAddress}, ${city}`,
-        search_depth: "advanced", max_results: 5, include_answer: true
+        // ✅ ON FORCE LA PRÉCISION : On demande explicitement les lignes et les distances réelles
+        query: `Lignes de transport et commerces les plus proches du ${fullAddress}, ${city}. Donne les noms de lignes précis et les distances à pied en mètres.`,
+        search_depth: "advanced", 
+        max_results: 5, 
+        include_answer: true
       })
     });
     const data = await res.json();
@@ -20,7 +23,7 @@ async function searchLocalInfo(userQuery, fullAddress, city) {
   } catch (e) { return ""; }
 }
 
-// --- 2. DÉTECTION D'INTENTION (Correction effectuée ici ✅) ---
+// --- 2. DÉTECTION D'INTENTION ---
 function isLocalQuery(msg) {
   const lower = msg.toLowerCase();
   const keywords = [
@@ -58,45 +61,40 @@ export default async function handler(req, res) {
     const city = propertyData.city || '';
     const fullAddress = `${propertyData.street_number || ''} ${propertyData.address || ''}, ${city}`.trim();
 
-    // A. RECHERCHE WEB
     let searchResults = "";
     if (isLocalQuery(lastUserMsg)) {
       searchResults = await searchLocalInfo(lastUserMsg, fullAddress, city);
     }
 
-    // B. RÉCUPÉRATION BASE DE CONNAISSANCES
     const { data: kb } = await supabase.from('knowledge_base').select('category, content').eq('property_id', propertyData.id);
     const formattedKB = kb?.map(item => `${item.category}: ${item.content}`).join('\n') || "";
 
-    // C. CONSTRUCTION DU BLOC ENVIRONNEMENT
     const hostRecos = [propertyData.local_shops, propertyData.transport_info, propertyData.recommendations].filter(Boolean).join('\n');
     const neighborhoodContext = `
 ━━━ INFOS QUARTIER & ALENTOURS ━━━
-${hostRecos || "L'hôte n'a pas laissé de recommandations spécifiques."}
-${searchResults ? `\nCompléments trouvés en temps réel :\n${searchResults}` : ""}
+${hostRecos || "L'hôte n'a pas laissé de recommandations."}
+${searchResults ? `\nDonnées web vérifiées :\n${searchResults}` : ""}
 `.trim();
 
-    // D. PROMPT SYSTÈME
     const systemPrompt = `Tu es Marc, le majordome de "${propertyData.name}" à ${city}.
-Identité : Humain, professionnel, chaleureux. Pas d'IA.
+Identité : Humain, professionnel. Pas d'IA.
 Règle : Réponds toujours dans la langue du voyageur. Sois concis (3 phrases max).
 
 DONNÉES DU LOGEMENT :
-- Adresse : ${fullAddress} (${propertyData.address_complement || ""})
+- Adresse : ${fullAddress}
 - WiFi : ${propertyData.wifi_name || "Non renseigné"} / ${propertyData.wifi_password || "Non renseigné"}
 - Check-in : Dès ${propertyData.check_in_hour || "15:00"} | Check-out : Avant ${propertyData.check_out_hour || "11:00"}
-- Accès : ${propertyData.key_code ? `Code ${propertyData.key_code} (${propertyData.entrance_type})` : "Non renseigné"}
-- Technique : Parking (${propertyData.parking_info || "Non renseigné"}), Instructions (${propertyData.checkin_instructions || "Non renseigné"}), Urgences (${propertyData.health_emergency_info || "Non renseigné"}).
+- Accès : ${propertyData.key_code ? `Code ${propertyData.key_code}` : "Non renseigné"}
 
 ${neighborhoodContext}
 
 CONSIGNES PARTICULIÈRES :
 ${formattedKB}
 
-RÈGLES D'OR :
-1. Si une info technique (code, wifi, parking) est "Non renseigné", dis que tu contactes l'hôte.
-2. Pour le quartier/transports, utilise les données ci-besoin pour répondre comme un expert local.
-3. Ne cite JAMAIS tes sources ni les noms des sections internes.
+RÈGLES D'OR — ANTI-ERREUR :
+1. Si une info technique (code, wifi) est "Non renseigné", dis que tu contactes l'hôte.
+2. ✅ POUR LE QUARTIER : Utilise les "INFOS QUARTIER" ci-dessus. 
+3. ✅ HONNÊTETÉ GÉOGRAPHIQUE : Si tu ne vois pas de distance précise (ex: 200m) dans les données, ne l'invente pas. Dis "à quelques minutes" ou "dans les environs". Ne cite jamais de Tramway s'il n'apparaît pas clairement comme étant à moins de 500m.
 4. Urgence : Termine par "Je préviens immédiatement votre hôte."`;
 
     const chatResponse = await groq.chat.completions.create({
@@ -107,11 +105,9 @@ RÈGLES D'OR :
 
     const responseText = chatResponse.choices[0].message.content;
 
-    // Sauvegarde
     const newHistory = [...messagesHistory, { role: 'marc', text: responseText, timestamp: new Date().toISOString() }];
     await supabase.from('conversations').upsert({ property_id: propertyData.id, history: newHistory, last_message_at: new Date().toISOString() }, { onConflict: 'property_id' });
 
-    // Alerte Telegram
     if (responseText.toLowerCase().includes("je préviens immédiatement votre hôte")) {
         let translated = null;
         if (langCode !== 'fr') {
@@ -124,7 +120,7 @@ RÈGLES D'OR :
     res.status(200).json({ answer: responseText });
 
   } catch (error) {
-    console.error("ERREUR API CHAT:", error); // Pour voir le bug dans Vercel Logs
+    console.error("ERREUR API CHAT:", error);
     res.status(200).json({ answer: "Petit souci technique, je reviens vers vous." });
   }
 }
