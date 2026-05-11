@@ -112,25 +112,54 @@ export default function Home() {
         .notif-bubble { background: white; padding: 20px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border-left: 4px solid #ef4444; }
         .notif-head { display: flex; justify-content: space-between; font-size: 12px; color: #64748b; font-weight: 600; margin-bottom: 10px; }
 
-        /* --- TESTIMONIALS (SOCIAL PROOF) --- */
-        .testimonials { padding: 100px 5%; background: #f8fafc; text-align: center; }
-        .testi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; max-width: 1100px; margin: 40px auto 0; }
-        .testi-card { background: white; padding: 40px; border-radius: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); text-align: left; }
-        .stars { color: #fbbf24; margin-bottom: 15px; font-size: 20px; letter-spacing: 2px;}
-        .testi-quote { font-style: italic; color: #475569; font-size: 16px; line-height: 1.6; margin-bottom: 20px; }
-        .testi-author { display: flex; align-items: center; gap: 15px; }
-        .avatar { width: 45px; height: 45px; background: #e2e8f0; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #1a2a6c; }
-        .author-info strong { display: block; color: #0f172a; font-size: 15px; }
-        .author-info span { color: #64748b; font-size: 13px; }
+        /* --- BENEFITS --- */
+        .benefits { padding: 100px 5%; background: #f8fafc; text-align: center; }
+        .benefits-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; max-width: 1100px; margin: 40px auto 0; }
+        .benefit-card { background: white; padding: 40px; border-radius: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); text-align: left; border-top: 4px solid #1a2a6c; }
+        .benefit-icon { font-size: 32px; margin-bottom: 15px; }
+        .benefit-card h4 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 18px; color: #0f172a; margin-bottom: 10px; font-weight: 700; }
+        .benefit-card p { color: #475569; font-size: 15px; line-height: 1.6; margin: 0; }
 
-        /* --- PRICING ANCHOR --- */
-        .pricing-anchor { padding: 100px 5%; background: white; text-align: center; }
-        .anchor-box { max-width: 800px; margin: 0 auto; }
-        .anchor-box h2 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: clamp(28px, 5vw, 40px); color: #0f172a; margin-bottom: 20px; font-weight: 800; letter-spacing: -1px; }
-        .anchor-box p { font-size: 16px; color: #475569; margin-bottom: 40px; line-height: 1.6; }
-        .price-highlight { font-size: clamp(48px, 8vw, 64px); font-weight: 800; color: #1a2a6c; font-family: 'Plus Jakarta Sans', sans-serif; display: block; margin: 20px 0; }
-        .price-highlight span { font-size: 18px; color: #64748b; font-family: 'Inter', sans-serif; font-weight: 500; }
+        /* --- NOUVELLE PRICING SECTION INTÉGRÉE --- */
+        .pricing-section { padding: 100px 5%; background: white; text-align: center; }
+        .pricing-header { max-width: 800px; margin: 0 auto 50px; }
+        .pricing-header h2 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: clamp(28px, 5vw, 40px); color: #0f172a; margin-bottom: 15px; font-weight: 800; letter-spacing: -1px; }
+        .pricing-header p { font-size: 16px; color: #475569; line-height: 1.6; }
+
+        .price-card-home { 
+          background: white; padding: 50px 40px; border-radius: 24px; 
+          box-shadow: 0 25px 50px -12px rgba(0,0,0,0.1); text-align: center; 
+          border: 2px solid #d4af37; position: relative; width: 100%; max-width: 450px; 
+          margin: 0 auto; display: flex; flex-direction: column; 
+        }
         
+        .badge-promo {
+          position: absolute; top: -18px; left: 50%; transform: translateX(-50%);
+          background: #d4af37; color: #1a2a6c; padding: 8px 24px; border-radius: 30px;
+          font-weight: 800; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;
+          box-shadow: 0 10px 20px rgba(212, 175, 55, 0.3); white-space: nowrap;
+        }
+
+        .plan-name { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 22px; color: #1a2a6c; margin-bottom: 15px; }
+        .price { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 56px; font-weight: 800; color: #0f172a; letter-spacing: -2px; margin-bottom: 5px; }
+        .price span { font-size: 18px; font-weight: 600; color: #64748b; letter-spacing: 0; }
+        .billing-cycle { color: #64748b; font-size: 14px; margin-bottom: 30px; font-weight: 500; }
+        
+        .features-list { text-align: left; margin-bottom: 40px; border-top: 1px solid #e2e8f0; padding-top: 30px; }
+        .feature { margin-bottom: 18px; font-size: 15px; display: flex; align-items: center; gap: 12px; color: #1e293b; font-weight: 500; }
+        .check-icon { 
+          background: rgba(212, 175, 55, 0.15); color: #d4af37; width: 24px; height: 24px; 
+          border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; 
+        }
+        
+        .cta-pricing { 
+          background: #1a2a6c; color: white; padding: 18px; border-radius: 16px; 
+          font-weight: 700; font-size: 16px; transition: 0.3s; text-decoration: none; display: block;
+        }
+        .cta-pricing:hover { transform: translateY(-3px); box-shadow: 0 15px 30px rgba(26, 42, 108, 0.2); background: #1e3280; }
+        
+        .guarantee { margin-top: 20px; font-size: 13px; color: #64748b; display: flex; align-items: center; justify-content: center; gap: 8px; }
+
         /* --- FOOTER PRO --- */
         footer { background: #0f172a; color: #94a3b8; padding: 60px 5% 30px; }
         .footer-content { max-width: 1100px; margin: 0 auto; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 40px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 40px; margin-bottom: 30px; }
@@ -147,6 +176,8 @@ export default function Home() {
           .nav-links { gap: 15px; }
           .hero { padding: 120px 15px 60px; }
           .killer-feature { flex-direction: column; padding: 30px 20px; margin: 40px auto 0; text-align: center; }
+          .demo-features { text-align: left; }
+          .price-card-home { padding: 40px 25px; }
           .footer-content { flex-direction: column; }
         }
         @media (max-width: 380px) { .nav-link { display: none; } }
@@ -158,7 +189,8 @@ export default function Home() {
           <a className="brand">Major<span className="gold">Marc</span></a>
         </Link>
         <div className="nav-links">
-          <Link href="/pricing" passHref legacyBehavior><a className="nav-link">Tarifs</a></Link>
+          <a href="#fonctionnement" className="nav-link">Fonctionnement</a>
+          <a href="#tarifs" className="nav-link">Tarifs</a>
           <Link href="/login" passHref legacyBehavior><a className="nav-login">Espace Hôte</a></Link>
         </div>
       </nav>
@@ -166,19 +198,19 @@ export default function Home() {
       {/* HERO SECTION */}
       <section className="hero">
         <div className="hero-content">
-          <div className="badge-hero">⚡ En ce moment : Votre 1er mois est offert</div>
+          <div className="badge-hero">⚡ Offre de lancement : Votre 1er mois à 9,90€</div>
           <h1>Dormez sur vos deux oreilles.<br/>Marc gère vos voyageurs.</h1>
           <p className="subtitle">
             Le premier majordome IA qui répond aux questions 24h/24, recommande les meilleurs restaurants locaux, et vous alerte uniquement en cas d'urgence.
           </p>
-          <Link href="/pricing" passHref legacyBehavior>
-            <a className="cta-main">Activer mon Majordome (1er mois offert) <span>→</span></a>
+          <Link href="/register" passHref legacyBehavior>
+            <a className="cta-main">Activer mon Majordome (1er mois à 9,90€) <span>→</span></a>
           </Link>
-          <div className="trust-banner">⭐ Déjà adopté par plus de 500 hôtes en France</div>
+          <div className="trust-banner">⭐ Rejoignez la nouvelle génération d'hôtes automatisés</div>
         </div>
       </section>
 
-      {/* LOGOS / INTEGRATIONS (SOCIAL PROOF) */}
+      {/* LOGOS / INTEGRATIONS */}
       <section className="logos-section">
         <p>Compatible avec les voyageurs de toutes les plateformes</p>
         <div className="logos-flex">
@@ -190,7 +222,7 @@ export default function Home() {
       </section>
 
       {/* COMMENT ÇA MARCHE */}
-      <section className="steps-section">
+      <section className="steps-section" id="fonctionnement">
         <h2 className="section-title">Déploiement en 5 minutes</h2>
         <div className="steps-grid">
           <div className="step-card">
@@ -240,170 +272,4 @@ export default function Home() {
       </section>
 
       {/* DEMO SECTION */}
-      <section id="demo" className="demo-section">
-        <div className="demo-header">
-          <h2>L'illusion parfaite d'une conciergerie</h2>
-          <p style={{fontSize: '16px', color: '#cbd5e1', maxWidth: '700px', margin: '0 auto'}}>Marc comprend le contexte, cherche des recommandations locales et répond naturellement.</p>
-        </div>
-
-        <div className="demo-layout">
-          <div className="phone-wrapper">
-            <div className="phone-frame">
-              <div className="phone-notch"></div>
-              <div className="chat-app">
-                <div className="chat-header">La Villa Noam</div>
-                <div className="chat-body">
-                  <div className="msg msg-user">
-                    Hi! We just arrived. Where are the trash bins and do you have a restaurant recommendation?
-                    <span className="msg-time">19:42</span>
-                  </div>
-                  <div className="msg msg-marc">
-                    Welcome to Villa Noam! 🎩<br/><br/>
-                    The grey and green bins are under the sink. For dinner, I highly recommend "Pizzeria Da Luigi", located just a 5-minute walk from the villa! 🍕
-                    <span className="msg-time">19:42</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="demo-features">
-            <div className="feat-row">
-              <div className="feat-icon-wrapper">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
-              </div>
-              <div className="feat-text">
-                <h4>Réponses Instantanées</h4>
-                <p>Vos voyageurs n'attendent plus. Marc répond dans la seconde en piochant dans votre base de données sécurisée.</p>
-              </div>
-            </div>
-            <div className="feat-row">
-              <div className="feat-icon-wrapper">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-              </div>
-              <div className="feat-text">
-                <h4>Recherche Web Intégrée</h4>
-                <p>Marc scanne les environs du logement sur internet pour faire des recommandations précises (restos, pharmacies...).</p>
-              </div>
-            </div>
-            
-            <div style={{marginTop: '30px'}}>
-              <Link href="/pricing" passHref legacyBehavior>
-                <a className="cta-main" style={{backgroundColor: '#fff', color: '#1a2a6c'}}>Activer mon Majordome (1er mois offert)</a>
-              </Link>
-            </div>
-          </div>
-        </div>
-
-        <div className="killer-feature">
-          <div className="kf-text">
-            <span>Le Filet de Sécurité</span>
-            <h3>Vous n'êtes dérangé que lorsque c'est vital.</h3>
-            <p>Si un client signale une urgence (fuite d'eau, panne), Marc vous transfère immédiatement l'information via Telegram.</p>
-            <p><b>Résultat :</b> Vous filtrez 95% du bruit quotidien et gardez le contrôle sur l'essentiel.</p>
-          </div>
-          <div className="notif-mockup">
-            <div className="notif-bubble">
-              <div className="notif-head">
-                <span>Telegram</span>
-                <span>Maintenant</span>
-              </div>
-              <p style={{fontSize: '13px', margin: 0, color: '#475569', lineHeight: '1.5'}}>
-                🚨 <b>ALERTE MAJOR MARC</b><br/><br/>
-                🏠 Logement : La Villa Noam<br/>
-                💬 Client : "Il y a une énorme fuite sous l'évier !"
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* AVIS CLIENTS (SOCIAL PROOF) */}
-      <section className="testimonials">
-        <h2 className="section-title">Ce que disent nos hôtes</h2>
-        <div className="testi-grid">
-          <div className="testi-card">
-            <div className="stars">★★★★★</div>
-            <p className="testi-quote">"Depuis que Marc gère mes 3 appartements, je n'ai plus ouvert mon application Airbnb le soir. C'est un gain de temps et de sérénité incroyable."</p>
-            <div className="testi-author">
-              <div className="avatar">T</div>
-              <div className="author-info">
-                <strong>Thomas M.</strong>
-                <span>Superhost, Bordeaux</span>
-              </div>
-            </div>
-          </div>
-          <div className="testi-card">
-            <div className="stars">★★★★★</div>
-            <p className="testi-quote">"Le filet de sécurité avec Telegram est génial. Les voyageurs ont leurs réponses, et moi je suis prévenue seulement si c'est vraiment grave."</p>
-            <div className="testi-author">
-              <div className="avatar">S</div>
-              <div className="author-info">
-                <strong>Sarah L.</strong>
-                <span>Propriétaire, Paris</span>
-              </div>
-            </div>
-          </div>
-          <div className="testi-card">
-            <div className="stars">★★★★★</div>
-            <p className="testi-quote">"J'hésitais à prendre une conciergerie à 20%. Pour 19,90€, j'ai le même niveau de service client pour mes locataires. Imbattable."</p>
-            <div className="testi-author">
-              <div className="avatar">J</div>
-              <div className="author-info">
-                <strong>Julien D.</strong>
-                <span>Investisseur, Lyon</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* PRICING ANCHOR */}
-      <section className="pricing-anchor">
-        <div className="anchor-box">
-          <h2>L'excellence accessible.</h2>
-          <p>Profitez du service d'un majordome privé 24h/24 pour une fraction du coût d'une conciergerie traditionnelle.</p>
-          <span className="price-highlight">19,90€ <span>/ logement / mois</span></span>
-          <p style={{fontSize: '14px', marginTop: '-10px', color: '#94a3b8', marginBottom: '30px'}}>Sans engagement.</p>
-          <Link href="/pricing" passHref legacyBehavior>
-            <a className="cta-main">Activer mon Majordome (1er mois offert) <span>→</span></a>
-          </Link>
-        </div>
-      </section>
-
-      {/* FOOTER COMPLET & LÉGAL */}
-      <footer>
-        <div className="footer-content">
-          <div className="footer-col">
-            <h3>Major<span className="gold">Marc</span></h3>
-            <p style={{maxWidth: '300px', lineHeight: '1.6'}}>Le premier majordome IA qui simplifie la vie des hôtes courte durée.</p>
-          </div>
-          <div className="footer-col">
-            <h4 style={{color: 'white', marginBottom: '15px'}}>Produit</h4>
-            <ul>
-              <li><Link href="/login">Espace Hôte</Link></li>
-              <li><Link href="/pricing">Tarifs</Link></li>
-            </ul>
-          </div>
-          <div className="footer-col">
-            <h4 style={{color: 'white', marginBottom: '15px'}}>Légal</h4>
-            <ul>
-              <li><a href="#">Conditions Générales</a></li>
-              <li><a href="#">Confidentialité (RGPD)</a></li>
-              <li><a href="#">Mentions légales</a></li>
-            </ul>
-          </div>
-          <div className="footer-col">
-            <h4 style={{color: 'white', marginBottom: '15px'}}>Contact</h4>
-            <ul>
-              <li><a href="mailto:contact@majormarc.com">contact@majormarc.com</a></li>
-            </ul>
-          </div>
-        </div>
-        <div className="footer-bottom">
-          <p>© 2026 Major Marc - Tous droits réservés.</p>
-        </div>
-      </footer>
-    </div>
-  );
-}
+      <section 
