@@ -1,5 +1,4 @@
-console.log("Intent check result:", intentCheck.choices[0].message.content);
-console.log("Search results:", searchResults);
+
 
 import Groq from 'groq-sdk';
 import { supabase } from '../../lib/supabase';
