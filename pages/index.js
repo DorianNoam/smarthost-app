@@ -272,4 +272,187 @@ export default function Home() {
       </section>
 
       {/* DEMO SECTION */}
-      <section 
+      <section id="demo" className="demo-section">
+        <div className="demo-header">
+          <h2>L'illusion parfaite d'une conciergerie</h2>
+          <p style={{fontSize: '16px', color: '#cbd5e1', maxWidth: '700px', margin: '0 auto'}}>Marc comprend le contexte, cherche des recommandations locales et répond naturellement.</p>
+        </div>
+
+        <div className="demo-layout">
+          <div className="phone-wrapper">
+            <div className="phone-frame">
+              <div className="phone-notch"></div>
+              <div className="chat-app">
+                <div className="chat-header">La Villa Noam</div>
+                <div className="chat-body">
+                  <div className="msg msg-user">
+                    Hi! We just arrived. Where are the trash bins and do you have a restaurant recommendation?
+                    <span className="msg-time">19:42</span>
+                  </div>
+                  <div className="msg msg-marc">
+                    Welcome to Villa Noam! 🎩<br/><br/>
+                    The grey and green bins are under the sink. For dinner, I highly recommend "Pizzeria Da Luigi", located just a 5-minute walk from the villa! 🍕
+                    <span className="msg-time">19:42</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="demo-features">
+            <div className="feat-row">
+              <div className="feat-icon-wrapper">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+              </div>
+              <div className="feat-text">
+                <h4>Réponses Instantanées</h4>
+                <p>Vos voyageurs n'attendent plus. Marc répond dans la seconde en piochant dans votre base de données sécurisée.</p>
+              </div>
+            </div>
+            <div className="feat-row">
+              <div className="feat-icon-wrapper">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+              </div>
+              <div className="feat-text">
+                <h4>Recherche Web Intégrée</h4>
+                <p>Marc scanne les environs du logement sur internet pour faire des recommandations précises (restos, pharmacies...).</p>
+              </div>
+            </div>
+            
+            <div style={{marginTop: '30px'}}>
+              <Link href="/register" passHref legacyBehavior>
+                <a className="cta-main" style={{backgroundColor: '#fff', color: '#1a2a6c'}}>Créer mon compte (1er mois à 9,90€)</a>
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        <div className="killer-feature">
+          <div className="kf-text">
+            <span>Le Filet de Sécurité</span>
+            <h3>Vous n'êtes dérangé que lorsque c'est vital.</h3>
+            <p>Si un client signale une urgence (fuite d'eau, panne), Marc vous transfère immédiatement l'information via Telegram.</p>
+            <p><b>Résultat :</b> Vous filtrez 95% du bruit quotidien et gardez le contrôle sur l'essentiel.</p>
+          </div>
+          <div className="notif-mockup">
+            <div className="notif-bubble">
+              <div className="notif-head">
+                <span>Telegram</span>
+                <span>Maintenant</span>
+              </div>
+              <p style={{fontSize: '13px', margin: 0, color: '#475569', lineHeight: '1.5'}}>
+                🚨 <b>ALERTE MAJOR MARC</b><br/><br/>
+                🏠 Logement : La Villa Noam<br/>
+                💬 Client : "Il y a une énorme fuite sous l'évier !"
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* HONEST BENEFITS */}
+      <section className="benefits">
+        <h2 className="section-title">Pourquoi les hôtes nous font confiance</h2>
+        <div className="benefits-grid">
+          <div className="benefit-card">
+            <div className="benefit-icon">🔋</div>
+            <h4>Déconnexion totale</h4>
+            <p>Plus besoin de garder un œil sur votre téléphone à 22h pour donner un code WiFi ou expliquer où se trouvent les poubelles.</p>
+          </div>
+          <div className="benefit-card">
+            <div className="benefit-icon">🛡️</div>
+            <h4>Tranquillité d'esprit</h4>
+            <p>Avec le système d'alerte Telegram, vous avez la certitude de ne rater aucune urgence vitale (fuite, panne) qui nécessite votre intervention.</p>
+          </div>
+          <div className="benefit-card">
+            <div className="benefit-icon">⭐</div>
+            <h4>Des voyageurs ravis</h4>
+            <p>Offrez à vos clients l'expérience d'un service premium avec un assistant instantané et multilingue capable de leur faire des recommandations sur mesure.</p>
+          </div>
+        </div>
+      </section>
+
+      {/* --- NOUVELLE PRICING SECTION --- */}
+      <section className="pricing-section" id="tarifs">
+        <div className="pricing-header">
+          <h2>L'excellence accessible.</h2>
+          <p>Profitez du service d'un majordome privé 24h/24 pour une fraction du coût d'une conciergerie traditionnelle.</p>
+        </div>
+
+        <div className="price-card-home">
+          <div className="badge-promo">⚡ Offre : 1er mois à 9,90€</div>
+          <div className="plan-name">Licence Unique</div>
+          
+          <div className="price">19,90€<span>/mois</span></div>
+          <div className="billing-cycle">Facturé par logement. Sans engagement.</div>
+          
+          <div className="features-list">
+            <div className="feature">
+              <div className="check-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+              Majordome IA disponible 24h/24
+            </div>
+            <div className="feature">
+              <div className="check-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+              Traduction automatique (30+ langues)
+            </div>
+            <div className="feature">
+              <div className="check-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+              Recherche locale web intégrée
+            </div>
+            <div className="feature">
+              <div className="check-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+              Alerte urgence en direct sur Telegram
+            </div>
+            <div className="feature">
+              <div className="check-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+              Lien web personnalisé pour vos clients
+            </div>
+          </div>
+
+          <Link href="/register" passHref legacyBehavior>
+            <a className="cta-pricing">Créer mon compte (1er mois à 9,90€)</a>
+          </Link>
+          
+          <div className="guarantee">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+            Paiement sécurisé via Stripe
+          </div>
+        </div>
+      </section>
+
+      {/* FOOTER COMPLET & LÉGAL */}
+      <footer>
+        <div className="footer-content">
+          <div className="footer-col">
+            <h3>Major<span className="gold">Marc</span></h3>
+            <p style={{maxWidth: '300px', lineHeight: '1.6'}}>Le premier majordome IA qui simplifie la vie des hôtes courte durée.</p>
+          </div>
+          <div className="footer-col">
+            <h4 style={{color: 'white', marginBottom: '15px'}}>Produit</h4>
+            <ul>
+              <li><Link href="/login">Espace Hôte</Link></li>
+              <li><Link href="/register">Inscription</Link></li>
+            </ul>
+          </div>
+          <div className="footer-col">
+            <h4 style={{color: 'white', marginBottom: '15px'}}>Légal</h4>
+            <ul>
+              <li><a href="#">Conditions Générales</a></li>
+              <li><a href="#">Confidentialité (RGPD)</a></li>
+              <li><a href="#">Mentions légales</a></li>
+            </ul>
+          </div>
+          <div className="footer-col">
+            <h4 style={{color: 'white', marginBottom: '15px'}}>Contact</h4>
+            <ul>
+              <li><a href="mailto:contact@majormarc.com">contact@majormarc.com</a></li>
+            </ul>
+          </div>
+        </div>
+        <div className="footer-bottom">
+          <p>© 2026 Major Marc - Tous droits réservés.</p>
+        </div>
+      </footer>
+    </div>
+  );
+}
