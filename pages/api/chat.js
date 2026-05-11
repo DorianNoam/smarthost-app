@@ -3,7 +3,7 @@ import { supabase } from '../../lib/supabase';
 
 // --- 1. FONCTION GOOGLE PLACES (Précision Chirurgicale) ---
 async function getGooglePlacesInfo(userQuery, fullAddress) {
-  const apiKey = process.env.GOOGLE_MAPS_API_KEY;
+  const apiKey = process.env.MAPS_API_KEY;
   if (!apiKey) return "Erreur: Clé API Google non configurée.";
 
   try {
