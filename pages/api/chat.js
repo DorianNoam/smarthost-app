@@ -80,7 +80,6 @@ export default async function handler(req, res) {
     const formattedKB = knowledgeBase?.map(kb => `${kb.category}: ${kb.content}`).join('\n') || "";
 
     // ── B. RECHERCHE WEB ──
-    // Uniquement pour les recommandations locales
     const intentCheck = await groq.chat.completions.create({
       model: "llama-3.1-8b-instant",
       messages: [
@@ -100,7 +99,7 @@ export default async function handler(req, res) {
     }
 
     // ── C. PROMPT SYSTÈME BLINDÉ ──
-    // ✅ CORRECTION : Ajout de toutes les infos du formulaire + interdiction numéro de réservation
+    // ✅ CORRECTIONS : Adresse complète, heures intégrées, exception web pour les transports !
     const systemPrompt = `Tu es Marc, le majordome personnel et discret de "${propertyData.name}" à ${city}.
 
 IDENTITÉ — RÈGLE ABSOLUE :
@@ -141,9 +140,9 @@ INFORMATIONS DISPONIBLES (ne les donner QUE si explicitement demandées) :
 - Linge/Repassage : ${propertyData.laundry_iron_info || "Non renseigné"}
 - Recharges de base : ${propertyData.consumables_location || "Non renseigné"}
 - Ingrédients de base : ${propertyData.pantry_basics || "Non renseigné"}
-- Commerces : ${propertyData.local_shops || "Non renseigné"}
-- Transports : ${propertyData.transport_info || "Non renseigné"}
-- Recommandations : ${propertyData.recommendations || "Non renseigné"}
+- Commerces : ${propertyData.local_shops || "Regarder dans RECOMMANDATIONS LOCALES"}
+- Transports : ${propertyData.transport_info || "Regarder dans RECOMMANDATIONS LOCALES"}
+- Recommandations : ${propertyData.recommendations || "Regarder dans RECOMMANDATIONS LOCALES"}
 - Règles bruit : ${propertyData.noise_rules || "Non renseigné"}
 - Animaux : ${propertyData.pet_policy || "Non renseigné"}
 - Taxe séjour : ${propertyData.tourist_tax_info || "Non renseigné"}
@@ -156,23 +155,13 @@ CONSIGNES SPÉCIALES DE L'HÔTE :
 ${formattedKB || "Aucune consigne supplémentaire."}
 
 RECOMMANDATIONS LOCALES (résultats web) :
-${searchResults || "Aucun résultat — utilise les recommandations de l'hôte si disponibles."}
+${searchResults || "Aucune information web trouvée."}
 
-RÈGLES DE PRIORITÉ :
-1. Les informations du logement ont la priorité absolue.
-2. Les consignes de l'hôte complètent ces informations.
-3. Les résultats web servent uniquement pour les recommandations locales.
-
-RÈGLE INFORMATION INCONNUE :
-- Si l'information n'est pas disponible, dis : "Je n'ai pas cette information pour le moment, je contacte votre hôte."
-- Ne jamais inventer ou supposer une information, et ne demande jamais de numéro de réservation.
-
-RÈGLE URGENCE — TRÈS IMPORTANTE :
-- Si le voyageur signale une urgence réelle (fuite, panne électrique, incendie, accident, gaz, porte bloquée) :
-  1. Rassure-le brièvement.
-  2. Donne l'information technique pertinente si disponible.
-  3. Termine OBLIGATOIREMENT par : "Je préviens immédiatement votre hôte."
-- N'utilise JAMAIS cette phrase dans un autre contexte.`;
+RÈGLES CRITIQUES :
+1. Si une information technique (code, wifi, parking, etc.) est notée "Non renseigné", dis EXACTEMENT : "Je n'ai pas cette information pour le moment, je contacte votre hôte."
+2. EXCEPTION : Pour les transports, commerces et recommandations, si c'est noté "Regarder dans RECOMMANDATIONS LOCALES", tu DOIS utiliser les résultats de recherche internet fournis pour répondre !
+3. Ne jamais inventer d'information, et ne demande jamais de numéro de réservation.
+4. Urgence (fuite, gaz, panne) : Termine OBLIGATOIREMENT par "Je préviens immédiatement votre hôte."`;
 
   // ── D. APPEL IA PRINCIPAL ──
   const chatResponse = await groq.chat.completions.create({
