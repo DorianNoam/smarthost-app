@@ -1,29 +1,27 @@
 import Groq from 'groq-sdk';
 import { supabase } from '../../lib/supabase';
 
-// --- 1. FONCTION DE RECHERCHE LOCALE (COMPLÉMENTAIRE) ---
+// --- 1. RECHERCHE GOOGLE "SEARCH NEARBY" (STRICTE) ---
 async function getGoogleLocalData(category, fullAddress, debugPath) {
   const apiKey = process.env.MAPS_API_KEY;
   
-  // Requêtes simplifiées pour éviter les erreurs d'interprétation de l'API
-  const queryMap = {
-    transport: "station de transport public",
-    food: "restaurant ou boulangerie",
-    shopping: "supermarché ou épicerie",
-    health: "pharmacie"
+  // Types officiels Google pour une recherche par proximité
+  const typeMap = {
+    transport: ["bus_stop", "transit_station", "train_station"],
+    food: ["restaurant", "bakery", "cafe"],
+    shopping: ["supermarket", "grocery_store", "store"],
+    health: ["pharmacy", "hospital"]
   };
 
-  const techQuery = queryMap[category] || "point of interest";
-
   try {
-    // A. Geocoding pour transformer l'adresse dynamique en point GPS
+    // A. Geocoding
     const geoRes = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(fullAddress)}&key=${apiKey}`);
     const geoData = await geoRes.json();
     if (!geoData.results?.[0]) return { data: "", trace: "❌ ADRESSE_NON_RECONNUE" };
     const { lat, lng } = geoData.results[0].geometry.location;
 
-    // B. Recherche Places (New) - Rayon réduit à 500m pour éviter les pôles trop lointains
-    const placesRes = await fetch('https://places.googleapis.com/v1/places:searchText', {
+    // B. Utilisation de searchNearby (Strictement limité au cercle)
+    const placesRes = await fetch('https://places.googleapis.com/v1/places:searchNearby', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -31,12 +29,12 @@ async function getGoogleLocalData(category, fullAddress, debugPath) {
         'X-Goog-FieldMask': 'places.displayName,places.shortFormattedAddress'
       },
       body: JSON.stringify({
-        textQuery: techQuery,
-        locationBias: {
-          circle: { center: { latitude: lat, longitude: lng }, radius: 500.0 } 
+        includedTypes: typeMap[category] || ["point_of_interest"],
+        locationRestriction: {
+          circle: { center: { latitude: lat, longitude: lng }, radius: 500.0 } // 🎯 500m STRICTS
         },
         languageCode: 'fr',
-        maxResultCount: 5
+        maxResultCount: 8
       })
     });
 
@@ -48,27 +46,24 @@ async function getGoogleLocalData(category, fullAddress, debugPath) {
     }
 
     const count = data.places?.length || 0;
-    debugPath.push(`✅ Google a trouvé ${count} lieux pour "${techQuery}" dans un rayon de 500m`);
+    debugPath.push(`✅ Google Nearby a trouvé ${count} lieux pour "${category}"`);
     
     return data.places?.map(p => `- ${p.displayName.text} (${p.shortFormattedAddress})`).join('\n') || "";
-  } catch (e) { 
-    return { data: "", trace: "FETCH_ERROR" }; 
-  }
+  } catch (e) { return ""; }
 }
 
 // --- 2. DÉTECTEUR D'INTENTION ---
 function detectCategory(msg) {
   const m = msg.toLowerCase();
-  if (['bus', 'tram', 'transport', 'aller', 'gare', 'train'].some(k => m.includes(k))) return 'transport';
-  if (['manger', 'resto', 'faim', 'dîner', 'déjeuner', 'café', 'boulangerie', 'faim'].some(k => m.includes(k))) return 'food';
-  if (['course', 'supermarché', 'magasin', 'achat', 'épicerie', 'provisions'].some(k => m.includes(k))) return 'shopping';
+  if (['bus', 'tram', 'transport', 'aller', 'gare', 'train', 'commun'].some(k => m.includes(k))) return 'transport';
+  if (['manger', 'resto', 'faim', 'dîner', 'déjeuner', 'café', 'boulangerie'].some(k => m.includes(k))) return 'food';
+  if (['course', 'supermarché', 'magasin', 'achat', 'épicerie'].some(k => m.includes(k))) return 'shopping';
   return null;
 }
 
 // --- HANDLER PRINCIPAL ---
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).send('Non autorisé');
-
   const { messagesHistory, propertyData } = req.body;
   const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
   const lastUserMsg = messagesHistory[messagesHistory.length - 1]?.text || "";
@@ -76,65 +71,52 @@ export default async function handler(req, res) {
   let debugPath = ["🚀 Analyse SaaS"];
 
   try {
-    // Construction dynamique de l'adresse (valable pour n'importe quel pays/ville)
     const fullAddress = `${propertyData?.street_number || ''} ${propertyData?.address || ''}, ${propertyData?.city || ''}`.trim();
     const category = detectCategory(lastUserMsg);
 
-    // 🎯 ÉTAPE 1 : EXTRACTION DE LA BASE DE CONNAISSANCES DE L'HÔTE (VÉRITÉ ABSOLUE)
+    // 🎯 ÉTAPE 1 : PRIORITÉ ABSOLUE À LA BASE DE DONNÉES (L'HÔTE)
     const { data: kb } = await supabase.from('knowledge_base').select('category, content').eq('property_id', propertyData.id);
-    
     const ownerKB = kb?.map(item => `[${item.category}] : ${item.content}`).join('\n') || "";
-    const propertyDirectInfo = `${propertyData.transport_info || ''} ${propertyData.local_shops || ''} ${propertyData.recommendations || ''}`.trim();
+    const propertyDirectInfo = `${propertyData.transport_info || ''} ${propertyData.local_shops || ''}`.trim();
     const globalOwnerData = `${propertyDirectInfo}\n${ownerKB}`.trim();
 
-    debugPath.push(globalOwnerData ? "📦 Infos Hôte chargées." : "⚠️ Base hôte vide.");
+    debugPath.push(globalOwnerData ? "📦 Infos Hôte trouvées." : "⚠️ Base hôte vide.");
 
-    // 🎯 ÉTAPE 2 : RECHERECHE GOOGLE MAPS (SI INTENTION DÉTECTÉE)
+    // 🎯 ÉTAPE 2 : APPEL GOOGLE SEARCHNEARBY (SI INTENTION DÉTECTÉE)
     let googleData = "";
     if (category) {
       debugPath.push(`🎯 Catégorie détectée : ${category}`);
-      const result = await getGoogleLocalData(category, fullAddress, debugPath);
-      googleData = typeof result === 'string' ? result : result.data;
+      googleData = await getGoogleLocalData(category, fullAddress, debugPath);
     }
 
-    // 🎯 ÉTAPE 3 : PROMPT AVEC HIÉRARCHIE DE DONNÉES
-    const systemPrompt = `Tu es Marc, le majordome privé de la villa "${propertyData.name}".
-Ton rôle est d'aider le voyageur avec une précision chirurgicale sur les environs.
+    // 🎯 ÉTAPE 3 : PROMPT DU MAJORDOME (SANS HALLUCINATION)
+    const systemPrompt = `Tu es Marc, le majordome de la villa "${propertyData.name}". 
+Ton rôle est de donner des infos sur les environs IMMÉDIATS (moins de 5 min à pied).
 
-ORDRE DE PRIORITÉ :
-1. INFOS DE L'HÔTE (Priorité absolue) : 
-${globalOwnerData || "L'hôte n'a pas encore rempli ses recommandations."}
+INFOS HÔTE (Priorité absolue) :
+${globalOwnerData || "L'hôte n'a pas donné d'instructions."}
 
-2. INFOS GOOGLE MAPS (Complément local) :
-${googleData || "Aucun lieu trouvé sur la carte à moins de 500m."}
+INFOS GOOGLE MAPS (Seulement si à moins de 500m) :
+${googleData || "Aucun résultat trouvé à proximité immédiate."}
 
-CONSIGNES DE RÉPONSE :
-- Si l'hôte a donné une recommandation, utilise-la EXCLUSIVEMENT.
-- N'utilise Google Maps que si l'hôte n'a pas donné d'info ou pour ajouter une adresse précise.
-- Ne cite JAMAIS de lieux situés à plus de 10 minutes à pied (ignore les centres-villes lointains).
-- Sois bref, élégant et chaleureux. 2 à 3 phrases maximum.`;
+CONSIGNES :
+1. Si l'hôte a donné une info, utilise-la exclusivement.
+2. N'utilise les infos Google que si elles sont cohérentes avec l'adresse du logement (${fullAddress}).
+3. Si un lieu te semble trop loin (plus de 10 min de marche), ne le cite pas.
+4. Si la liste Google est vide, dis simplement que tu ne vois pas d'arrêt immédiat et suggère de demander à l'hôte.
+5. Sois très bref.`;
 
     const chatResponse = await groq.chat.completions.create({
       model: "llama-3.3-70b-versatile",
-      messages: [
-        { role: 'system', content: systemPrompt },
-        ...messagesHistory.map(m => ({ 
-          role: m.role === 'marc' ? 'assistant' : 'user', 
-          content: m.text 
-        }))
-      ],
+      messages: [{ role: 'system', content: systemPrompt }, ...messagesHistory.map(m => ({ role: m.role === 'marc' ? 'assistant' : 'user', content: m.text }))],
       temperature: 0,
     });
 
     const responseText = chatResponse.choices[0].message.content;
-    
-    // On garde la trace technique pour tes tests
     const finalResponse = `${responseText}\n\n**🔍 TRACE TECHNIQUE :**\n${debugPath.map(l => `> ${l}`).join('\n')}`;
 
     res.status(200).json({ answer: finalResponse });
-
-  } catch (error) {
-    console.error("❌ Erreur Handler:", error.message);
-    res.status(200).json({ answer: "Je rencontre une petite difficulté technique, mais je reste à votre disposition." });
+  } catch (e) {
+    res.status(200).json({ answer: "Petit souci technique." });
   }
 }
