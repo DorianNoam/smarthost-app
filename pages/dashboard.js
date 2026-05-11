@@ -37,6 +37,20 @@ export default function Dashboard() {
     setLoading(false);
   };
 
+  // ✅ NOUVEAUTÉ : Fonction pour copier le message de bienvenue
+  const copyWelcomeMessage = (prop) => {
+    const guestLink = `${window.location.origin}/chat/${prop.id}`;
+    
+    const message = `Bonjour ! 👋
+Pour toute question pendant votre séjour — que ce soit le WiFi, les équipements, ou une bonne adresse dans le quartier — vous pouvez contacter mon assistant disponible 24h/24 via ce lien :
+👉 ${guestLink}
+
+Bon séjour ! 🎩`;
+
+    navigator.clipboard.writeText(message);
+    alert(`Message de bienvenue copié pour "${prop.name}" ! Il vous suffit de le coller dans Airbnb.`);
+  };
+
   const handleAddClick = (e) => {
     e.preventDefault();
     const hasInactive = properties.some(prop => !prop.is_active);
@@ -129,46 +143,41 @@ export default function Dashboard() {
       `}</style>
       <style jsx>{`
         .dashboard-layout { display: flex; min-height: 100vh; }
-        
-        /* --- NAVIGATION DESKTOP --- */
         nav { width: 260px; background: #1a2a6c; color: white; padding: 40px 20px; position: fixed; height: 100vh; z-index: 100; box-sizing: border-box; display: flex; flex-direction: column; }
         .logo { font-size: 22px; font-weight: 900; margin-bottom: 50px; text-align: center; }
         .nav-item { padding: 14px 18px; border-radius: 12px; display: flex; align-items: center; gap: 12px; font-weight: 600; opacity: 0.8; margin-bottom: 10px; cursor: pointer; color: white;}
         .nav-item.active { background: rgba(255,255,255,0.15); color: #fbbf24; opacity: 1; }
         
-        /* --- MAIN CONTENT --- */
         main { flex: 1; margin-left: 260px; padding: 50px; box-sizing: border-box; }
         .header-area { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
         h1 { margin: 0; color: #1e293b; font-size: 32px; font-weight: 800; }
-        .btn-add { background: #fbbf24; color: #1a2a6c; padding: 12px 24px; border-radius: 12px; font-weight: 800; cursor: pointer; border: none; transition: 0.2s; }
-        .btn-add:hover { background: #f59e0b; }
-
-        /* --- GRID & CARDS --- */
+        
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 25px; }
         .card { background: white; border-radius: 24px; padding: 25px; border: 1px solid #e2e8f0; position: relative; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
         .btn-delete { position: absolute; top: 15px; right: 15px; border: none; background: none; cursor: pointer; color: #94a3b8; font-size: 18px; transition: 0.2s; }
         .btn-delete:hover { color: #e11d48; }
+        
         h3 { margin: 0 0 5px 0; color: #1a2a6c; font-size: 20px; font-weight: 800; }
         .address { color: #64748b; font-size: 13px; margin-bottom: 20px; }
 
-        /* --- BUTTONS --- */
         .btn-stack { display: flex; flex-direction: column; gap: 10px; }
         .action-btn { padding: 12px; border-radius: 10px; font-weight: 700; font-size: 13px; text-align: center; border: none; cursor: pointer; transition: 0.2s; }
         .btn-primary { background: #1a2a6c; color: white; }
-        .btn-primary:hover { background: #1e3280; }
+        
+        /* Bouton Spécial Kit de Bienvenue */
+        .btn-welcome { background: #ecfdf5; color: #059669; border: 1px solid #10b981; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn-welcome:hover { background: #d1fae5; }
+        
         .btn-history { background: #fdf2f8; color: #be185d; }
-        .btn-history:hover { background: #fce7f3; }
         .btn-light { background: #f1f5f9; color: #475569; }
-        .btn-light:hover { background: #e2e8f0; }
-
+        .btn-add { background: #fbbf24; color: #1a2a6c; padding: 12px 24px; border-radius: 12px; font-weight: 800; cursor: pointer; border: none; transition: 0.2s; }
+        
         .activation-zone { background: #fffbeb; padding: 20px; border-radius: 16px; border: 1px solid #fef3c7; text-align: center; margin-top: 15px; }
         .btn-activate { background: #fbbf24; border: none; padding: 14px; width: 100%; border-radius: 12px; font-weight: 800; color: #1a2a6c; cursor: pointer; transition: 0.2s; }
-        .btn-activate:hover { background: #f59e0b; }
 
         .subscription-card { margin-top: 60px; padding: 30px; background: white; border-radius: 24px; border: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; }
         .btn-portal { background: #1a2a6c; color: white; padding: 14px 24px; border-radius: 12px; font-weight: 700; cursor: pointer; border: none; }
 
-        /* --- MODALS --- */
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
         .modal-card { background: white; border-radius: 32px; padding: 40px; max-width: 480px; width: 100%; box-sizing: border-box; text-align: center; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
         .btn-close-modal { background: #fbbf24; border: none; padding: 15px; width: 100%; border-radius: 14px; font-weight: 800; color: #1a2a6c; cursor: pointer; margin-top: 25px; }
@@ -177,46 +186,21 @@ export default function Dashboard() {
         .btn-abort { flex: 1; padding: 14px; border-radius: 12px; border: 1px solid #e2e8f0; background: white; color: #64748b; font-weight: 700; cursor: pointer; }
         .btn-confirm-delete { flex: 1; padding: 14px; border-radius: 12px; border: none; background: #e11d48; color: white; font-weight: 700; cursor: pointer; }
 
-        /* 📱 --- RESPONSIVE DESIGN (MOBILE) --- 📱 */
         @media (max-width: 900px) {
-          /* Transformation du menu latéral en Bottom Nav Bar */
-          nav { 
-            width: 100%; height: 75px; position: fixed; bottom: 0; left: 0; top: auto; 
-            flex-direction: row; padding: 0; justify-content: space-around; align-items: center; 
-            z-index: 1000; box-shadow: 0 -4px 15px rgba(0,0,0,0.1); 
-            padding-bottom: env(safe-area-inset-bottom, 10px); /* Pour les iPhone avec encoche */
-          }
-          .logo, .nav-text { display: none; } /* On cache le texte et le logo pour ne garder que les emojis */
-          .nav-item { 
-            margin: 0; padding: 10px; flex: 1; justify-content: center; 
-            font-size: 26px; border-radius: 0; background: transparent !important; height: 100%; 
-          }
-          
-          /* Ajustement de la zone principale */
-          main { 
-            margin-left: 0; /* On retire la marge de 260px ! */
-            padding: 30px 20px; 
-            padding-bottom: 120px; /* On laisse de la place en bas pour le menu */
-          }
-          
-          /* Ajustement de l'en-tête (Titre + Bouton Ajouter) */
+          nav { width: 100%; height: 75px; position: fixed; bottom: 0; left: 0; top: auto; flex-direction: row; padding: 0; justify-content: space-around; align-items: center; z-index: 1000; box-shadow: 0 -4px 15px rgba(0,0,0,0.1); padding-bottom: env(safe-area-inset-bottom, 10px); }
+          .logo, .nav-text { display: none; }
+          .nav-item { margin: 0; padding: 10px; flex: 1; justify-content: center; font-size: 26px; border-radius: 0; background: transparent !important; height: 100%; }
+          main { margin-left: 0; padding: 30px 20px; padding-bottom: 120px; }
           .header-area { flex-direction: column; align-items: stretch; gap: 20px; margin-bottom: 30px; }
           .btn-add { width: 100%; text-align: center; }
-          
-          /* Ajustement de la grille des logements */
-          .grid { grid-template-columns: 1fr; } /* 1 seule colonne sur mobile */
-          
-          /* Ajustement de la carte d'abonnement */
+          .grid { grid-template-columns: 1fr; }
           .subscription-card { flex-direction: column; align-items: stretch; gap: 20px; padding: 25px 20px; text-align: center; margin-top: 40px; }
           .btn-portal { width: 100%; }
-
-          /* Ajustement des modales */
           .modal-card { padding: 30px 20px; }
-          .modal-actions { flex-direction: column; } /* Boutons l'un sur l'autre sur les petits écrans */
+          .modal-actions { flex-direction: column; }
         }
       `}</style>
 
-      {/* J'ai ajouté des balises <span> pour pouvoir cacher le texte proprement sur mobile */}
       <nav>
         <div className="logo">MajorMarc 🎩</div>
         <Link href="/dashboard" legacyBehavior>
@@ -250,6 +234,12 @@ export default function Dashboard() {
               ) : (
                 <div className="btn-stack">
                   <Link href={`/property/${prop.id}`} legacyBehavior><a className="action-btn btn-primary">📊 Configurer le logement</a></Link>
+                  
+                  {/* ✅ NOUVEAU BOUTON : KIT DE BIENVENUE */}
+                  <button onClick={() => copyWelcomeMessage(prop)} className="action-btn btn-welcome">
+                    ✨ Kit de bienvenue (Copier)
+                  </button>
+
                   <Link href={`/history/${prop.id}`} legacyBehavior><a className="action-btn btn-history">📜 Historique des échanges</a></Link>
                   <Link href={`/chat/${prop.id}`} legacyBehavior><a className="action-btn btn-light">🎭 Simuler un voyageur</a></Link>
                 </div>
@@ -273,35 +263,29 @@ export default function Dashboard() {
         </div>
       </main>
 
-      {/* MODAL : LIMITE / ACTIVATION REQUISE */}
       {showLimitModal && (
         <div className="modal-overlay" onClick={() => setShowLimitModal(false)}>
           <div className="modal-card" onClick={e => e.stopPropagation()}>
             <span style={{fontSize: '54px', marginBottom: '20px', display: 'block'}}>🎩</span>
             <h2 style={{color: '#1a2a6c', fontWeight: 800, margin: '0 0 15px 0'}}>Activation requise</h2>
             <p style={{color: '#64748b', lineHeight: 1.6, margin: 0}}>
-              Vous avez déjà un logement en attente de configuration.<br/><br/>
-              <b>Veuillez activer votre logement actuel</b> avant de pouvoir en ajouter un nouveau.
+              Veuillez activer votre logement actuel avant de pouvoir en ajouter un nouveau.
             </p>
-            <button className="btn-close-modal" onClick={() => setShowLimitModal(false)}>
-              D'accord, j'ai compris
-            </button>
+            <button className="btn-close-modal" onClick={() => setShowLimitModal(false)}>D'accord</button>
           </div>
         </div>
       )}
 
-      {/* MODAL : CONFIRMATION DE SUPPRESSION */}
       {showDeleteModal && (
         <div className="modal-overlay" onClick={() => setShowDeleteModal(false)}>
           <div className="modal-card" onClick={e => e.stopPropagation()}>
             <span style={{fontSize: '50px', marginBottom: '15px', display: 'block'}}>⚠️</span>
             <h2 style={{color: '#1a2a6c', fontWeight: 800, margin: '0 0 15px 0'}}>Supprimer {propertyToDelete?.name} ?</h2>
             <p style={{color: '#64748b', fontSize: '14px', marginBottom: '20px'}}>
-              Êtes-vous sûr de vouloir supprimer ce logement ? Toute la configuration de Marc sera effacée.
+              Êtes-vous sûr ? Toute la configuration sera effacée.
             </p>
             <div className="info-box">
-              <strong>📌 Note sur votre abonnement :</strong><br/>
-              Votre licence reste active jusqu'à la fin de la période de facturation en cours (19,90€). Vous pourrez configurer un nouveau logement sur cet emplacement à tout moment.
+              <strong>📌 Note :</strong> Votre licence reste active jusqu'à la fin du mois en cours.
             </div>
             <div className="modal-actions">
               <button className="btn-abort" onClick={() => setShowDeleteModal(false)}>Annuler</button>
@@ -312,5 +296,4 @@ export default function Dashboard() {
       )}
     </div>
   );
-        }
-        
+}
