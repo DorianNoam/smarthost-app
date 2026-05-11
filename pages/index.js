@@ -5,7 +5,7 @@ export default function Home() {
   return (
     <div className="container">
       <Head>
-        <title>Major Marc | Le Majordome IA pour vos locations Airbnb</title>
+        <title>Major Marc | Le Majordome IA pour vos locations Courte durée</title>
         <meta name="description" content="Déléguez la gestion de vos voyageurs à Marc, l'IA qui répond 24h/24, recommande des adresses locales et vous alerte uniquement en cas d'urgence." />
         <meta property="og:title" content="Major Marc | Le Majordome IA" />
         <meta property="og:description" content="Gérez vos locations sans stress pour le prix d'un seul frais de ménage." />
@@ -221,7 +221,7 @@ export default function Home() {
       {/* HERO SECTION */}
       <section className="hero">
         <div className="hero-content">
-          <div className="badge-hero">⚡ Offre de lancement : Votre 1er mois à 9,90€</div>
+          <div className="badge-hero">⚡ En ce moment : Votre 1er mois à 9,90€</div>
           <h1>Dormez sur vos deux oreilles.<br/>Marc gère vos voyageurs.</h1>
           <p className="subtitle">
             Le premier majordome IA qui répond aux questions 24h/24, recommande les meilleurs restaurants locaux, et vous alerte uniquement en cas d'urgence.
