@@ -37,9 +37,10 @@ export default function Dashboard() {
     setLoading(false);
   };
 
-  // ✅ NOUVEAUTÉ : Fonction pour copier le message de bienvenue
+  // ✅ CORRECTION : Utilisation de /m/ et du slug (nom de la villa) pour le lien
   const copyWelcomeMessage = (prop) => {
-    const guestLink = `${window.location.origin}/chat/${prop.id}`;
+    const identifier = prop.slug || prop.id;
+    const guestLink = `${window.location.origin}/m/${identifier}`;
     
     const message = `Bonjour ! 👋
 Pour toute question pendant votre séjour — que ce soit le WiFi, les équipements, ou une bonne adresse dans le quartier — vous pouvez contacter mon assistant disponible 24h/24 via ce lien :
@@ -235,13 +236,15 @@ Bon séjour ! 🎩`;
                 <div className="btn-stack">
                   <Link href={`/property/${prop.id}`} legacyBehavior><a className="action-btn btn-primary">📊 Configurer le logement</a></Link>
                   
-                  {/* ✅ NOUVEAU BOUTON : KIT DE BIENVENUE */}
+                  {/* ✅ BOUTON KIT DE BIENVENUE */}
                   <button onClick={() => copyWelcomeMessage(prop)} className="action-btn btn-welcome">
                     ✨ Kit de bienvenue (Copier)
                   </button>
 
                   <Link href={`/history/${prop.id}`} legacyBehavior><a className="action-btn btn-history">📜 Historique des échanges</a></Link>
-                  <Link href={`/chat/${prop.id}`} legacyBehavior><a className="action-btn btn-light">🎭 Simuler un voyageur</a></Link>
+                  
+                  {/* ✅ CORRECTION : Le bouton simuler pointe aussi vers le slug /m/ */}
+                  <Link href={`/m/${prop.slug || prop.id}`} legacyBehavior><a className="action-btn btn-light">🎭 Simuler un voyageur</a></Link>
                 </div>
               )}
             </div>
