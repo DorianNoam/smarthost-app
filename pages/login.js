@@ -15,7 +15,6 @@ export default function Login() {
     setLoading(true);
     setError(null);
 
-    // Tentative de connexion avec Supabase
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -25,7 +24,6 @@ export default function Login() {
       setError("Identifiants invalides ou compte non confirmé.");
       setLoading(false);
     } else {
-      // Si c'est bon, on fonce au dashboard
       router.push('/dashboard');
     }
   };
@@ -37,14 +35,22 @@ export default function Login() {
         :global(a) { text-decoration: none; color: inherit; }
         .container { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #1a2a6c; font-family: 'Montserrat', sans-serif; padding: 20px; }
         .login-box { background: white; width: 100%; max-width: 400px; padding: 50px 40px; border-radius: 30px; box-shadow: 0 25px 50px rgba(0,0,0,0.2); text-align: center; }
-        h1 { font-family: 'Playfair Display', serif; color: #1a2a6c; margin-bottom: 5px; font-size: 28px; }
+        h1 { font-family: 'Playfair Display', serif; color: #1a2a6c; margin-bottom: 5px; font-size: 28px; cursor: pointer; }
         .gold { color: #d4af37; }
         form { display: flex; flex-direction: column; gap: 20px; margin-top: 30px; }
-        .input-group { text-align: left; }
+        .input-group { text-align: left; position: relative; }
         label { font-size: 12px; font-weight: 700; text-transform: uppercase; color: #999; margin-bottom: 8px; display: block; }
         input { width: 100%; padding: 15px; border: 1px solid #eee; border-radius: 12px; background: #f9f9f9; font-size: 15px; outline: none; box-sizing: border-box; }
         input:focus { border-color: #d4af37; background: white; }
+        
+        .forgot-link { 
+          display: block; text-align: right; font-size: 12px; color: #64748b; 
+          margin-top: 8px; font-weight: 500; transition: 0.2s;
+        }
+        .forgot-link:hover { color: #1a2a6c; text-decoration: underline; }
+
         .btn-login { background-color: #d4af37; color: #1a2a6c; border: none; padding: 18px; border-radius: 50px; font-weight: 700; font-size: 16px; cursor: pointer; transition: 0.3s; margin-top: 10px; }
+        .btn-login:hover { background-color: #e5c158; transform: translateY(-2px); }
         .btn-login:disabled { opacity: 0.5; cursor: not-allowed; }
         .error-msg { background: #fee2e2; color: #b91c1c; padding: 10px; border-radius: 8px; font-size: 13px; margin-bottom: 15px; }
         .footer-links { margin-top: 30px; font-size: 13px; color: #777; }
@@ -79,6 +85,10 @@ export default function Login() {
               onChange={(e) => setPassword(e.target.value)}
               required 
             />
+            {/* ✅ AJOUT DU LIEN MOT DE PASSE OUBLIÉ */}
+            <Link href="/forgot-password">
+              <span className="forgot-link">Mot de passe oublié ?</span>
+            </Link>
           </div>
 
           <button type="submit" className="btn-login" disabled={loading}>
