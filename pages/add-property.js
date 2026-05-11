@@ -36,9 +36,17 @@ export default function AddPropertyWizard() {
     if (!error && data) setFormData(data);
   };
 
+  // ✅ FONCTION DE SAISIE MODIFIÉE
   const handleChange = (e) => {
-    const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
-    setFormData({ ...formData, [e.target.name]: value });
+    const { name, value, type, checked } = e.target;
+    let finalValue = type === 'checkbox' ? checked : value;
+
+    // Blocage des lettres pour le numéro de rue
+    if (name === 'street_number') {
+      finalValue = value.replace(/\D/g, ''); // Remplace tout ce qui n'est pas un chiffre par "vide"
+    }
+
+    setFormData({ ...formData, [name]: finalValue });
   };
 
   const saveProgress = async (isFinal = false) => {
@@ -82,16 +90,18 @@ export default function AddPropertyWizard() {
         .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
         .full { grid-column: span 2; }
         label { font-weight: 700; font-size: 11px; color: #64748b; text-transform: uppercase; margin-bottom: 5px; display: block; }
-        input, textarea, select { padding: 12px; border: 1px solid #e2e8f0; border-radius: 12px; font-size: 15px; background: #f8fafc; width: 100%; box-sizing: border-box; }
+        input, textarea, select { padding: 12px; border: 1px solid #e2e8f0; border-radius: 12px; font-size: 15px; background: #f8fafc; width: 100%; box-sizing: border-box; outline: none; transition: 0.2s; }
+        input:focus { border-color: #fbbf24; background: white; }
         .actions { display: flex; flex-direction: column; gap: 10px; margin-top: 30px; }
-        .btn-next { background: #1e293b; color: white; padding: 16px; border-radius: 14px; border: none; font-weight: 700; cursor: pointer; font-size: 16px; }
+        .btn-next { background: #1e293b; color: white; padding: 16px; border-radius: 14px; border: none; font-weight: 700; cursor: pointer; font-size: 16px; transition: 0.2s; }
+        .btn-next:hover { background: #fbbf24; color: #1e293b; }
         .btn-later { display: block; text-align: center; color: #64748b; padding: 10px; font-weight: 600; font-size: 13px; text-decoration: none; cursor: pointer; }
       `}</style>
 
       <div className="wizard-card">
         <div className="progress-bar"><div className="progress-fill"></div></div>
 
-        {/* --- ÉTAPE 1 : IDENTITÉ (ORDRE CORRIGÉ) --- */}
+        {/* --- ÉTAPE 1 : IDENTITÉ --- */}
         {step === 1 && (
           <div className="step">
             <h2>1. Identité du logement</h2>
@@ -103,7 +113,13 @@ export default function AddPropertyWizard() {
               
               <div className="input-group">
                 <label>Numéro de rue</label>
-                <input name="street_number" value={formData.street_number} onChange={handleChange} />
+                <input 
+                  name="street_number" 
+                  value={formData.street_number} 
+                  onChange={handleChange} 
+                  inputMode="numeric" // 📱 Force le clavier numérique sur mobile
+                  placeholder="ex: 12"
+                />
               </div>
               <div className="input-group">
                 <label>Nom de la voie</label>
@@ -132,7 +148,7 @@ export default function AddPropertyWizard() {
           </div>
         )}
 
-        {/* --- ÉTAPE 2 : ACCÈS --- */}
+        {/* --- ÉTAPES SUIVANTES (Inchangées) --- */}
         {step === 2 && (
           <div className="step">
             <h2>2. Accès & Stationnement</h2>
@@ -145,8 +161,8 @@ export default function AddPropertyWizard() {
             </div>
           </div>
         )}
-
-        {/* --- ÉTAPE 3 : WIFI --- */}
+        
+        {/* ... Reste des étapes (3 à 10) ... */}
         {step === 3 && (
           <div className="step">
             <h2>3. Wifi & Confort</h2>
@@ -158,7 +174,6 @@ export default function AddPropertyWizard() {
           </div>
         )}
 
-        {/* --- ÉTAPE 4 : TECHNIQUE --- */}
         {step === 4 && (
           <div className="step">
             <h2>4. Entretien & Santé</h2>
@@ -171,7 +186,6 @@ export default function AddPropertyWizard() {
           </div>
         )}
 
-        {/* --- ÉTAPE 5 : GUIDE LOCAL --- */}
         {step === 5 && (
           <div className="step">
             <h2>5. Guide Local</h2>
@@ -183,7 +197,6 @@ export default function AddPropertyWizard() {
           </div>
         )}
 
-        {/* --- ÉTAPE 6 : DÉPART --- */}
         {step === 6 && (
           <div className="step">
             <h2>6. Départ & Avis</h2>
@@ -195,7 +208,6 @@ export default function AddPropertyWizard() {
           </div>
         )}
 
-        {/* --- ÉTAPE 7 : APPAREILS --- */}
         {step === 7 && (
           <div className="step">
             <h2>7. Divertissement & Appareils</h2>
@@ -208,7 +220,6 @@ export default function AddPropertyWizard() {
           </div>
         )}
 
-        {/* --- ÉTAPE 8 : INVENTAIRE --- */}
         {step === 8 && (
           <div className="step">
             <h2>8. Inventaire & Linge</h2>
@@ -220,7 +231,6 @@ export default function AddPropertyWizard() {
           </div>
         )}
 
-        {/* --- ÉTAPE 9 : QUIRKS --- */}
         {step === 9 && (
           <div className="step">
             <h2>9. Particularités (Quirks)</h2>
@@ -231,7 +241,6 @@ export default function AddPropertyWizard() {
           </div>
         )}
 
-        {/* --- ÉTAPE 10 : RÈGLES --- */}
         {step === 10 && (
           <div className="step">
             <h2>10. Familles, Règles & Taxes</h2>
