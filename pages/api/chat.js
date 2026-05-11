@@ -1,91 +1,129 @@
 import Groq from 'groq-sdk';
 import { supabase } from '../../lib/supabase';
 
-// --- 1. FONCTION GOOGLE PLACES (VERSION NEW - FILTRÉE) ---
+// --- 1. RECHERCHE GOOGLE MAPS GÉOLOCALISÉE (RAYON 800M) ---
 async function getGooglePlacesInfo(userQuery, fullAddress) {
   const apiKey = process.env.MAPS_API_KEY;
+  if (!apiKey) return "Configuration API manquante.";
+
   try {
-    const response = await fetch('https://places.googleapis.com/v1/places:searchText', {
+    // ÉTAPE A : Convertir l'adresse en coordonnées GPS (Geocoding)
+    const geocodeRes = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(fullAddress)}&key=${apiKey}`);
+    const geocodeData = await geocodeRes.json();
+    
+    if (!geocodeData.results || geocodeData.results.length === 0) {
+      console.log("🚩 Geocoding : Adresse introuvable.");
+      return "Localisation du logement impossible.";
+    }
+
+    const { lat, lng } = geocodeData.results[0].geometry.location;
+
+    // ÉTAPE B : Chercher les lieux uniquement dans un rayon de 800m (API Places New)
+    const placesRes = await fetch('https://places.googleapis.com/v1/places:searchText', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'X-Goog-Api-Key': apiKey,
-        'X-Goog-FieldMask': 'places.displayName,places.formattedAddress'
+        'X-Goog-FieldMask': 'places.displayName,places.formattedAddress,places.shortFormattedAddress'
       },
       body: JSON.stringify({
-        // On force la recherche à être TRÈS spécifique au quartier
-        textQuery: `arrêts de bus et transports transport public à moins de 500m de l'adresse ${fullAddress}`,
+        textQuery: userQuery, // Ex: "arrêt de bus", "boulangerie", etc.
+        locationRestriction: {
+          circle: {
+            center: { latitude: lat, longitude: lng },
+            radius: 800.0 // 🎯 STRICTEMENT limité à 800 mètres autour de la villa
+          }
+        },
         languageCode: 'fr',
-        maxResultCount: 10 // On en prend plus pour filtrer après
+        maxResultCount: 6
       })
     });
 
-    const data = await response.json();
-    if (!data.places || data.places.length === 0) return "Aucun arrêt trouvé dans un rayon immédiat.";
+    const placesData = await placesRes.json();
 
-    // ON FILTRE : On ignore les résultats qui contiennent "Gare" ou "Aéroport" s'ils sont trop loin
-    // (Sauf si l'utilisateur a spécifiquement demandé la gare)
-    const filtered = data.places.filter(p => {
-      const addr = p.formattedAddress.toLowerCase();
-      // On s'assure que l'adresse de l'arrêt contient au moins le code postal ou la ville du logement
-      return addr.includes("33200") || addr.includes("caudéran"); 
-    });
+    if (!placesData.places || placesData.places.length === 0) {
+      return "Aucun résultat trouvé à moins de 10 minutes à pied.";
+    }
 
-    return filtered.slice(0, 4).map(p => `- ${p.displayName.text} (Adresse: ${p.formattedAddress})`).join('\n');
+    return placesData.places.map(p => `- ${p.displayName.text} (${p.shortFormattedAddress})`).join('\n');
+
   } catch (e) {
-    return "Erreur technique recherche.";
+    console.error("❌ Erreur Google :", e.message);
+    return "Erreur lors de la recherche locale.";
   }
 }
 
-// --- HANDLER ---
+// --- 2. DÉTECTION D'INTENTION ---
+function isLocalQuery(msg) {
+  const keywords = ['transport', 'bus', 'tram', 'gare', 'boulangerie', 'restaurant', 'manger', 'proche', 'où est', 'commerce'];
+  return keywords.some(k => msg.toLowerCase().includes(k));
+}
+
+// --- HANDLER PRINCIPAL ---
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).send('Non autorisé');
+  
   const { messagesHistory, propertyData } = req.body;
   const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
   const lastUserMsg = messagesHistory[messagesHistory.length - 1]?.text || "";
 
   try {
-    // 1. On construit l'adresse précise du logement
+    // 1. On prépare l'adresse exacte du logement
     const fullAddress = `${propertyData?.street_number || ''} ${propertyData?.address || ''}, ${propertyData?.city || ''}`.trim();
+    console.log("🚩 Traitement pour :", fullAddress);
 
-    // 2. On appelle Google
-    const keywords = ['transport', 'bus', 'tram', 'gare', 'aller', 'proche'];
-    let googleResults = "";
-    if (keywords.some(k => lastUserMsg.toLowerCase().includes(k))) {
-      googleResults = await getGooglePlacesInfo(lastUserMsg, fullAddress);
+    // 2. On récupère les données Google si besoin
+    let googleData = "";
+    if (isLocalQuery(lastUserMsg)) {
+      googleData = await getGooglePlacesInfo(lastUserMsg, fullAddress);
     }
 
-    // 3. LE PROMPT QUI DONNE DES ORDRES FERMES
-    const systemPrompt = `Tu es Marc, le majordome de la villa située au : ${fullAddress}.
-Tu es un expert du quartier de CAUDÉRAN uniquement.
+    // 3. On récupère la base de connaissances de l'hôte (Supabase)
+    const { data: kb } = await supabase.from('knowledge_base').select('category, content').eq('property_id', propertyData.id);
+    const formattedKB = kb?.map(item => `${item.category}: ${item.content}`).join('\n') || "";
 
-DONNÉES RÉELLES DE GOOGLE MAPS :
-${googleResults}
+    // 4. LE PROMPT MAJORDOME (SANS HARDCODING)
+    const systemPrompt = `Tu es Marc, le majordome privé du logement "${propertyData.name}". 
+Ton but est d'être l'expert absolu du quartier immédiat.
 
 CONSIGNES DE RÉPONSE :
-1. Ne cite JAMAIS la Gare Saint-Jean, le Tram C ou les Quinconces, ils sont à plus de 20 minutes, ce n'est pas "proche".
-2. Si la liste au-dessus contient des arrêts avec "33200" ou "Caudéran", donne-les.
-3. Si tu n'as rien de local (33200) dans la liste, dis exactement ceci : "Je ne vois pas d'arrêt de bus immédiat sur la carte du quartier. Je vous conseille de prendre la Ligne 1 qui passe sur l'avenue principale ou de demander confirmation à votre hôte."
-4. Sois très précis. Si tu donnes un nom d'arrêt, donne aussi le nom de la rue s'il est écrit.`;
+1. Utilise les "DONNÉES LOCALES" ci-dessous pour répondre. Ce sont des lieux situés à moins de 10 min à pied.
+2. Si la liste contient des résultats, cite-les précisément.
+3. Si la liste est vide ou ne contient rien de pertinent, dis honnêtement que tu ne vois pas d'option immédiate sur la carte et suggère de demander à l'hôte pour ses pépites secrètes.
+4. INTERDICTION : N'invente jamais de lieux et ne cite pas de monuments célèbres s'ils ne sont pas dans la liste.
+5. Sois pro, chaleureux et concis (3 phrases max).
 
+DONNÉES LOCALES (GOOGLE MAPS) :
+${googleData || "Aucune donnée trouvée dans le périmètre immédiat."}
+
+INFOS COMPLÉMENTAIRES DE L'HÔTE :
+${formattedKB}
+${propertyData.transport_info || ''}`;
+
+    // 5. APPEL IA
     const chatResponse = await groq.chat.completions.create({
       model: "llama-3.3-70b-versatile",
       messages: [
         { role: 'system', content: systemPrompt },
         ...messagesHistory.map(m => ({ role: m.role === 'marc' ? 'assistant' : 'user', content: m.text }))
       ],
-      temperature: 0, // 0 pour qu'il arrête d'inventer
+      temperature: 0, 
     });
 
     const responseText = chatResponse.choices[0].message.content;
-    
-    // Sauvegarde...
+
+    // 6. SAUVEGARDE ET RÉPONSE
     const newHistory = [...messagesHistory, { role: 'marc', text: responseText, timestamp: new Date().toISOString() }];
-    await supabase.from('conversations').upsert({ property_id: propertyData.id, history: newHistory, last_message_at: new Date().toISOString() }, { onConflict: 'property_id' });
+    await supabase.from('conversations').upsert({ 
+        property_id: propertyData.id, 
+        history: newHistory, 
+        last_message_at: new Date().toISOString() 
+    }, { onConflict: 'property_id' });
 
     res.status(200).json({ answer: responseText });
 
   } catch (error) {
-    res.status(200).json({ answer: "Petit souci technique." });
+    console.error("❌ ERREUR :", error.message);
+    res.status(200).json({ answer: "Je rencontre une petite difficulté technique, mais je suis toujours là." });
   }
 }
