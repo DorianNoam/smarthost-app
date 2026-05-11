@@ -1,26 +1,25 @@
 import Groq from 'groq-sdk';
 import { supabase } from '../../lib/supabase';
 
+// --- 1. RECHERCHE GOOGLE MAPS (VERSION LARGE & GPS) ---
 async function getGooglePlacesInfo(userMsg, fullAddress) {
   const apiKey = process.env.MAPS_API_KEY;
-  if (!apiKey) return "Clé API manquante.";
-
-  // On transforme la demande en mots-clés simples pour Google
-  let techQuery = "transit station";
-  const msg = userMsg.toLowerCase();
-  if (msg.includes('manger') || msg.includes('restau')) techQuery = "restaurant";
-  if (msg.includes('course') || msg.includes('magasin')) techQuery = "supermarket";
+  if (!apiKey) return "Clé API absente.";
 
   try {
-    // 1. On trouve où se trouve la Villa (GPS)
+    // ÉTAPE A : Geocoding (On trouve le point GPS précis)
     const geoRes = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(fullAddress)}&key=${apiKey}`);
     const geoData = await geoRes.json();
     
-    if (!geoData.results[0]) return "Localisation impossible.";
+    if (!geoData.results || geoData.results.length === 0) {
+      console.error("🚩 Erreur : Adresse non reconnue par Google.");
+      return "";
+    }
 
     const { lat, lng } = geoData.results[0].geometry.location;
+    console.log(`🚩 Localisation Villa : ${lat}, ${lng}`);
 
-    // 2. On demande à Google ce qu'il y a à 800m autour de ce point PRÉCIS
+    // ÉTAPE B : Recherche ultra-large (Transit + Bus + Tram)
     const placesRes = await fetch('https://places.googleapis.com/v1/places:searchText', {
       method: 'POST',
       headers: {
@@ -29,71 +28,86 @@ async function getGooglePlacesInfo(userMsg, fullAddress) {
         'X-Goog-FieldMask': 'places.displayName,places.shortFormattedAddress'
       },
       body: JSON.stringify({
-        textQuery: techQuery, 
+        // On demande tous les types de transports possibles dans la zone
+        textQuery: "arrêt de bus, station de tram, transports publics",
         locationRestriction: {
           circle: {
             center: { latitude: lat, longitude: lng },
-            radius: 800.0 // Rayon de 800m autour de la villa
+            radius: 1000.0 // On élargit à 1km pour être SÛR de capter Pellegrin
           }
         },
         languageCode: 'fr',
-        maxResultCount: 5
+        maxResultCount: 10
       })
     });
 
     const placesData = await placesRes.json();
 
     if (!placesData.places || placesData.places.length === 0) {
-      return "Aucun résultat trouvé à proximité immédiate.";
+      console.log("🚩 Google ne renvoie AUCUN transport dans le rayon de 1km.");
+      return "";
     }
 
-    return placesData.places.map(p => `- ${p.displayName.text} (${p.shortFormattedAddress})`).join('\n');
+    // On crée la liste pour l'IA
+    const list = placesData.places.map(p => `- ${p.displayName.text} (${p.shortFormattedAddress})`).join('\n');
+    console.log("🚩 Données envoyées à l'IA :\n", list);
+    return list;
 
   } catch (e) {
-    return "Erreur technique recherche.";
+    console.error("❌ Erreur technique Google :", e.message);
+    return "";
   }
 }
 
-// --- HANDLER ---
+// --- HANDLER PRINCIPAL ---
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).send('Non autorisé');
+  
   const { messagesHistory, propertyData } = req.body;
   const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
   const lastUserMsg = messagesHistory[messagesHistory.length - 1]?.text || "";
 
   try {
+    // On s'assure que l'adresse est complète
     const fullAddress = `${propertyData?.street_number || ''} ${propertyData?.address || ''}, ${propertyData?.city || ''}`.trim();
+    
+    let googleData = "";
+    const isTransportQuery = ['transport', 'bus', 'tram', 'aller', 'proche', 'gare'].some(k => lastUserMsg.toLowerCase().includes(k));
 
-    // On n'appelle Google que si la question est locale
-    const keywords = ['transport', 'bus', 'tram', 'gare', 'manger', 'proche', 'où est'];
-    let googleResults = "";
-    if (keywords.some(k => lastUserMsg.toLowerCase().includes(k))) {
-      googleResults = await getGooglePlacesInfo(lastUserMsg, fullAddress);
+    if (isTransportQuery) {
+      googleData = await getGooglePlacesInfo(lastUserMsg, fullAddress);
     }
 
-    const systemPrompt = `Tu es Marc, le majordome de la villa située au : ${fullAddress}.
-Utilise UNIQUEMENT les données fournies ci-dessous pour répondre.
+    const systemPrompt = `Tu es Marc, le majordome de la villa située au ${fullAddress}.
+Tu es un expert local qui aide les voyageurs.
 
-DONNÉES RÉELLES (Moins de 10 min à pied) :
-${googleResults || "Aucune donnée trouvée."}
+DONNÉES RÉELLES GOOGLE MAPS :
+${googleData || "AUCUN RÉSULTAT TROUVÉ À PROXIMITÉ."}
 
 CONSIGNES :
-1. Sois un expert local : cite les noms des arrêts ou commerces trouvés.
-2. Si la liste est vide, dis simplement que tu n'as pas de confirmation visuelle sur la carte et suggère de demander à l'hôte.
-3. Ne cite JAMAIS de lieux éloignés (Gare, Centre-ville) s'ils ne sont pas dans la liste.
-4. Réponds en 3 phrases maximum, de façon chaleureuse.`;
+1. Si les "DONNÉES RÉELLES" contiennent des arrêts (ex: Pellegrin, Barrière d'Ornano, etc.), cite-les impérativement.
+2. Si la liste est vide, dis : "Je ne vois pas d'arrêt de bus immédiat sur la carte du quartier, je vous conseille de demander confirmation à votre hôte."
+3. Ne cite JAMAIS de lieux qui ne sont pas dans la liste ci-dessus.
+4. Réponds de façon concise et élégante (3 phrases max).`;
 
     const chatResponse = await groq.chat.completions.create({
       model: "llama-3.3-70b-versatile",
-      messages: [{ role: 'system', content: systemPrompt }, ...messagesHistory.map(m => ({ role: m.role === 'marc' ? 'assistant' : 'user', content: m.text }))],
+      messages: [
+        { role: 'system', content: systemPrompt },
+        ...messagesHistory.map(m => ({ role: m.role === 'marc' ? 'assistant' : 'user', content: m.text }))
+      ],
       temperature: 0,
     });
 
     const responseText = chatResponse.choices[0].message.content;
 
-    // Sauvegarde...
+    // Sauvegarde historique...
     const newHistory = [...messagesHistory, { role: 'marc', text: responseText, timestamp: new Date().toISOString() }];
-    await supabase.from('conversations').upsert({ property_id: propertyData.id, history: newHistory, last_message_at: new Date().toISOString() }, { onConflict: 'property_id' });
+    await supabase.from('conversations').upsert({ 
+        property_id: propertyData.id, 
+        history: newHistory, 
+        last_message_at: new Date().toISOString() 
+    }, { onConflict: 'property_id' });
 
     res.status(200).json({ answer: responseText });
 
