@@ -1,6 +1,6 @@
 import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
-import { supabase } from '../../lib/supabase';
+import { supabase } from '../../lib/supabase'; // Ajuste le chemin si besoin (ex: '../lib/supabase')
 import Link from 'next/link';
 
 export default function PropertySpecs() {
@@ -54,7 +54,7 @@ export default function PropertySpecs() {
         
         /* COMPOSANT DONNÉE */
         .data-item label { display: block; font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
-        .data-item p { margin: 6px 0 0; font-size: 15px; color: #1e293b; font-weight: 500; line-height: 1.5; }
+        .data-item p { margin: 6px 0 0; font-size: 15px; color: #1e293b; font-weight: 500; line-height: 1.5; white-space: pre-wrap; }
         
         /* STATISTIQUES (COLONNE DROITE) */
         .right-col { display: flex; flex-direction: column; gap: 20px; position: sticky; top: 40px; }
@@ -85,7 +85,9 @@ export default function PropertySpecs() {
           <div className="section">
             <h2>📍 Identité & Localisation</h2>
             <div className="data-grid">
-              <DataItem label="Adresse" value={property.address} fullWidth />
+              <DataItem label="Lien simplifié (Slug)" value={property.slug ? `/m/${property.slug}` : null} fullWidth />
+              <DataItem label="Adresse" value={`${property.street_number || ''} ${property.address || ''}`} fullWidth />
+              <DataItem label="Complément" value={property.address_complement} fullWidth />
               <DataItem label="Ville" value={property.city} />
               <DataItem label="Bâtiment / Étage" value={`${property.building || ''} ${property.floor ? `- Étage ${property.floor}` : ''}`} />
             </div>
@@ -96,9 +98,18 @@ export default function PropertySpecs() {
             <div className="data-grid">
               <DataItem label="Check-in" value={`Dès ${property.check_in_hour}`} />
               <DataItem label="Check-out" value={`Avant ${property.check_out_hour}`} />
-              <DataItem label="Autonomie" value={property.self_checkin ? "Oui" : "Non"} />
+              <DataItem label="Arrivée autonome" value={property.self_checkin ? "✅ Oui" : "❌ Non"} />
+              
+              {property.self_checkin && (
+                <>
+                  <DataItem label="Type de dispositif" value={property.entrance_type} />
+                  <DataItem label="Code d'accès" value={property.key_code} />
+                </>
+              )}
+              
+              <DataItem label="Parking" value={property.parking_info} fullWidth />
+              <DataItem label="Lien GPS" value={property.gps_link} fullWidth />
               <DataItem label="Instructions d'entrée" value={property.checkin_instructions} fullWidth />
-              <DataItem label="Consignes de départ" value={property.checkout_instructions} fullWidth />
             </div>
           </div>
 
@@ -117,6 +128,7 @@ export default function PropertySpecs() {
               <DataItem label="Tableau électrique" value={property.breaker_box_location} />
               <DataItem label="Vanne d'eau" value={property.water_shutoff_location} />
               <DataItem label="Gestion des poubelles" value={property.trash_instructions} fullWidth />
+              <DataItem label="Urgences & Santé" value={property.health_emergency_info} fullWidth />
             </div>
           </div>
 
@@ -126,6 +138,51 @@ export default function PropertySpecs() {
               <DataItem label="Commerces proches" value={property.local_shops} />
               <DataItem label="Transports" value={property.transport_info} />
               <DataItem label="Recommandations du propriétaire" value={property.recommendations} fullWidth />
+            </div>
+          </div>
+
+          <div className="section">
+            <h2>👋 Départ & Avis</h2>
+            <div className="data-grid">
+              <DataItem label="Consignes de sortie" value={property.checkout_instructions} fullWidth />
+              <DataItem label="Retour des clés" value={property.key_return_details} />
+              <DataItem label="Lien Airbnb pour avis" value={property.review_link} />
+            </div>
+          </div>
+
+          <div className="section">
+            <h2>📺 Divertissement & Appareils</h2>
+            <div className="data-grid">
+              <DataItem label="TV & Streaming" value={property.tv_manual} fullWidth />
+              <DataItem label="Électroménager" value={property.appliances_instructions} fullWidth />
+              <DataItem label="Audio" value={property.music_system} />
+              <DataItem label="Jeux" value={property.games_available} />
+            </div>
+          </div>
+
+          <div className="section">
+            <h2>🧺 Inventaire & Linge</h2>
+            <div className="data-grid">
+              <DataItem label="Produits de base (Sel, poivre...)" value={property.pantry_basics} fullWidth />
+              <DataItem label="Emplacement recharges (Papier, savon...)" value={property.consumables_location} fullWidth />
+              <DataItem label="Lave-linge & Fer" value={property.laundry_iron_info} fullWidth />
+            </div>
+          </div>
+
+          <div className="section">
+            <h2>⚠️ Particularités & Nuisances</h2>
+            <div className="data-grid">
+              <DataItem label="Détails spécifiques au logement" value={property.property_quirks} fullWidth />
+              <DataItem label="Nuisances de quartier" value={property.neighborhood_nuisances} fullWidth />
+            </div>
+          </div>
+
+          <div className="section">
+            <h2>📜 Familles, Règles & Taxes</h2>
+            <div className="data-grid">
+              <DataItem label="Équipements bébé" value={property.baby_equipment} fullWidth />
+              <DataItem label="Règles de vie & Bruit" value={property.noise_rules} fullWidth />
+              <DataItem label="Taxe de séjour" value={property.tourist_tax_info} fullWidth />
             </div>
           </div>
 
@@ -145,7 +202,7 @@ export default function PropertySpecs() {
           </div>
 
           <Link href={`/add-property?id=${property.id}`} passHref legacyBehavior>
-            <a className="btn-edit">⚙️ Compléter les infos</a>
+            <a className="btn-edit">⚙️ Modifier les infos</a>
           </Link>
         </div>
       </main>
