@@ -27,7 +27,7 @@ export default async function handler(req, res) {
 
         if (!error) {
           // 2. Envoi d'un message de confirmation au client sur Telegram
-          await sendTelegramMessage(chatId, "✅ MajorMarc est connecté !\n\nVotre compte est désormais lié. Vous recevrez toutes les alertes urgentes concernant vos logements directement ici.");
+          await sendTelegramMessage(chatId, "✅ Alfred Major est connecté !\n\nVotre compte est désormais lié. Vous recevrez toutes les alertes urgentes concernant vos logements directement ici.");
         } else {
           console.error("Erreur Supabase lors de la liaison Telegram:", error);
           // On peut envoyer un petit message d'erreur au client si besoin
