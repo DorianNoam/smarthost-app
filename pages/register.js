@@ -17,7 +17,6 @@ export default function Register() {
     setError(null);
 
     try {
-      // 1. Création ou récupération de l'utilisateur technique
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
@@ -26,8 +25,6 @@ export default function Register() {
       if (authError) throw authError;
 
       if (authData.user) {
-        // 2. Utilisation de UPSERT au lieu de INSERT
-        // Cela écrase l'ancien profil s'il existait déjà, évitant l'erreur de doublon.
         const { error: profileError } = await supabase
           .from('profiles')
           .upsert([{ 
@@ -35,7 +32,7 @@ export default function Register() {
             full_name: fullName, 
             email: email,
             active_licenses: 0 
-          }], { onConflict: 'email' }); // On gère le conflit sur l'email
+          }], { onConflict: 'email' });
 
         if (profileError) throw profileError;
         
@@ -64,7 +61,7 @@ export default function Register() {
 
       <div className="register-box">
         <Link href="/" legacyBehavior>
-          <a style={{textDecoration: 'none'}}><h1>Major<span className="gold">Marc</span></h1></a>
+          <a style={{textDecoration: 'none'}}><h1>Alfred<span className="gold">Major</span></h1></a>
         </Link>
         <form onSubmit={handleRegister}>
           {error && <div className="error-msg">{error}</div>}
