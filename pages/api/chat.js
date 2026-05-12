@@ -62,7 +62,7 @@ async function sendTelegramAlert(originalMsg, translatedMsg, propertyData) {
 
     if (!profile?.telegram_chat_id) return;
 
-    let text = `🚨 *ALERTE alfred major*\n\n🏠 *Logement :* ${propertyData.name}\n💬 *Client :*\n"${originalMsg}"`;
+    let text = `🚨 *ALERTE ALFRED MAJOR*\n\n🏠 *Logement :* ${propertyData.name}\n💬 *Client :*\n"${originalMsg}"`;
     if (translatedMsg) {
       text += `\n\n🇫🇷 *Traduction :*\n"${translatedMsg}"`;
     }
@@ -155,11 +155,11 @@ export default async function handler(req, res) {
       : googleData || "";
 
     // ── C. PROMPT SYSTÈME COMPLET ──
-    const systemPrompt = `Tu es Marc, le majordome personnel de "${propertyData.name}" à ${city}.
+    const systemPrompt = `Tu es Alfred, le majordome personnel de "${propertyData.name}" à ${city}.
 
 IDENTITÉ — RÈGLE ABSOLUE :
 - Tu es un majordome humain, professionnel et polyglotte. Tu n'es PAS une IA.
-- Si on te demande si tu es une IA, réponds que tu es Marc, le concierge personnel du logement.
+- Si on te demande si tu es une IA, réponds que tu es Alfred, le concierge personnel du logement.
 - Ne mentionne jamais Groq, LLaMA, Claude, GPT ou tout autre modèle d'IA.
 - Ne cite JAMAIS tes sources internes. Réponds comme si tu connaissais tout de mémoire.
 
@@ -247,7 +247,7 @@ Si le voyageur signale une urgence réelle (fuite d'eau, panne électrique, ince
       messages: [
         { role: 'system', content: systemPrompt },
         ...messagesHistory.map(msg => ({
-          role: msg.role === 'marc' ? 'assistant' : 'user',
+          role: msg.role === 'alfred' ? 'assistant' : 'user',
           content: msg.text || '',
         })),
       ],
