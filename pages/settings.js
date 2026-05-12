@@ -198,7 +198,7 @@ export default function Settings() {
 
       {/* SIDEBAR */}
       <nav>
-        <div className="logo">MajorMarc 🎩</div>
+        <div className="logo">Alfred Major 🎩</div>
         <Link href="/dashboard" legacyBehavior>
           <a className="nav-item">🏠 <span className="nav-text">Logements</span></a>
         </Link>
