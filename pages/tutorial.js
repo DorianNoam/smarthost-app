@@ -33,7 +33,7 @@ export default function Tutorial() {
   }, []);
 
   const handleTelegramSmartLink = () => {
-    const botName = "Marc_Alerte_Bot";
+    const botName = "Alfred_Alerte_Bot";
     const userId = user?.id;
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
     const isAndroid = /Android/.test(navigator.userAgent);
