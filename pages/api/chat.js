@@ -1,19 +1,24 @@
 import Groq from 'groq-sdk';
 import { supabase } from '../../lib/supabase';
 
-// --- 1. RECHERCHE GOOGLE "SEARCH NEARBY" (STRICTE 500M) ---
+// ─────────────────────────────────────────────
+// 1. RECHERCHE GOOGLE MAPS (local à 500m)
+// ─────────────────────────────────────────────
 async function getGoogleLocalData(category, fullAddress) {
   const apiKey = process.env.MAPS_API_KEY;
-  
+  if (!apiKey) return "";
+
   const typeMap = {
     transport: ["bus_stop", "transit_station", "train_station", "light_rail_station"],
     food: ["restaurant", "bakery", "cafe", "meal_takeaway"],
     shopping: ["supermarket", "grocery_store", "convenience_store", "store"],
-    health: ["pharmacy", "hospital"]
+    health: ["pharmacy", "hospital", "doctor"],
   };
 
   try {
-    const geoRes = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(fullAddress)}&key=${apiKey}`);
+    const geoRes = await fetch(
+      `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(fullAddress)}&key=${apiKey}`
+    );
     const geoData = await geoRes.json();
     if (!geoData.results?.[0]) return "";
     const { lat, lng } = geoData.results[0].geometry.location;
@@ -23,96 +28,283 @@ async function getGoogleLocalData(category, fullAddress) {
       headers: {
         'Content-Type': 'application/json',
         'X-Goog-Api-Key': apiKey,
-        'X-Goog-FieldMask': 'places.displayName,places.shortFormattedAddress'
+        'X-Goog-FieldMask': 'places.displayName,places.shortFormattedAddress',
       },
       body: JSON.stringify({
         includedTypes: typeMap[category] || ["point_of_interest"],
         locationRestriction: {
-          circle: { center: { latitude: lat, longitude: lng }, radius: 500.0 }
+          circle: { center: { latitude: lat, longitude: lng }, radius: 600.0 },
         },
         languageCode: 'fr',
-        maxResultCount: 8
-      })
+        maxResultCount: 8,
+      }),
     });
 
     const data = await placesRes.json();
-    if (data.error || !data.places) return "";
-    
+    if (data.error || !data.places?.length) return "";
     return data.places.map(p => `- ${p.displayName.text} (${p.shortFormattedAddress})`).join('\n');
-  } catch (e) { return ""; }
+  } catch (e) {
+    return "";
+  }
 }
 
-// --- 2. DÉTECTEUR D'INTENTION ---
-function detectCategory(msg) {
+// ─────────────────────────────────────────────
+// 2. ALERTE TELEGRAM
+// ─────────────────────────────────────────────
+async function sendTelegramAlert(originalMsg, translatedMsg, propertyData) {
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  try {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('telegram_chat_id')
+      .eq('id', propertyData.owner_id)
+      .single();
+
+    if (!profile?.telegram_chat_id) return;
+
+    let text = `🚨 *ALERTE MAJOR MARC*\n\n🏠 *Logement :* ${propertyData.name}\n💬 *Client :*\n"${originalMsg}"`;
+    if (translatedMsg) {
+      text += `\n\n🇫🇷 *Traduction :*\n"${translatedMsg}"`;
+    }
+
+    await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: profile.telegram_chat_id,
+        text,
+        parse_mode: 'Markdown',
+      }),
+    });
+  } catch (e) {
+    console.error("Erreur Telegram:", e);
+  }
+}
+
+// ─────────────────────────────────────────────
+// 3. DÉTECTION D'INTENTION LOCALE (côté code)
+// ─────────────────────────────────────────────
+function detectLocalCategory(msg) {
   const m = msg.toLowerCase();
-  if (['bus', 'tram', 'transport', 'aller', 'gare', 'train', 'commun', 'navette'].some(k => m.includes(k))) return 'transport';
-  if (['manger', 'resto', 'faim', 'dîner', 'déjeuner', 'café', 'boulangerie', 'pizza'].some(k => m.includes(k))) return 'food';
-  if (['course', 'supermarché', 'magasin', 'achat', 'épicerie', 'provisions', 'market', 'shopping'].some(k => m.includes(k))) return 'shopping';
+  if (['bus', 'tram', 'tramway', 'transport', 'aller', 'gare', 'train', 'commun', 'navette', 'métro', 'metro', 'taxi', 'uber', 'arrêt'].some(k => m.includes(k))) return 'transport';
+  if (['manger', 'resto', 'restaurant', 'faim', 'dîner', 'déjeuner', 'café', 'boulangerie', 'pizza', 'sushi', 'bar', 'bistrot', 'adresse'].some(k => m.includes(k))) return 'food';
+  if (['course', 'supermarché', 'supermarche', 'magasin', 'achat', 'épicerie', 'epicerie', 'provisions', 'shopping', 'commerce'].some(k => m.includes(k))) return 'shopping';
+  if (['pharmacie', 'médecin', 'docteur', 'hôpital', 'hopital', 'santé', 'sante', 'urgence médicale'].some(k => m.includes(k))) return 'health';
   return null;
 }
 
-// --- HANDLER PRINCIPAL ---
+// ─────────────────────────────────────────────
+// 4. DÉTECTION D'URGENCE (côté code)
+// ─────────────────────────────────────────────
+function isEmergency(msg) {
+  const m = msg.toLowerCase();
+  return ['fuite', 'leak', 'inondation', 'flood', 'feu', 'fire', 'incendie',
+    'panne', 'coupure', 'électricité', 'electricity', 'blessé', 'injured',
+    'accident', 'urgence', 'emergency', 'danger', 'cassé', 'ne fonctionne pas',
+    'not working', 'bloqué', 'locked out', 'gaz', 'gas', 'odeur', 'smell',
+    'fumée', 'smoke', 'porte bloquée', 'porte fermée'].some(k => m.includes(k));
+}
+
+// ─────────────────────────────────────────────
+// HANDLER PRINCIPAL
+// ─────────────────────────────────────────────
 export default async function handler(req, res) {
-  if (req.method !== 'POST') return res.status(405).send('Non autorisé');
-  
-  const { messagesHistory, propertyData } = req.body;
+  if (req.method !== 'POST') return res.status(405).send('Méthode non autorisée');
+
+  const { messagesHistory, propertyData, userLanguage } = req.body;
+
+  if (!messagesHistory || !propertyData) {
+    return res.status(400).json({ answer: "Données manquantes." });
+  }
+
   const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+  const langCode = userLanguage ? userLanguage.split('-')[0] : 'fr';
   const lastUserMsg = messagesHistory[messagesHistory.length - 1]?.text || "";
 
   try {
-    const fullAddress = `${propertyData?.street_number || ''} ${propertyData?.address || ''}, ${propertyData?.city || ''}`.trim();
-    const category = detectCategory(lastUserMsg);
+    const city = propertyData.city || '';
+    const fullAddress = `${propertyData.street_number || ''} ${propertyData.address || ''}, ${city}`.trim();
 
-    // 🎯 ÉTAPE 1 : PRIORITÉ ABSOLUE À LA BASE DE DONNÉES (L'HÔTE)
-    const { data: kb } = await supabase.from('knowledge_base').select('category, content').eq('property_id', propertyData.id);
-    const ownerKB = kb?.map(item => `[${item.category}] : ${item.content}`).join('\n') || "";
-    const propertyDirectInfo = `${propertyData.transport_info || ''} ${propertyData.local_shops || ''}`.trim();
-    const globalOwnerData = `${propertyDirectInfo}\n${ownerKB}`.trim();
+    // ── A. KNOWLEDGE BASE ──
+    const { data: kb } = await supabase
+      .from('knowledge_base')
+      .select('category, content')
+      .eq('property_id', propertyData.id);
+    const formattedKB = kb?.map(item => `[${item.category}] : ${item.content}`).join('\n') || "";
 
-    // 🎯 ÉTAPE 2 : APPEL GOOGLE SEARCHNEARBY (SI BESOIN)
+    // ── B. RECHERCHE LOCALE ──
+    // Priorité : infos hôte → Google Maps si rien de renseigné
+    const hostLocalInfo = [
+      propertyData.transport_info,
+      propertyData.local_shops,
+      propertyData.recommendations,
+      propertyData.pharmacy_info,
+    ].filter(Boolean).join('\n');
+
+    const localCategory = detectLocalCategory(lastUserMsg);
     let googleData = "";
-    if (category) {
-      googleData = await getGoogleLocalData(category, fullAddress);
+
+    // On appelle Google Maps si c'est une question locale
+    if (localCategory) {
+      googleData = await getGoogleLocalData(localCategory, fullAddress);
     }
 
-    // 🎯 ÉTAPE 3 : LE PROMPT DU MAJORDOME
-    const systemPrompt = `Tu es Marc, le majordome de la villa "${propertyData.name}". 
-Ton rôle est d'informer le voyageur sur les environs immédiats (moins de 5 min à pied).
+    // Section quartier : infos hôte en priorité, Google en complément
+    const localSection = hostLocalInfo
+      ? `${hostLocalInfo}${googleData ? `\n\nComplément Google Maps :\n${googleData}` : ''}`
+      : googleData || "";
 
-INFOS HÔTE (Priorité absolue) :
-${globalOwnerData || "L'hôte n'a pas donné d'instructions."}
+    // ── C. PROMPT SYSTÈME COMPLET ──
+    const systemPrompt = `Tu es Marc, le majordome personnel de "${propertyData.name}" à ${city}.
 
-INFOS GOOGLE MAPS :
-${googleData || "Aucun résultat trouvé à proximité immédiate."}
+IDENTITÉ — RÈGLE ABSOLUE :
+- Tu es un majordome humain, professionnel et polyglotte. Tu n'es PAS une IA.
+- Si on te demande si tu es une IA, réponds que tu es Marc, le concierge personnel du logement.
+- Ne mentionne jamais Groq, LLaMA, Claude, GPT ou tout autre modèle d'IA.
+- Ne cite JAMAIS tes sources internes. Réponds comme si tu connaissais tout de mémoire.
 
-CONSIGNES :
-1. Si l'hôte a donné une info, utilise-la EXCLUSIVEMENT.
-2. Si tu utilises Google Maps, sois affirmatif sur les lieux (ce sont des arrêts proches).
-3. Ne cite jamais de lieux à plus de 10 min de marche.
-4. Réponds en 2 sentences max, de façon chaleureuse.`;
+LANGUE :
+- Réponds TOUJOURS dans la langue du voyageur, sans exception.
 
+STYLE :
+- CONCIS : 2-3 phrases max sauf explication indispensable.
+- Chaleureux et professionnel.
+- Ne donne JAMAIS d'infos non demandées.
+- Pour une salutation simple ("bonjour", "hi"), réponds poliment et demande comment aider. RIEN DE PLUS.
+
+━━━ INFORMATIONS DU LOGEMENT ━━━
+(Donner uniquement si le voyageur le demande explicitement)
+
+Localisation :
+- Adresse : ${propertyData.street_number || ""} ${propertyData.address || ""}
+- Ville : ${city}
+- Bâtiment / Étage : ${[propertyData.building, propertyData.floor ? `Étage ${propertyData.floor}` : '', propertyData.address_complement].filter(Boolean).join(', ') || "Non renseigné"}
+
+Arrivée & Départ :
+- Check-in : dès ${propertyData.check_in_hour || "15:00"}
+- Check-out : avant ${propertyData.check_out_hour || "11:00"}
+- Arrivée autonome : ${propertyData.self_checkin ? "Oui" : "Non"}
+- Instructions d'accès : ${propertyData.checkin_instructions || "Non renseigné"}
+- Code boîte à clés : ${propertyData.key_code || "Non renseigné"}
+- Type d'entrée : ${propertyData.entrance_type || "Non renseigné"}
+
+Connectivité :
+- WiFi : ${propertyData.wifi_name || "Non renseigné"} | Mot de passe : ${propertyData.wifi_password || "Non renseigné"}
+
+Logistique :
+- Parking : ${propertyData.parking_info || "Non renseigné"}
+- Lien GPS : ${propertyData.gps_link || "Non renseigné"}
+- Poubelles : ${propertyData.trash_instructions || "Non renseigné"}
+
+Confort :
+- Chauffage/Clim : ${propertyData.heating_cooling_info || "Non renseigné"}
+- TV : ${propertyData.tv_manual || "Non renseigné"}
+- Électroménager : ${propertyData.appliances_instructions || "Non renseigné"}
+- Linge/Repassage : ${propertyData.laundry_iron_info || "Non renseigné"}
+- Produits de base : ${propertyData.pantry_basics || "Non renseigné"}
+- Équipements bébé : ${propertyData.baby_equipment || "Non renseigné"}
+
+Urgences :
+- Tableau électrique : ${propertyData.breaker_box_location || "Non renseigné"}
+- Vanne d'eau : ${propertyData.water_shutoff_location || "Non renseigné"}
+- Santé/Urgences : ${propertyData.health_emergency_info || "Non renseigné"}
+
+Règles :
+- Bruit : ${propertyData.noise_rules || "Non renseigné"}
+- Animaux : ${propertyData.pet_policy || "Non renseigné"}
+- Taxe de séjour : ${propertyData.tourist_tax_info || "Non renseigné"}
+- Particularités : ${propertyData.property_quirks || "Aucune"}
+
+Départ :
+- Consignes : ${propertyData.checkout_instructions || "Non renseigné"}
+- Retour clés : ${propertyData.key_return_details || "Non renseigné"}
+- Lien avis : ${propertyData.review_link || "Non renseigné"}
+
+━━━ CONSIGNES SPÉCIALES DE L'HÔTE ━━━
+${formattedKB || "Aucune consigne particulière."}
+
+━━━ QUARTIER & ENVIRONS ━━━
+${localSection || "Aucune information disponible pour le moment."}
+
+━━━ RÈGLES CRITIQUES ━━━
+
+1. INFO TECHNIQUE MANQUANTE : Si une info (wifi, code, parking...) est "Non renseigné", dis exactement : "Je n'ai pas cette information pour le moment, je contacte votre hôte." Ne demande jamais de numéro de réservation.
+
+2. QUARTIER & LOCAL : Pour toute question sur transports, restaurants, commerces, pharmacies — utilise la section QUARTIER & ENVIRONS et réponds directement avec ces infos. Si tu as des résultats, utilise-les sans hésiter.
+
+3. INVENTION INTERDITE : Ne jamais inventer une information.
+
+4. URGENCE — RÈGLE LA PLUS IMPORTANTE :
+Si le voyageur signale une urgence réelle (fuite d'eau, panne électrique, incendie, gaz, porte bloquée, accident) :
+   a) Rassure-le en 1 phrase.
+   b) Donne l'info technique si disponible (vanne, disjoncteur...).
+   c) Termine ta réponse OBLIGATOIREMENT et EXACTEMENT par cette phrase : "Je préviens immédiatement votre hôte."
+   IMPORTANT : Cette phrase doit apparaître TELLE QUELLE dans ta réponse pour déclencher l'alerte. Ne la reformule JAMAIS.`;
+
+    // ── D. APPEL IA ──
     const chatResponse = await groq.chat.completions.create({
       model: "llama-3.3-70b-versatile",
       messages: [
         { role: 'system', content: systemPrompt },
-        ...messagesHistory.map(m => ({ role: m.role === 'marc' ? 'assistant' : 'user', content: m.text }))
+        ...messagesHistory.map(msg => ({
+          role: msg.role === 'marc' ? 'assistant' : 'user',
+          content: msg.text || '',
+        })),
       ],
-      temperature: 0,
+      temperature: 0.1,
+      max_tokens: 400,
     });
 
     const responseText = chatResponse.choices[0].message.content;
 
-    // SAUVEGARDE HISTORIQUE
-    const newHistory = [...messagesHistory, { role: 'marc', text: responseText, timestamp: new Date().toISOString() }];
-    await supabase.from('conversations').upsert({ 
-        property_id: propertyData.id, 
-        history: newHistory, 
-        last_message_at: new Date().toISOString() 
-    }, { onConflict: 'property_id' });
+    // ── E. SAUVEGARDE ──
+    const newHistory = [
+      ...messagesHistory,
+      { role: 'marc', text: responseText, timestamp: new Date().toISOString() },
+    ];
+    await supabase
+      .from('conversations')
+      .upsert(
+        { property_id: propertyData.id, history: newHistory, last_message_at: new Date().toISOString() },
+        { onConflict: 'property_id' }
+      );
+
+    // ── F. ALERTE TELEGRAM ──
+    // Double détection : phrase déclencheur dans la réponse OU urgence détectée côté code
+    const triggerPhrase = "je préviens immédiatement votre hôte";
+    const shouldAlert = responseText.toLowerCase().includes(triggerPhrase) || isEmergency(lastUserMsg);
+
+    if (shouldAlert) {
+      let translatedMsg = null;
+      if (langCode !== 'fr') {
+        try {
+          const transRes = await groq.chat.completions.create({
+            model: "llama-3.1-8b-instant",
+            messages: [
+              { role: 'system', content: "Traduis ce message en français. Réponds UNIQUEMENT avec la traduction." },
+              { role: 'user', content: lastUserMsg },
+            ],
+            max_tokens: 150,
+          });
+          translatedMsg = transRes.choices[0].message.content;
+        } catch (_) {}
+      }
+      await sendTelegramAlert(lastUserMsg, translatedMsg, propertyData);
+    }
 
     res.status(200).json({ answer: responseText });
 
   } catch (error) {
-    res.status(200).json({ answer: "Je reste à votre écoute pour vous aider." });
+    console.error("Erreur chat.js:", error);
+    const errorMessages = {
+      fr: "Je rencontre un problème technique momentané. Veuillez réessayer dans quelques instants.",
+      en: "I'm experiencing a brief technical issue. Please try again in a moment.",
+      es: "Estoy experimentando un problema técnico. Por favor, inténtelo de nuevo.",
+      de: "Ich habe gerade ein technisches Problem. Bitte versuchen Sie es erneut.",
+      it: "Sto riscontrando un problema tecnico. Si prega di riprovare.",
+    };
+    res.status(200).json({
+      answer: errorMessages[langCode] || errorMessages['en'],
+    });
   }
 }
