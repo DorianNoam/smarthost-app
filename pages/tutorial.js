@@ -14,7 +14,8 @@ export default function Tutorial() {
   }, []);
 
   const handleTelegramSmartLink = () => {
-    const botName = "MonMajordomeIARobot";
+    // NOM DU ROBOT CRÉÉ SUR TELEGRAM
+    const botName = "Marc_Alerte_Bot"; 
     const userId = user?.id;
     
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
@@ -64,24 +65,31 @@ export default function Tutorial() {
         .feature-list li { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 12px; font-size: 15px; color: #334155; }
         .icon { font-size: 18px; }
 
-        .tip-box { background: #fff7ed; border-left: 4px solid #f97316; padding: 20px; border-radius: 12px; font-size: 14px; color: #9a3412; margin-top: 20px; }
-        
+        /* Styles Telegram Spécifiques & Responsive */
         .telegram-alert { border: 2px solid #0088cc; background: #f0f9ff; }
-        .telegram-header { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }
-        .download-buttons { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
-        .btn-dl { padding: 12px 20px; border-radius: 10px; font-size: 13px; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 8px; transition: 0.2s; }
+        .telegram-header { display: flex; align-items: center; gap: 20px; margin-bottom: 20px; }
+        
+        .download-area { background: rgba(255,255,255,0.6); padding: 20px; border-radius: 16px; margin: 25px 0; }
+        .download-buttons { display: flex; gap: 12px; margin-top: 15px; }
+        
+        .btn-dl { flex: 1; padding: 14px; border-radius: 10px; font-size: 14px; font-weight: 700; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; }
         .btn-apple { background: #000; color: white; }
         .btn-google { background: #34a853; color: white; }
-        .btn-link-bot { background: #0088cc; color: white; width: 100%; justify-content: center; margin-top: 20px; font-size: 16px; padding: 18px; border: none; cursor: pointer; border-radius: 12px; font-weight: 800; }
+        
+        .link-area { text-align: center; margin-top: 30px; }
+        .btn-link-bot { background: #0088cc; color: white; width: 100%; max-width: 400px; justify-content: center; font-size: 16px; padding: 18px; border: none; cursor: pointer; border-radius: 15px; font-weight: 800; box-shadow: 0 4px 12px rgba(0,136,204,0.2); }
 
         .cta-footer { text-align: center; margin-top: 60px; padding: 40px; background: #1a2a6c; border-radius: 24px; color: white; }
-        .btn-start { background: #fbbf24; color: #1a2a6c; padding: 16px 32px; border-radius: 12px; font-weight: 800; border: none; cursor: pointer; font-size: 18px; margin-top: 20px; transition: 0.2s; }
+        .btn-start { background: #fbbf24; color: #1a2a6c; padding: 16px 32px; border-radius: 12px; font-weight: 800; border: none; cursor: pointer; font-size: 18px; margin-top: 20px; }
 
-        @media (max-width: 600px) {
+        @media (max-width: 700px) {
           h1 { font-size: 28px; }
+          .tutorial-container { padding: 40px 15px; }
           .step-card { padding: 30px 20px; }
-          .step-number { font-size: 80px; }
           .grid-mini { grid-template-columns: 1fr; }
+          .telegram-header { flex-direction: column; text-align: center; }
+          .download-buttons { flex-direction: column; }
+          .btn-dl { width: 100%; }
         }
       `}</style>
 
@@ -90,85 +98,78 @@ export default function Tutorial() {
       </Link>
 
       <h1>Guide de mise en route</h1>
-      <p className="subtitle">Configurez MajorMarc en 4 étapes clés.</p>
+      <p className="subtitle">Suivez ces 4 étapes pour automatiser votre gestion.</p>
 
-      {/* ÉTAPE 1 */}
+      {/* ÉTAPES 1, 2, 3 Identiques à vos besoins... */}
       <div className="step-card">
         <div className="step-number">1</div>
         <div className="step-content">
           <span className="badge">Démarrage</span>
           <h2>Créez votre logement</h2>
           <p>Ajoutez votre propriété pour lui donner une identité et une localisation précise.</p>
-          <ul className="feature-list">
-            <li><span className="icon">🏠</span> <strong>Nom :</strong> Indiquez le nom de votre villa.</li>
-            <li><span className="icon">📍</span> <strong>Adresse :</strong> Indispensable pour la localisation Google Maps.</li>
-          </ul>
         </div>
       </div>
 
-      {/* ÉTAPE 2 */}
       <div className="step-card">
         <div className="step-number">2</div>
         <div className="step-content">
           <span className="badge">Sérénité</span>
           <h2>Dressez votre Majordome (Les 10 Piliers)</h2>
-          <p>Remplissez un maximum d'informations pour que Marc réponde à tout sans vous déranger :</p>
           <div className="grid-mini">
             <ul className="feature-list">
-              <li><span className="icon">🔑</span> Arrivée & Boîte à clés.</li>
-              <li><span className="icon">📶</span> Wifi & Box.</li>
-              <li><span className="icon">🗑️</span> Poubelles & Tri.</li>
-              <li><span className="icon">☕</span> Équipements & Cuisine.</li>
-              <li><span className="icon">📜</span> Règlement intérieur.</li>
+              <li><span className="icon">🔑</span> Arrivée & Boîte à clés</li>
+              <li><span className="icon">📶</span> Wifi & Box</li>
+              <li><span className="icon">🗑️</span> Poubelles & Tri</li>
+              <li><span className="icon">☕</span> Équipements</li>
+              <li><span className="icon">📜</span> Règlement</li>
             </ul>
             <ul className="feature-list">
-              <li><span className="icon">🚌</span> Transports favoris.</li>
-              <li><span className="icon">🍕</span> Vos bonnes adresses.</li>
-              <li><span className="icon">🚒</span> Urgences & Sécurité.</li>
-              <li><span className="icon">💡</span> Compteurs & Énergie.</li>
-              <li><span className="icon">✨</span> Services Plus.</li>
+              <li><span className="icon">🚌</span> Transports</li>
+              <li><span className="icon">🍕</span> Bonnes adresses</li>
+              <li><span className="icon">🚒</span> Urgences</li>
+              <li><span className="icon">💡</span> Énergie</li>
+              <li><span className="icon">✨</span> Services Plus</li>
             </ul>
           </div>
         </div>
       </div>
 
-      {/* ÉTAPE 3 */}
       <div className="step-card">
         <div className="step-number">3</div>
         <div className="step-content">
           <span className="badge">Mise en service</span>
           <h2>Partagez l'accès voyageur</h2>
-          <p>Copiez votre lien personnalisé et collez-le dans vos messages de bienvenue Airbnb ou Booking.</p>
+          <p>Copiez votre lien et collez-le dans vos messages Airbnb ou Booking.</p>
         </div>
       </div>
 
-      {/* ÉTAPE 4 - TELEGRAM / URGENCE */}
+      {/* ÉTAPE 4 - TELEGRAM RESPONSIVE */}
       <div id="step-4" className="step-card telegram-alert">
         <div className="step-content">
           <div className="telegram-header">
-            <span style={{fontSize: '40px'}}>🚨</span>
+            <span style={{fontSize: '48px'}}>🚨</span>
             <h2>Urgence & Alerte : Votre filet de sécurité</h2>
           </div>
           <p>
             En cas d'urgence ou si l'IA ne connaît pas la réponse, le système vous contacte immédiatement via <strong>Telegram</strong>.
           </p>
-          <blockquote style={{borderLeft: '4px solid #0088cc', paddingLeft: '15px', color: '#006699', fontWeight: '600', marginBottom: '25px'}}>
-            "Lier Telegram est indispensable pour être informé à la seconde près dès qu'une intervention humaine est nécessaire."
-          </blockquote>
-
+          
           <div className="download-area">
-            <p style={{fontSize: '14px', fontWeight: '800', marginBottom: '10px'}}>1. Téléchargez l'application Telegram :</p>
+            <p style={{fontSize: '14px', fontWeight: '800', textAlign: 'center', marginBottom: '10px'}}>1. Téléchargez l'application Telegram :</p>
             <div className="download-buttons">
               <a href="https://apps.apple.com/app/telegram-messenger/id686449807" target="_blank" className="btn-dl btn-apple">🍎 iPhone</a>
               <a href="https://play.google.com/store/apps/details?id=org.telegram.messenger" target="_blank" className="btn-dl btn-google">🤖 Android</a>
             </div>
           </div>
 
-          <div className="link-area" style={{marginTop: '30px'}}>
-            <p style={{fontSize: '14px', fontWeight: '800', marginBottom: '10px'}}>2. Activez les notifications :</p>
+          <div className="link-area">
+            <p style={{fontSize: '14px', fontWeight: '800', marginBottom: '15px'}}>2. Activez les notifications :</p>
             <button onClick={handleTelegramSmartLink} className="btn-link-bot">
               ✈️ Lier mon compte Telegram maintenant
             </button>
+            <p style={{fontSize: '12px', color: '#64748b', marginTop: '15px'}}>
+              <b>Important :</b> Une fois dans l'application, appuyez sur <b>"DÉMARRER"</b>.
+            </p>
           </div>
         </div>
       </div>
