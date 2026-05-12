@@ -58,7 +58,7 @@ export default function Login() {
 
       <div className="login-box">
         <Link href="/">
-          <h1>Major<span className="gold">Marc</span></h1>
+          <h1>Alfred<span className="gold">Major</span></h1>
         </Link>
         <p style={{color: '#666'}}>Ravi de vous revoir.</p>
 
@@ -85,7 +85,6 @@ export default function Login() {
               onChange={(e) => setPassword(e.target.value)}
               required 
             />
-            {/* ✅ AJOUT DU LIEN MOT DE PASSE OUBLIÉ */}
             <Link href="/forgot-password">
               <span className="forgot-link">Mot de passe oublié ?</span>
             </Link>
