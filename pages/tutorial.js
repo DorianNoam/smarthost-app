@@ -239,8 +239,8 @@ export default function Tutorial() {
           border-radius: 28px; padding: 50px 40px; text-align: center;
           color: white; margin-top: 40px;
         }
-        .cta-footer h2 { margin: 0 0 12px; font-size: 28px; font-weight: 900; }
-        .cta-footer p { margin: 0 0 30px; opacity: 0.8; font-size: 16px; }
+        .cta-footer h2 { margin: 0 0 12px; font-size: 28px; font-weight: 900; color: white; }
+        .cta-footer p { margin: 0 0 30px; color: rgba(255,255,255,0.85); font-size: 16px; }
         .btn-cta {
           background: #fbbf24; color: #1a2a6c; padding: 18px 40px;
           border-radius: 50px; font-weight: 900; font-size: 18px;
