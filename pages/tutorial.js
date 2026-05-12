@@ -56,7 +56,6 @@ export default function Tutorial() {
 
         .cta-footer { text-align: center; margin-top: 60px; padding: 40px; background: #1a2a6c; border-radius: 24px; color: white; }
         .btn-start { background: #fbbf24; color: #1a2a6c; padding: 16px 32px; border-radius: 12px; font-weight: 800; border: none; cursor: pointer; font-size: 18px; margin-top: 20px; transition: 0.2s; }
-        .btn-start:hover { transform: scale(1.05); }
 
         @media (max-width: 600px) {
           h1 { font-size: 28px; }
@@ -70,8 +69,8 @@ export default function Tutorial() {
         <a className="back-link">← Retour au tableau de bord</a>
       </Link>
 
-      <h1>Comment fonctionne MajorMarc ?</h1>
-      <p className="subtitle">Suivez ces 4 étapes pour automatiser la gestion de vos voyageurs.</p>
+      <h1>Guide de mise en route</h1>
+      <p className="subtitle">Configurez MajorMarc en 4 étapes pour automatiser votre gestion locative.</p>
 
       {/* ÉTAPE 1 */}
       <div className="step-card">
@@ -79,10 +78,10 @@ export default function Tutorial() {
         <div className="step-content">
           <span className="badge">Démarrage</span>
           <h2>Créez votre logement</h2>
-          <p>Ajoutez votre propriété en quelques clics pour activer son intelligence locale.</p>
+          <p>Ajoutez votre propriété pour lui donner une identité et une localisation précise.</p>
           <ul className="feature-list">
-            <li><span className="icon">🏠</span> <strong>Nom :</strong> Identifiez votre villa (ex: Villa 08).</li>
-            <li><span className="icon">📍</span> <strong>Adresse :</strong> Indispensable pour que Marc localise les transports et commerces autour du logement.</li>
+            <li><span className="icon">🏠</span> <strong>Nom :</strong> Indiquez le nom de votre villa ou appartement.</li>
+            <li><span className="icon">📍</span> <strong>Adresse :</strong> Crucial pour que l'IA localise les commerces et transports environnants.</li>
           </ul>
         </div>
       </div>
@@ -94,17 +93,16 @@ export default function Tutorial() {
           <span className="badge">Performance & Sérénité</span>
           <h2>Dressez votre Majordome (Les 10 Piliers)</h2>
           <p>
-            Major Marc est intelligent, mais il a besoin de vos consignes pour être parfait. 
-            <strong> Remplissez un maximum d'informations pour ne plus jamais être dérangé par un voyageur :</strong>
+            MajorMarc gère le quotidien à votre place. <strong>Plus vous remplissez d'informations, moins vous serez dérangé pendant le séjour :</strong>
           </p>
           
           <div className="grid-mini">
             <ul className="feature-list">
-              <li><span className="icon">🔑</span> <strong>Arrivée :</strong> Accès, codes et horaires.</li>
-              <li><span className="icon">📶</span> <strong>Wifi :</strong> Emplacement et mots de passe.</li>
+              <li><span className="icon">🔑</span> <strong>Arrivée :</strong> Accès et boîte à clés.</li>
+              <li><span className="icon">📶</span> <strong>Wifi :</strong> Codes et emplacement box.</li>
               <li><span className="icon">🗑️</span> <strong>Poubelles :</strong> Jours de sortie et tri.</li>
-              <li><span className="icon">☕</span> <strong>Équipements :</strong> Cafetière, Clim, TV.</li>
-              <li><span className="icon">📜</span> <strong>Règlement :</strong> Tabac, animaux, bruit.</li>
+              <li><span className="icon">☕</span> <strong>Équipements :</strong> Machine à café, Clim, TV.</li>
+              <li><span className="icon">📜</span> <strong>Règlement :</strong> Tabac, bruit, animaux.</li>
             </ul>
             <ul className="feature-list">
               <li><span className="icon">🚌</span> <strong>Transports :</strong> Vos lignes préférées.</li>
@@ -116,7 +114,7 @@ export default function Tutorial() {
           </div>
 
           <div className="tip-box">
-            <strong>💡 La Règle d'Or :</strong> Un Majordome bien informé, c'est un hôte qui n'est jamais sollicité inutilement. Plus vous détaillez, plus vous gagnez en liberté.
+            <strong>💡 Rappel :</strong> Chaque détail renseigné ici est une notification en moins sur votre téléphone durant le séjour de vos voyageurs.
           </div>
         </div>
       </div>
@@ -127,28 +125,32 @@ export default function Tutorial() {
         <div className="step-content">
           <span className="badge">Mise en service</span>
           <h2>Partagez l'accès voyageur</h2>
-          <p>Une fois activé, Marc devient le point de contact privilégié de vos locataires.</p>
+          <p>Marc devient l'interlocuteur unique de vos locataires pour toutes leurs questions logistiques.</p>
           <ul className="feature-list">
-            <li><span className="icon">🔗</span> Utilisez le bouton <strong>"Lien d'Accès Voyageur"</strong> sur votre tableau de bord.</li>
-            <li><span className="icon">📲</span> Copiez le message et collez-le dans vos instructions Airbnb ou Booking.</li>
+            <li><span className="icon">🔗</span> Récupérez votre <strong>"Lien d'Accès Voyageur"</strong> sur le dashboard.</li>
+            <li><span className="icon">📲</span> Collez-le simplement dans votre message de bienvenue Airbnb ou Booking.</li>
           </ul>
         </div>
       </div>
 
-      {/* ÉTAPE 4 */}
+      {/* ÉTAPE 4 - TELEGRAM / URGENCE */}
       <div className="step-card telegram-alert">
         <div className="step-content">
           <div className="telegram-header">
             <span style={{fontSize: '40px'}}>🚨</span>
-            <h2>Indispensable : Ne ratez aucun message !</h2>
+            <h2>Urgence & Alerte : Votre filet de sécurité</h2>
           </div>
           
           <p>
-            La réactivité est la clé d'un commentaire 5 étoiles. Liez votre compte <strong>Telegram</strong> pour être alerté instantanément sur votre téléphone dès qu'un voyageur pose une question.
+            MajorMarc gère 95% des demandes en autonomie. Cependant, <strong>en cas d'urgence ou si l'IA ne connaît pas la réponse</strong>, le système vous contacte immédiatement via <strong>Telegram</strong>.
           </p>
           
+          <blockquote style={{borderLeft: '4px solid #0088cc', paddingLeft: '15px', color: '#006699', fontWeight: '600', marginBottom: '25px'}}>
+            "Lier Telegram est indispensable pour être informé à la seconde près dès qu'une intervention humaine est nécessaire."
+          </blockquote>
+
           <div className="download-area">
-            <p style={{fontSize: '14px', fontWeight: '800', marginBottom: '10px'}}>1. Installez l'application Telegram :</p>
+            <p style={{fontSize: '14px', fontWeight: '800', marginBottom: '10px'}}>1. Téléchargez l'application Telegram :</p>
             <div className="download-buttons">
               <a href="https://apps.apple.com/app/telegram-messenger/id686449807" target="_blank" className="btn-dl btn-apple">
                 🍎 iPhone / App Store
@@ -161,7 +163,7 @@ export default function Tutorial() {
 
           <div className="link-area" style={{marginTop: '30px'}}>
             <p style={{fontSize: '14px', fontWeight: '800', marginBottom: '10px'}}>2. Activez les notifications MajorMarc :</p>
-            <p style={{fontSize: '13px'}}>Cliquez ci-dessous puis appuyez sur le bouton <strong>"DÉMARRER"</strong> dans Telegram.</p>
+            <p style={{fontSize: '13px'}}>Cliquez ci-dessous puis appuyez sur le bouton <strong>"DÉMARRER"</strong> dans l'application.</p>
             <a href="https://t.me/MonMajordomeIARobot" target="_blank" className="btn-dl btn-link-bot" style={{textDecoration:'none'}}>
               ✈️ Lier mon compte Telegram maintenant
             </a>
@@ -170,8 +172,8 @@ export default function Tutorial() {
       </div>
 
       <div className="cta-footer">
-        <h2>Prêt à automatiser votre gestion ?</h2>
-        <p>Votre majordome n'attend plus que vos instructions.</p>
+        <h2>Prêt à gagner en liberté ?</h2>
+        <p>Votre majordome n'attend plus que vos instructions pour prendre le relais.</p>
         <Link href="/add-property" legacyBehavior>
           <button className="btn-start">Ajouter mon logement</button>
         </Link>
