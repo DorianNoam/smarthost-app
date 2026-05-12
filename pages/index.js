@@ -11,7 +11,7 @@ export default function Home() {
         <meta property="og:title" content="MajorMarc — Le Majordome IA pour vos locations" />
         <meta property="og:description" content="Marc répond à vos voyageurs 24h/24, recommande les meilleures adresses locales et vous alerte en cas d'urgence. 1er mois à 9,90€." />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://smarthost-app.vercel.app" />
+        <meta property="og:url" content="https://alfredmajor.com" />
         <meta property="og:image" content="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1200&h=630&q=80" />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
