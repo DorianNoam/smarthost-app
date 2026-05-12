@@ -5,21 +5,19 @@ export default function Home() {
   return (
     <div className="container">
       <Head>
-        <title>alfred major | Le Majordome IA pour vos locations Courte durée</title>
+        <title>Alfred Major | Le Majordome IA pour vos locations Courte durée</title>
         <meta name="description" content="Déléguez la gestion de vos voyageurs à Alfred, l'IA qui répond 24h/24, recommande des adresses locales et vous alerte uniquement en cas d'urgence." />
-        {/* ✅ Open Graph — aperçu sur WhatsApp, LinkedIn, Facebook */}
         <meta property="og:title" content="Alfred Major — Le Majordome IA pour vos locations" />
-        <meta property="og:description" content="Alfred  répond à vos voyageurs 24h/24, recommande les meilleures adresses locales et vous alerte en cas d'urgence. 1er mois à 9,90€." />
+        <meta property="og:description" content="Alfred répond à vos voyageurs 24h/24, recommande les meilleures adresses locales et vous alerte en cas d'urgence. 1er mois à 9,90€." />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://alfredmajor.com" />
         <meta property="og:image" content="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1200&h=630&q=80" />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
         <meta property="og:locale" content="fr_FR" />
-        {/* Twitter Card */}
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="MajorMarc — Le Majordome IA pour vos locations" />
-        <meta name="twitter:description" content="Marc répond à vos voyageurs 24h/24. 1er mois à 9,90€." />
+        <meta name="twitter:title" content="Alfred Major — Le Majordome IA pour vos locations" />
+        <meta name="twitter:description" content="Alfred répond à vos voyageurs 24h/24. 1er mois à 9,90€." />
         <meta name="twitter:image" content="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1200&h=630&q=80" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
@@ -105,7 +103,7 @@ export default function Home() {
         .chat-body { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
         .msg { padding: 12px 16px; border-radius: 15px; font-size: 13.5px; line-height: 1.5; max-width: 85%; position: relative; color: #111; }
         .msg-user { background: #dcf8c6; align-self: flex-end; border-bottom-right-radius: 2px; }
-        .msg-marc { background: white; align-self: flex-start; border-bottom-left-radius: 2px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .msg-alfred { background: white; align-self: flex-start; border-bottom-left-radius: 2px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
         .msg-time { display: block; font-size: 10px; color: #888; text-align: right; margin-top: 5px; }
 
         .demo-features { flex: 1; max-width: 500px; width: 100%; }
@@ -132,7 +130,7 @@ export default function Home() {
         .benefit-card h4 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 18px; color: #0f172a; margin-bottom: 10px; font-weight: 700; }
         .benefit-card p { color: #475569; font-size: 15px; line-height: 1.6; margin: 0; }
 
-        /* ✅ --- TÉMOIGNAGES --- */
+        /* --- TÉMOIGNAGES --- */
         .testimonials { padding: 100px 5%; background: white; text-align: center; }
         .testi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 28px; max-width: 1100px; margin: 50px auto 0; }
         .testi-card { background: #f8fafc; border-radius: 24px; padding: 36px; text-align: left; border: 1px solid #e2e8f0; transition: 0.3s; position: relative; }
@@ -152,7 +150,6 @@ export default function Home() {
         .pricing-header { max-width: 800px; margin: 0 auto 50px; }
         .pricing-header h2 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: clamp(28px, 5vw, 40px); color: #0f172a; margin-bottom: 15px; font-weight: 800; letter-spacing: -1px; }
         .pricing-header p { font-size: 16px; color: #475569; line-height: 1.6; }
-
         .price-card-home { 
           background: white; padding: 50px 40px; border-radius: 24px; 
           box-shadow: 0 25px 50px -12px rgba(0,0,0,0.1); text-align: center; 
@@ -213,7 +210,7 @@ export default function Home() {
       {/* NAVIGATION */}
       <nav>
         <Link href="/" passHref legacyBehavior>
-          <a className="brand">Major<span className="gold">Marc</span></a>
+          <a className="brand">Alfred<span className="gold">Major</span></a>
         </Link>
         <div className="nav-links">
           <a href="#fonctionnement" className="nav-link">Fonctionnement</a>
@@ -226,7 +223,7 @@ export default function Home() {
       <section className="hero">
         <div className="hero-content">
           <div className="badge-hero">⚡ En ce moment : Votre 1er mois à 9,90€</div>
-          <h1>Dormez sur vos deux oreilles.<br/>Marc gère vos voyageurs.</h1>
+          <h1>Dormez sur vos deux oreilles.<br/>Alfred gère vos voyageurs.</h1>
           <p className="subtitle">
             Le premier majordome IA qui répond aux questions 24h/24, recommande les meilleurs restaurants locaux, et vous alerte uniquement en cas d'urgence.
           </p>
@@ -265,7 +262,7 @@ export default function Home() {
           <div className="step-card">
             <div className="step-number">3</div>
             <h3>Soufflez</h3>
-            <p>Marc répond à 95% des questions de vos voyageurs. Vous n'intervenez qu'en cas d'urgence.</p>
+            <p>Alfred répond à 95% des questions de vos voyageurs. Vous n'intervenez qu'en cas d'urgence.</p>
           </div>
         </div>
       </section>
@@ -279,21 +276,21 @@ export default function Home() {
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
             </div>
             <h3>Le message à 23h30</h3>
-            <p>Le voyageur arrive tard et ne trouve pas le wifi. Votre téléphone sonne pendant votre sommeil. Laissez Marc s'en charger.</p>
+            <p>Le voyageur arrive tard et ne trouve pas le wifi. Votre téléphone sonne pendant votre sommeil. Laissez Alfred s'en charger.</p>
           </div>
           <div className="pain-card">
             <div className="pain-icon-wrapper">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
             </div>
             <h3>La barrière de la langue</h3>
-            <p>Marc parle couramment plus de 30 langues pour assister vos touristes étrangers sans aucun effort de traduction.</p>
+            <p>Alfred parle couramment plus de 30 langues pour assister vos touristes étrangers sans aucun effort de traduction.</p>
           </div>
           <div className="pain-card">
             <div className="pain-icon-wrapper">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="1 4 1 10 7 10"></polyline><polyline points="23 20 23 14 17 14"></polyline><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"></path></svg>
             </div>
             <h3>Les questions répétées</h3>
-            <p>Départ, commerces... Marc répond inlassablement à toutes les demandes avec une politesse irréprochable.</p>
+            <p>Départ, commerces... Alfred répond inlassablement à toutes les demandes avec une politesse irréprochable.</p>
           </div>
         </div>
       </section>
@@ -302,7 +299,7 @@ export default function Home() {
       <section id="demo" className="demo-section">
         <div className="demo-header">
           <h2>L'illusion parfaite d'une conciergerie</h2>
-          <p style={{fontSize: '16px', color: '#cbd5e1', maxWidth: '700px', margin: '0 auto'}}>Marc comprend le contexte, cherche des recommandations locales et répond naturellement.</p>
+          <p style={{fontSize: '16px', color: '#cbd5e1', maxWidth: '700px', margin: '0 auto'}}>Alfred comprend le contexte, cherche des recommandations locales et répond naturellement.</p>
         </div>
 
         <div className="demo-layout">
@@ -316,7 +313,7 @@ export default function Home() {
                     Hi! We just arrived. Where are the trash bins and do you have a restaurant recommendation?
                     <span className="msg-time">19:42</span>
                   </div>
-                  <div className="msg msg-marc">
+                  <div className="msg msg-alfred">
                     Welcome to Villa Noam! 🎩<br/><br/>
                     The grey and green bins are under the sink. For dinner, I highly recommend "Pizzeria Da Luigi", located just a 5-minute walk from the villa! 🍕
                     <span className="msg-time">19:42</span>
@@ -333,7 +330,7 @@ export default function Home() {
               </div>
               <div className="feat-text">
                 <h4>Réponses Instantanées</h4>
-                <p>Vos voyageurs n'attendent plus. Marc répond dans la seconde en piochant dans votre base de données sécurisée.</p>
+                <p>Vos voyageurs n'attendent plus. Alfred répond dans la seconde en piochant dans votre base de données sécurisée.</p>
               </div>
             </div>
             <div className="feat-row">
@@ -342,7 +339,7 @@ export default function Home() {
               </div>
               <div className="feat-text">
                 <h4>Recherche Web Intégrée</h4>
-                <p>Marc scanne les environs du logement sur internet pour faire des recommandations précises (restos, pharmacies...).</p>
+                <p>Alfred scanne les environs du logement sur internet pour faire des recommandations précises (restos, pharmacies...).</p>
               </div>
             </div>
             <div style={{marginTop: '30px'}}>
@@ -357,7 +354,7 @@ export default function Home() {
           <div className="kf-text">
             <span>Le Filet de Sécurité</span>
             <h3>Vous n'êtes dérangé que lorsque c'est vital.</h3>
-            <p>Si un client signale une urgence (fuite d'eau, panne), Marc vous transfère immédiatement l'information via Telegram.</p>
+            <p>Si un client signale une urgence (fuite d'eau, panne), Alfred vous transfère immédiatement l'information via Telegram.</p>
             <p><b>Résultat :</b> Vous filtrez 95% du bruit quotidien et gardez le contrôle sur l'essentiel.</p>
           </div>
           <div className="notif-mockup">
@@ -367,7 +364,7 @@ export default function Home() {
                 <span>Maintenant</span>
               </div>
               <p style={{fontSize: '13px', margin: 0, color: '#475569', lineHeight: '1.5'}}>
-                🚨 <b>ALERTE alfred major</b><br/><br/>
+                🚨 <b>ALERTE ALFRED MAJOR</b><br/><br/>
                 🏠 Logement : La Villa Noam<br/>
                 💬 Client : "Il y a une énorme fuite sous l'évier !"
               </p>
@@ -398,17 +395,16 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ✅ TÉMOIGNAGES */}
+      {/* TÉMOIGNAGES */}
       <section className="testimonials">
         <h2 className="section-title">Ce que disent nos premiers hôtes</h2>
-        <p style={{color: '#64748b', fontSize: '16px', marginTop: '10px'}}>Ils ont adopté Marc et ne reviendront plus en arrière.</p>
+        <p style={{color: '#64748b', fontSize: '16px', marginTop: '10px'}}>Ils ont adopté Alfred et ne reviendront plus en arrière.</p>
         <div className="testi-grid">
-
           <div className="testi-card">
             <span className="testi-badge">✓ Hôte vérifié</span>
             <div className="testi-stars">★★★★★</div>
             <div className="testi-quote">
-              <span>Marc répond à toutes les questions de mes voyageurs, même à 3h du matin. Je n'ai plus reçu un seul appel pour le code WiFi depuis que je l'ai installé. Un vrai soulagement.</span>
+              <span>Alfred répond à toutes les questions de mes voyageurs, même à 3h du matin. Je n'ai plus reçu un seul appel pour le code WiFi depuis que je l'ai installé. Un vrai soulagement.</span>
             </div>
             <div className="testi-author">
               <div className="testi-avatar" style={{background: '#fef3c7'}}>👩</div>
@@ -423,7 +419,7 @@ export default function Home() {
             <span className="testi-badge">✓ Hôte vérifié</span>
             <div className="testi-stars">★★★★★</div>
             <div className="testi-quote">
-              <span>J'avais des voyageurs étrangers qui ne parlaient pas français. Marc leur a répondu en anglais, espagnol et même en allemand. Mes notes Airbnb ont augmenté depuis.</span>
+              <span>J'avais des voyageurs étrangers qui ne parlaient pas français. Alfred leur a répondu en anglais, espagnol et même en allemand. Mes notes Airbnb ont augmenté depuis.</span>
             </div>
             <div className="testi-author">
               <div className="testi-avatar" style={{background: '#dbeafe'}}>👨</div>
@@ -448,7 +444,6 @@ export default function Home() {
               </div>
             </div>
           </div>
-
         </div>
       </section>
 
@@ -458,7 +453,6 @@ export default function Home() {
           <h2>L'excellence accessible.</h2>
           <p>Profitez du service d'un majordome privé 24h/24 pour une fraction du coût d'une conciergerie traditionnelle.</p>
         </div>
-
         <div className="price-card-home">
           <div className="badge-promo">⚡ Offre : 1er mois à 9,90€</div>
           <div className="plan-name">Licence Unique</div>
@@ -500,7 +494,7 @@ export default function Home() {
       <footer>
         <div className="footer-content">
           <div className="footer-col">
-            <h3>Major<span className="gold">Marc</span></h3>
+            <h3>Alfred<span className="gold">Major</span></h3>
             <p style={{maxWidth: '300px', lineHeight: '1.6'}}>
               Le premier majordome IA qui simplifie la vie des hôtes courte durée.
             </p>
@@ -523,12 +517,12 @@ export default function Home() {
           <div className="footer-col">
             <h4 style={{color: 'white', marginBottom: '15px'}}>Contact</h4>
             <ul>
-              <li><a href="mailto:contact@majormarc.com">contact@majormarc.com</a></li>
+              <li><a href="mailto:contact@alfredmajor.com">contact@alfredmajor.com</a></li>
             </ul>
           </div>
         </div>
         <div className="footer-bottom">
-          <p>© 2026 alfred major - Tous droits réservés.</p>
+          <p>© 2026 Alfred Major - Tous droits réservés.</p>
         </div>
       </footer>
     </div>
