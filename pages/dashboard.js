@@ -36,7 +36,7 @@ export default function Dashboard() {
       if (props) setProperties(props);
       if (prof) setProfile(prof);
     } catch (err) {
-      console.error("Erreur chargement données:", err);
+      console.error("Erreur chargement:", err);
     } finally {
       setLoading(false);
     }
@@ -79,7 +79,7 @@ Bon séjour ! 🎩`;
       const data = await res.json();
       if (data.url) window.location.href = data.url;
     } catch (err) {
-      alert("Erreur Stripe");
+      alert("Erreur de connexion à Stripe.");
     } finally {
       setPaymentLoading(false);
     }
@@ -141,17 +141,17 @@ Bon séjour ! 🎩`;
         .tutorial-box { background: #fbbf24; color: #1a2a6c; padding: 15px; border-radius: 12px; font-size: 13px; font-weight: 700; text-align: center; cursor: pointer; display: block; margin-top: 10px;}
 
         main { flex: 1; margin-left: 260px; padding: 50px; box-sizing: border-box; }
-        .header-area { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
+        .header-area { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
         h1 { margin: 0; color: #1e293b; font-size: 32px; font-weight: 800; }
 
-        /* --- TELEGRAM BANNER --- */
+        /* BANNIÈRE TELEGRAM */
         .telegram-banner { background: #f0f9ff; border: 1px solid #0088cc; border-radius: 20px; padding: 20px; margin-bottom: 40px; display: flex; align-items: center; gap: 20px; box-shadow: 0 4px 12px rgba(0, 136, 204, 0.1); }
         .tg-icon { font-size: 32px; }
         .tg-text h4 { margin: 0 0 5px 0; color: #0088cc; font-weight: 800; }
         .tg-text p { margin: 0; font-size: 13px; color: #475569; line-height: 1.4; }
         .btn-link-tg { background: #0088cc; color: white; padding: 10px 20px; border-radius: 10px; font-weight: 700; font-size: 13px; border: none; cursor: pointer; white-space: nowrap; }
         
-        .empty-state { background: white; padding: 60px; border-radius: 32px; text-align: center; border: 2px dashed #e2e8f0; }
+        .empty-state { background: white; padding: 60px; border-radius: 32px; text-align: center; border: 2px dashed #e2e8f0; grid-column: 1 / -1; }
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 25px; }
         .card { background: white; border-radius: 24px; padding: 25px; border: 1px solid #e2e8f0; position: relative; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
         .btn-delete { position: absolute; top: 15px; right: 15px; border: none; background: none; cursor: pointer; color: #94a3b8; font-size: 18px; transition: 0.2s; }
@@ -214,7 +214,7 @@ Bon séjour ! 🎩`;
           <button onClick={handleAddClick} className="btn-add">+ Ajouter</button>
         </div>
 
-        {/* ALERTE TELEGRAM SÉCURISÉE */}
+        {/* ALERTE TELEGRAM */}
         {!loading && profile && !profile.telegram_id && (
           <div className="telegram-banner">
             <div className="tg-icon">🚨</div>
@@ -222,20 +222,20 @@ Bon séjour ! 🎩`;
               <h4>Action Requise : Sécurisez vos urgences</h4>
               <p>Liez votre compte Telegram pour être alerté immédiatement en cas d'urgence ou de difficulté.</p>
             </div>
-            <Link href="/tutorial" legacyBehavior><button className="btn-link-tg">Lier mon Telegram</button></Link>
+            <Link href="/tutorial#step-4" legacyBehavior><button className="btn-link-tg">Lier mon Telegram</button></Link>
           </div>
         )}
 
-        {properties.length === 0 ? (
-          <div className="empty-state">
-            <span style={{fontSize: '60px'}}>✨</span>
-            <h2 style={{color: '#1a2a6c', fontWeight: 800}}>Bienvenue sur MajorMarc !</h2>
-            <p style={{color: '#64748b', maxWidth: '400px', margin: '15px auto 30px'}}>Commencez par ajouter votre premier logement pour configurer votre majordome IA.</p>
-            <button onClick={handleAddClick} className="btn-add">Créer mon premier logement</button>
-          </div>
-        ) : (
-          <div className="grid">
-            {properties.map((prop) => (
+        <div className="grid">
+          {properties.length === 0 ? (
+            <div className="empty-state">
+              <span style={{fontSize: '60px'}}>✨</span>
+              <h2 style={{color: '#1a2a6c', fontWeight: 800}}>Bienvenue sur MajorMarc !</h2>
+              <p style={{color: '#64748b', maxWidth: '400px', margin: '15px auto 30px'}}>Ajoutez votre premier logement pour configurer votre majordome IA.</p>
+              <button onClick={handleAddClick} className="btn-add">Créer mon premier logement</button>
+            </div>
+          ) : (
+            properties.map((prop) => (
               <div key={prop.id} className="card">
                 <button className="btn-delete" onClick={(e) => triggerDeleteRequest(e, prop)}>🗑️</button>
                 <h3>{prop.name}</h3>
@@ -255,9 +255,9 @@ Bon séjour ! 🎩`;
                   </div>
                 )}
               </div>
-            ))}
-          </div>
-        )}
+            ))
+          )}
+        </div>
 
         <div className="subscription-card">
           <div className="sub-info">
