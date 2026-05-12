@@ -20,7 +20,7 @@ export default function Settings() {
   });
 
   const [telegramLinked, setTelegramLinked] = useState(false);
-  const botName = "MonMajordomeIARobot"; 
+  const botName = "Marc_Alerte_Bot"; 
 
   useEffect(() => {
     loadUserData();
