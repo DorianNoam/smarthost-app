@@ -6,10 +6,10 @@ export default function Home() {
     <div className="container">
       <Head>
         <title>alfred major | Le Majordome IA pour vos locations Courte durée</title>
-        <meta name="description" content="Déléguez la gestion de vos voyageurs à Marc, l'IA qui répond 24h/24, recommande des adresses locales et vous alerte uniquement en cas d'urgence." />
+        <meta name="description" content="Déléguez la gestion de vos voyageurs à Alfred, l'IA qui répond 24h/24, recommande des adresses locales et vous alerte uniquement en cas d'urgence." />
         {/* ✅ Open Graph — aperçu sur WhatsApp, LinkedIn, Facebook */}
-        <meta property="og:title" content="MajorMarc — Le Majordome IA pour vos locations" />
-        <meta property="og:description" content="Marc répond à vos voyageurs 24h/24, recommande les meilleures adresses locales et vous alerte en cas d'urgence. 1er mois à 9,90€." />
+        <meta property="og:title" content="Alfred Major — Le Majordome IA pour vos locations" />
+        <meta property="og:description" content="Alfred  répond à vos voyageurs 24h/24, recommande les meilleures adresses locales et vous alerte en cas d'urgence. 1er mois à 9,90€." />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://alfredmajor.com" />
         <meta property="og:image" content="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1200&h=630&q=80" />
