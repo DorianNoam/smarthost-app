@@ -31,7 +31,6 @@ export default function Dashboard() {
         .select('*')
         .order('created_at', { ascending: false });
 
-      // ✅ On récupère explicitement telegram_chat_id
       const { data: prof } = await supabase
         .from('profiles')
         .select('*, telegram_chat_id')
@@ -122,7 +121,6 @@ export default function Dashboard() {
 
   if (loading) return <div style={{ padding: '50px', textAlign: 'center' }}>Chargement...</div>;
 
-  // ✅ CORRECTION : on vérifie telegram_chat_id et non telegram_id
   const telegramLinked = !!profile?.telegram_chat_id;
 
   return (
@@ -145,14 +143,12 @@ export default function Dashboard() {
         .header-area { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
         h1 { margin: 0; color: #1e293b; font-size: 32px; font-weight: 800; }
 
-        /* BANNIÈRE TELEGRAM — visible seulement si non lié */
         .telegram-banner { background: #f0f9ff; border: 1px solid #0088cc; border-radius: 20px; padding: 20px; margin-bottom: 40px; display: flex; align-items: center; gap: 20px; box-shadow: 0 4px 12px rgba(0, 136, 204, 0.1); }
         .tg-icon { font-size: 32px; }
         .tg-text h4 { margin: 0 0 5px 0; color: #0088cc; font-weight: 800; }
         .tg-text p { margin: 0; font-size: 13px; color: #475569; line-height: 1.4; }
         .btn-link-tg { background: #0088cc; color: white; padding: 10px 20px; border-radius: 10px; font-weight: 700; font-size: 13px; border: none; cursor: pointer; white-space: nowrap; }
 
-        /* BANNIÈRE TELEGRAM CONNECTÉ — verte */
         .telegram-banner-linked { background: #f0fdf4; border: 1px solid #10b981; border-radius: 20px; padding: 16px 20px; margin-bottom: 40px; display: flex; align-items: center; gap: 15px; }
         .tg-linked-text { font-size: 14px; color: #059669; font-weight: 600; }
 
@@ -202,8 +198,9 @@ export default function Dashboard() {
         }
       `}</style>
 
+      {/* ✅ SIDEBAR — Alfred Major */}
       <nav>
-        <div className="logo">MajorMarc 🎩</div>
+        <div className="logo">Alfred Major 🎩</div>
         <Link href="/dashboard" legacyBehavior><a className="nav-item active">🏠 <span className="nav-text">Mes Logements</span></a></Link>
         <Link href="/settings" legacyBehavior><a className="nav-item">⚙️ <span className="nav-text">Paramètres</span></a></Link>
         <div className="nav-footer">
@@ -217,7 +214,7 @@ export default function Dashboard() {
           <button onClick={handleAddClick} className="btn-add">+ Ajouter</button>
         </div>
 
-        {/* ✅ BANNIÈRE TELEGRAM — disparaît quand lié */}
+        {/* BANNIÈRE TELEGRAM — disparaît quand lié */}
         {!telegramLinked && (
           <div className="telegram-banner">
             <div className="tg-icon">🚨</div>
@@ -231,7 +228,7 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* ✅ BANNIÈRE VERTE quand Telegram est connecté */}
+        {/* BANNIÈRE VERTE quand Telegram est connecté */}
         {telegramLinked && (
           <div className="telegram-banner-linked">
             <span style={{ fontSize: '20px' }}>✅</span>
@@ -243,7 +240,8 @@ export default function Dashboard() {
           {properties.length === 0 ? (
             <div className="empty-state">
               <span style={{ fontSize: '60px' }}>✨</span>
-              <h2 style={{ color: '#1a2a6c', fontWeight: 800 }}>Bienvenue sur MajorMarc !</h2>
+              {/* ✅ Bienvenue sur Alfred Major */}
+              <h2 style={{ color: '#1a2a6c', fontWeight: 800 }}>Bienvenue sur Alfred Major !</h2>
               <p style={{ color: '#64748b', maxWidth: '400px', margin: '15px auto 30px' }}>Ajoutez votre premier logement pour configurer votre majordome IA.</p>
               <button onClick={handleAddClick} className="btn-add">Créer mon premier logement</button>
             </div>
