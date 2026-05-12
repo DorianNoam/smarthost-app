@@ -10,7 +10,6 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [showLimitModal, setShowLimitModal] = useState(false);
-  
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [propertyToDelete, setPropertyToDelete] = useState(null);
 
@@ -25,13 +24,19 @@ export default function Dashboard() {
   const fetchData = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        router.push('/login');
-        return;
-      }
+      if (!user) { router.push('/login'); return; }
 
-      const { data: props } = await supabase.from('properties').select('*').order('created_at', { ascending: false });
-      const { data: prof } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+      const { data: props } = await supabase
+        .from('properties')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      // ✅ On récupère explicitement telegram_chat_id
+      const { data: prof } = await supabase
+        .from('profiles')
+        .select('*, telegram_chat_id')
+        .eq('id', user.id)
+        .single();
 
       if (props) setProperties(props);
       if (prof) setProfile(prof);
@@ -45,13 +50,7 @@ export default function Dashboard() {
   const copyWelcomeMessage = (prop) => {
     const identifier = prop.slug || prop.id;
     const guestLink = `${window.location.origin}/m/${identifier}`;
-    
-    const message = `Bonjour ! 👋
-Pour toute question pendant votre séjour — que ce soit le WiFi, les équipements, ou une bonne adresse dans le quartier — vous pouvez contacter mon assistant disponible 24h/24 via ce lien :
-👉 ${guestLink}
-
-Bon séjour ! 🎩`;
-
+    const message = `Bonjour ! 👋\nPour toute question pendant votre séjour — que ce soit le WiFi, les équipements, ou une bonne adresse dans le quartier — vous pouvez contacter mon assistant disponible 24h/24 via ce lien :\n👉 ${guestLink}\n\nBon séjour ! 🎩`;
     navigator.clipboard.writeText(message);
     alert(`Lien Voyageur copié pour "${prop.name}" !`);
   };
@@ -121,7 +120,10 @@ Bon séjour ! 🎩`;
     }
   };
 
-  if (loading) return <div style={{padding: '50px', textAlign: 'center'}}>Chargement...</div>;
+  if (loading) return <div style={{ padding: '50px', textAlign: 'center' }}>Chargement...</div>;
+
+  // ✅ CORRECTION : on vérifie telegram_chat_id et non telegram_id
+  const telegramLinked = !!profile?.telegram_chat_id;
 
   return (
     <div className="dashboard-layout">
@@ -136,7 +138,6 @@ Bon séjour ! 🎩`;
         .nav-item { padding: 14px 18px; border-radius: 12px; display: flex; align-items: center; gap: 12px; font-weight: 600; opacity: 0.8; margin-bottom: 10px; cursor: pointer; color: white; transition: 0.2s;}
         .nav-item:hover { opacity: 1; background: rgba(255,255,255,0.05); }
         .nav-item.active { background: rgba(255,255,255,0.15); color: #fbbf24; opacity: 1; }
-        
         .nav-footer { margin-top: auto; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); }
         .tutorial-box { background: #fbbf24; color: #1a2a6c; padding: 15px; border-radius: 12px; font-size: 13px; font-weight: 700; text-align: center; cursor: pointer; display: block; margin-top: 10px;}
 
@@ -144,19 +145,22 @@ Bon séjour ! 🎩`;
         .header-area { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
         h1 { margin: 0; color: #1e293b; font-size: 32px; font-weight: 800; }
 
-        /* BANNIÈRE TELEGRAM */
+        /* BANNIÈRE TELEGRAM — visible seulement si non lié */
         .telegram-banner { background: #f0f9ff; border: 1px solid #0088cc; border-radius: 20px; padding: 20px; margin-bottom: 40px; display: flex; align-items: center; gap: 20px; box-shadow: 0 4px 12px rgba(0, 136, 204, 0.1); }
         .tg-icon { font-size: 32px; }
         .tg-text h4 { margin: 0 0 5px 0; color: #0088cc; font-weight: 800; }
         .tg-text p { margin: 0; font-size: 13px; color: #475569; line-height: 1.4; }
         .btn-link-tg { background: #0088cc; color: white; padding: 10px 20px; border-radius: 10px; font-weight: 700; font-size: 13px; border: none; cursor: pointer; white-space: nowrap; }
-        
+
+        /* BANNIÈRE TELEGRAM CONNECTÉ — verte */
+        .telegram-banner-linked { background: #f0fdf4; border: 1px solid #10b981; border-radius: 20px; padding: 16px 20px; margin-bottom: 40px; display: flex; align-items: center; gap: 15px; }
+        .tg-linked-text { font-size: 14px; color: #059669; font-weight: 600; }
+
         .empty-state { background: white; padding: 60px; border-radius: 32px; text-align: center; border: 2px dashed #e2e8f0; grid-column: 1 / -1; }
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 25px; }
         .card { background: white; border-radius: 24px; padding: 25px; border: 1px solid #e2e8f0; position: relative; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
         .btn-delete { position: absolute; top: 15px; right: 15px; border: none; background: none; cursor: pointer; color: #94a3b8; font-size: 18px; transition: 0.2s; }
         .btn-delete:hover { color: #e11d48; }
-        
         h3 { margin: 0 0 5px 0; color: #1a2a6c; font-size: 20px; font-weight: 800; }
         .address { color: #64748b; font-size: 13px; margin-bottom: 20px; }
         .btn-stack { display: flex; flex-direction: column; gap: 10px; }
@@ -167,7 +171,6 @@ Bon séjour ! 🎩`;
         .btn-history { background: #fdf2f8; color: #be185d; }
         .btn-light { background: #f1f5f9; color: #475569; }
         .btn-add { background: #fbbf24; color: #1a2a6c; padding: 12px 24px; border-radius: 12px; font-weight: 800; cursor: pointer; border: none; transition: 0.2s; }
-        
         .activation-zone { background: #fffbeb; padding: 20px; border-radius: 16px; border: 1px solid #fef3c7; text-align: center; margin-top: 15px; }
         .btn-activate { background: #fbbf24; border: none; padding: 14px; width: 100%; border-radius: 12px; font-weight: 800; color: #1a2a6c; cursor: pointer; transition: 0.2s; }
         .subscription-card { margin-top: 60px; padding: 30px; background: white; border-radius: 24px; border: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; }
@@ -214,24 +217,34 @@ Bon séjour ! 🎩`;
           <button onClick={handleAddClick} className="btn-add">+ Ajouter</button>
         </div>
 
-        {/* ALERTE TELEGRAM */}
-        {!loading && profile && !profile.telegram_id && (
+        {/* ✅ BANNIÈRE TELEGRAM — disparaît quand lié */}
+        {!telegramLinked && (
           <div className="telegram-banner">
             <div className="tg-icon">🚨</div>
             <div className="tg-text">
               <h4>Action Requise : Sécurisez vos urgences</h4>
-              <p>Liez votre compte Telegram pour être alerté immédiatement en cas d'urgence ou de difficulté.</p>
+              <p>Liez votre compte Telegram pour être alerté immédiatement en cas d'urgence.</p>
             </div>
-            <Link href="/tutorial#step-4" legacyBehavior><button className="btn-link-tg">Lier mon Telegram</button></Link>
+            <Link href="/settings" legacyBehavior>
+              <a><button className="btn-link-tg">Lier mon Telegram →</button></a>
+            </Link>
+          </div>
+        )}
+
+        {/* ✅ BANNIÈRE VERTE quand Telegram est connecté */}
+        {telegramLinked && (
+          <div className="telegram-banner-linked">
+            <span style={{ fontSize: '20px' }}>✅</span>
+            <span className="tg-linked-text">Telegram connecté — vous recevrez une alerte en cas d'urgence</span>
           </div>
         )}
 
         <div className="grid">
           {properties.length === 0 ? (
             <div className="empty-state">
-              <span style={{fontSize: '60px'}}>✨</span>
-              <h2 style={{color: '#1a2a6c', fontWeight: 800}}>Bienvenue sur MajorMarc !</h2>
-              <p style={{color: '#64748b', maxWidth: '400px', margin: '15px auto 30px'}}>Ajoutez votre premier logement pour configurer votre majordome IA.</p>
+              <span style={{ fontSize: '60px' }}>✨</span>
+              <h2 style={{ color: '#1a2a6c', fontWeight: 800 }}>Bienvenue sur MajorMarc !</h2>
+              <p style={{ color: '#64748b', maxWidth: '400px', margin: '15px auto 30px' }}>Ajoutez votre premier logement pour configurer votre majordome IA.</p>
               <button onClick={handleAddClick} className="btn-add">Créer mon premier logement</button>
             </div>
           ) : (
@@ -240,11 +253,13 @@ Bon séjour ! 🎩`;
                 <button className="btn-delete" onClick={(e) => triggerDeleteRequest(e, prop)}>🗑️</button>
                 <h3>{prop.name}</h3>
                 <div className="address">📍 {prop.street_number} {prop.address}{prop.city ? `, ${prop.city}` : ''}</div>
-                
+
                 {!prop.is_active ? (
                   <div className="activation-zone">
-                    <p style={{fontSize: '13px', color: '#92400e', marginBottom: '15px', fontWeight: 600}}>Prêt à entrer en service.</p>
-                    <button onClick={handlePayment} className="btn-activate">{paymentLoading ? 'Connexion...' : 'Activer ce logement'}</button>
+                    <p style={{ fontSize: '13px', color: '#92400e', marginBottom: '15px', fontWeight: 600 }}>Prêt à entrer en service.</p>
+                    <button onClick={handlePayment} className="btn-activate">
+                      {paymentLoading ? 'Connexion...' : 'Activer ce logement'}
+                    </button>
                   </div>
                 ) : (
                   <div className="btn-stack">
@@ -261,14 +276,16 @@ Bon séjour ! 🎩`;
 
         <div className="subscription-card">
           <div className="sub-info">
-            <h3 style={{margin: '0 0 5px 0', color: '#1a2a6c'}}>Gestion des abonnements</h3>
-            <p style={{margin: 0, color: '#64748b'}}>Gérez vos factures et moyens de paiement.</p>
+            <h3 style={{ margin: '0 0 5px 0', color: '#1a2a6c' }}>Gestion des abonnements</h3>
+            <p style={{ margin: 0, color: '#64748b' }}>Gérez vos factures et moyens de paiement.</p>
           </div>
           <button onClick={handleManageSubscription} className="btn-portal">Accéder au portail</button>
         </div>
 
-        <div style={{textAlign: 'center', marginTop: '40px'}}>
-          <button onClick={handleDeleteAccount} style={{background:'none', border:'none', color:'#94a3b8', cursor:'pointer', textDecoration:'underline'}}>Supprimer mon compte</button>
+        <div style={{ textAlign: 'center', marginTop: '40px' }}>
+          <button onClick={handleDeleteAccount} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', textDecoration: 'underline' }}>
+            Supprimer mon compte
+          </button>
         </div>
       </main>
 
@@ -276,9 +293,9 @@ Bon séjour ! 🎩`;
       {showLimitModal && (
         <div className="modal-overlay" onClick={() => setShowLimitModal(false)}>
           <div className="modal-card" onClick={e => e.stopPropagation()}>
-            <span style={{fontSize: '54px', marginBottom: '20px', display: 'block'}}>🎩</span>
-            <h2 style={{color: '#1a2a6c', fontWeight: 800}}>Activation requise</h2>
-            <p style={{color: '#64748b'}}>Veuillez activer votre logement actuel avant de pouvoir en ajouter un nouveau.</p>
+            <span style={{ fontSize: '54px', marginBottom: '20px', display: 'block' }}>🎩</span>
+            <h2 style={{ color: '#1a2a6c', fontWeight: 800 }}>Activation requise</h2>
+            <p style={{ color: '#64748b' }}>Veuillez activer votre logement actuel avant d'en ajouter un nouveau.</p>
             <button className="btn-close-modal" onClick={() => setShowLimitModal(false)}>D'accord</button>
           </div>
         </div>
@@ -288,9 +305,9 @@ Bon séjour ! 🎩`;
       {showDeleteModal && (
         <div className="modal-overlay" onClick={() => setShowDeleteModal(false)}>
           <div className="modal-card" onClick={e => e.stopPropagation()}>
-            <span style={{fontSize: '50px', marginBottom: '15px', display: 'block'}}>⚠️</span>
-            <h2 style={{color: '#1a2a6c', fontWeight: 800}}>Supprimer {propertyToDelete?.name} ?</h2>
-            <p style={{color: '#64748b'}}>Êtes-vous sûr ? Toute la configuration sera effacée.</p>
+            <span style={{ fontSize: '50px', marginBottom: '15px', display: 'block' }}>⚠️</span>
+            <h2 style={{ color: '#1a2a6c', fontWeight: 800 }}>Supprimer {propertyToDelete?.name} ?</h2>
+            <p style={{ color: '#64748b' }}>Êtes-vous sûr ? Toute la configuration sera effacée.</p>
             <div className="info-box"><strong>📌 Note :</strong> Votre licence reste active jusqu'à la fin du mois.</div>
             <div className="modal-actions">
               <button className="btn-abort" onClick={() => setShowDeleteModal(false)}>Annuler</button>
