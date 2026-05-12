@@ -1,17 +1,15 @@
-@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { supabase } from '../lib/supabase';
 import { useRouter } from 'next/router';
-import Link from 'next/link';
 
 export default function Settings() {
   const router = useRouter();
-@@ -10,7 +10,13 @@ export default function Settings() {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-
+  
   const [profile, setProfile] = useState({ 
-    full_name: '', address: '', zipcode: '', city: '', email: ''
     full_name: '', 
     email: '',
     address: '',
@@ -22,70 +20,37 @@ export default function Settings() {
   });
 
   const [telegramLinked, setTelegramLinked] = useState(false);
-@@ -21,99 +27,253 @@ export default function Settings() {
+  const botName = "MonMajordomeIARobot"; 
+
+  useEffect(() => {
+    loadUserData();
   }, []);
 
   const loadUserData = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
       setUser(user);
-      const { data, error } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+        
       if (data) {
-        // --- LOG DE DEBUG ---
-        console.log("DEBUG SETTINGS - Données profil reçues:", data);
-        console.log("DEBUG SETTINGS - Valeur telegram_id:", data.telegram_id);
-        // --------------------
-
         setProfile({
           full_name: data.full_name || '',
           email: user.email,
           address: data.address || '',
           zipcode: data.zipcode || '',
-          city: data.city || ''
+          city: data.city || '',
+          active_licenses: data.active_licenses || 0,
+          subscription_status: data.subscription_status || 'Inactif'
         });
-        
-        if (data.telegram_id && data.telegram_id !== "") {
+        // Cohérence avec la colonne telegram_id du Dashboard
+        if (data.telegram_id) {
           setTelegramLinked(true);
-    try {
-      const { data: { user: authUser } } = await supabase.auth.getUser();
-      if (authUser) {
-        setUser(authUser);
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', authUser.id)
-          .single();
-          
-        if (data) {
-          // --- LOG DE DEBUG POUR TRAQUER LE BUG ---
-          console.log("DEBUG SETTINGS - Données brutes reçues de Supabase :", data);
-          console.log("DEBUG SETTINGS - Colonne telegram_id :", data.telegram_id);
-          // -----------------------------------------
-
-          setProfile({
-            full_name: data.full_name || '',
-            email: authUser.email,
-            address: data.address || '',
-            zipcode: data.zipcode || '',
-            city: data.city || '',
-            active_licenses: data.active_licenses || 0,
-            subscription_status: data.subscription_status || 'Inactif'
-          });
-
-          // Utilisation de telegram_id pour la cohérence globale
-          if (data.telegram_id && data.telegram_id !== "") {
-            console.log("Liaison Telegram confirmée pour l'UI");
-            setTelegramLinked(true);
-          } else {
-            console.log("Liaison Telegram absente dans la base");
-            setTelegramLinked(false);
-          }
         }
       }
-    } catch (err) {
-      console.error("Crash lors du chargement des réglages :", err);
-    } finally {
-      setLoading(false);
     }
     setLoading(false);
   };
@@ -95,7 +60,6 @@ export default function Settings() {
     
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
     const isAndroid = /Android/.test(navigator.userAgent);
-    const appLink = `tg://resolve?domain=${botName}&start=${user?.id}`;
     const isMobile = isIOS || isAndroid;
 
     const appLink = `tg://resolve?domain=${botName}&start=${user.id}`;
@@ -103,10 +67,11 @@ export default function Settings() {
     const playStore = "https://play.google.com/store/apps/details?id=org.telegram.messenger";
     const appStore = "https://apps.apple.com/app/telegram-messenger/id686449807";
 
-    if (isIOS || isAndroid) {
     if (isMobile) {
+      // Tentative d'ouverture de l'app
       window.location.href = appLink;
-      setTimeout(() => { window.location.href = isIOS ? appStore : playStore; }, 2500);
+
+      // Fallback vers le store si l'app n'est pas détectée après 2.5s
       const start = Date.now();
       setTimeout(() => {
         if (Date.now() - start < 3500) {
@@ -114,20 +79,12 @@ export default function Settings() {
         }
       }, 2500);
     } else {
-      window.open(`https://t.me/${botName}?start=${user?.id}`, '_blank');
       window.open(webLink, '_blank');
     }
   };
 
   const handleSave = async () => {
     setSaving(true);
-    await supabase.from('profiles').update({
-      full_name: profile.full_name,
-      address: profile.address,
-      zipcode: profile.zipcode,
-      city: profile.city
-    }).eq('id', user.id);
-    alert("Profil mis à jour !");
     const { error } = await supabase
       .from('profiles')
       .update({
@@ -146,7 +103,6 @@ export default function Settings() {
     setSaving(false);
   };
 
-  if (loading) return <div style={{padding: '50px', textAlign: 'center'}}>Chargement...</div>;
   const handleStripePortal = async () => {
     try {
       const res = await fetch('/api/create-portal-session', {
@@ -165,7 +121,6 @@ export default function Settings() {
 
   return (
     <div className="dashboard-layout">
-      <style jsx global>{` body { margin: 0; background: #f8fafc; font-family: 'Inter', sans-serif; } `}</style>
       <style jsx global>{`
         body { margin: 0; background: #f8fafc; font-family: 'Inter', sans-serif; }
         a { text-decoration: none !important; color: inherit; }
@@ -173,30 +128,23 @@ export default function Settings() {
       
       <style jsx>{`
         .dashboard-layout { display: flex; min-height: 100vh; }
-        nav { width: 260px; background: #1a2a6c; color: white; padding: 40px 20px; position: fixed; height: 100vh; }
-        main { flex: 1; margin-left: 260px; padding: 50px; display: flex; flex-direction: column; align-items: center; }
-        .card { background: white; border-radius: 20px; padding: 30px; width: 100%; max-width: 600px; border: 1px solid #e2e8f0; margin-bottom: 20px; }
-        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #e2e8f0; border-radius: 10px; box-sizing: border-box; }
-        .btn-primary { background: #1a2a6c; color: white; border: none; padding: 15px; border-radius: 10px; cursor: pointer; font-weight: 700; width: 100%; }
-        .btn-telegram { background: #0088cc; color: white; border: none; padding: 15px; border-radius: 10px; cursor: pointer; font-weight: 700; width: 100%; margin-top: 10px; }
-        @media (max-width: 900px) { nav { display: none; } main { margin-left: 0; padding: 20px; } }
         nav { width: 260px; background: #1a2a6c; color: white; padding: 40px 20px; position: fixed; height: 100vh; z-index: 100; box-sizing: border-box; display: flex; flex-direction: column; }
         .logo { font-size: 22px; font-weight: 900; margin-bottom: 50px; text-align: center; }
         .nav-item { padding: 14px 18px; border-radius: 12px; display: flex; align-items: center; gap: 12px; font-weight: 600; opacity: 0.8; margin-bottom: 10px; cursor: pointer; color: white; transition: 0.2s;}
         .nav-item.active { background: rgba(255,255,255,0.15); color: #fbbf24; opacity: 1; }
         .nav-item:hover { opacity: 1; background: rgba(255,255,255,0.05); }
 
-        .nav-footer { margin-top: auto; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); width: 100%; }
+        .nav-footer { margin-top: auto; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); }
         .tutorial-box { background: #fbbf24; color: #1a2a6c; padding: 15px; border-radius: 12px; font-size: 13px; font-weight: 700; text-align: center; cursor: pointer; display: block; margin-top: 10px;}
 
         main { flex: 1; margin-left: 260px; padding: 50px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; }
         .settings-container { width: 100%; max-width: 800px; }
         
-        .header-area { margin-bottom: 40px; border-bottom: 2px solid #e2e8f0; padding-bottom: 20px; width: 100%; }
+        .header-area { margin-bottom: 40px; border-bottom: 2px solid #e2e8f0; padding-bottom: 20px; }
         h1 { margin: 0; color: #1e293b; font-size: 32px; font-weight: 800; }
         .subtitle { color: #64748b; margin: 5px 0 0 0; font-size: 15px; }
 
-        .settings-card { background: white; border-radius: 24px; padding: 30px; margin-bottom: 30px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.02); width: 100%; box-sizing: border-box; }
+        .settings-card { background: white; border-radius: 24px; padding: 30px; margin-bottom: 30px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
         h2 { margin: 0 0 25px 0; color: #1a2a6c; font-size: 20px; font-weight: 800; display: flex; align-items: center; gap: 10px; }
         
         .input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
@@ -212,11 +160,11 @@ export default function Settings() {
         .status-unlinked { background: #fee2e2; color: #b91c1c; }
         .status-linked { background: #ecfdf5; color: #059669; }
 
-        .btn { padding: 14px 24px; border-radius: 12px; font-weight: 700; font-size: 14px; cursor: pointer; border: none; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn { padding: 12px 24px; border-radius: 12px; font-weight: 700; font-size: 14px; cursor: pointer; border: none; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
         .btn-primary { background: #1a2a6c; color: white !important; }
         .btn-outline { background: white; color: #1a2a6c !important; border: 1px solid #cbd5e1; }
         
-        .btn-telegram { background: #0088cc; color: white !important; border: none; padding: 16px; border-radius: 12px; font-weight: 800; cursor: pointer; font-size: 15px; width: 100%; text-align: center; }
+        .btn-telegram { background: #0088cc; color: white !important; border: none; padding: 16px; border-radius: 12px; font-weight: 800; cursor: pointer; font-size: 15px; }
 
         .plan-box { border: 2px solid #1a2a6c; border-radius: 16px; padding: 20px; display: flex; justify-content: space-between; align-items: center; background: #f8fafc; margin-bottom: 20px; }
         .plan-info h3 { margin: 0; color: #1a2a6c; font-size: 18px; font-weight: 800; }
@@ -234,11 +182,8 @@ export default function Settings() {
       `}</style>
 
       <nav>
-        <div style={{fontSize:'22px', fontWeight:900, marginBottom:'40px'}}>MajorMarc 🎩</div>
-        <Link href="/dashboard" legacyBehavior><a style={{color:'white', display:'block', marginBottom:'20px'}}>🏠 Logements</a></Link>
-        <Link href="/settings" legacyBehavior><a style={{color:'#fbbf24', display:'block', fontWeight:700}}>⚙️ Paramètres</a></Link>
         <div className="logo">MajorMarc 🎩</div>
-        <Link href="/dashboard" legacyBehavior><a className="nav-item">🏠 <span className="nav-text">Logements</span></a></Link>
+        <Link href="/dashboard" legacyBehavior><a className="nav-item">🏠 <span className="nav-text">Mes Logements</span></a></Link>
         <Link href="/settings" legacyBehavior><a className="nav-item active">⚙️ <span className="nav-text">Paramètres</span></a></Link>
         <div className="nav-footer">
           <Link href="/tutorial" legacyBehavior><a className="tutorial-box">❓ <span className="nav-text">Comment ça marche ?</span></a></Link>
@@ -246,23 +191,14 @@ export default function Settings() {
       </nav>
 
       <main>
-        <div className="card">
-          <h2>👤 Mon Profil</h2>
-          <label>Nom complet</label>
-          <input value={profile.full_name} onChange={e => setProfile({...profile, full_name: e.target.value})} />
-          <label>Adresse de facturation</label>
-          <input value={profile.address} onChange={e => setProfile({...profile, address: e.target.value})} />
-          <button className="btn-primary" onClick={handleSave} disabled={saving}>{saving ? 'Sauvegarde...' : 'Enregistrer'}</button>
-        </div>
         <div className="settings-container">
           <div className="header-area">
             <h1>Paramètres du compte</h1>
-            <p className="subtitle">Gérez vos informations de facturation et vos alertes.</p>
+            <p className="subtitle">Gérez vos informations et vos alertes.</p>
           </div>
 
-          {/* SECTION PROFIL & COORDONNÉES */}
           <div className="settings-card">
-            <h2>👤 Profil & Coordonnées</h2>
+            <h2>👤 Profil & Facturation</h2>
             <div className="input-grid">
               <div className="input-group">
                 <label>Nom complet / Société</label>
@@ -286,52 +222,46 @@ export default function Settings() {
               </div>
               <div className="input-group full">
                 <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
-                  {saving ? 'Enregistrement...' : 'Enregistrer les modifications'}
+                  {saving ? 'Enregistrement...' : 'Enregistrer les informations'}
                 </button>
               </div>
             </div>
           </div>
 
-          {/* SECTION TELEGRAM */}
           <div className="settings-card">
             <h2>🔔 Alertes & Urgences</h2>
             <div className="telegram-box">
               <div className="telegram-status">
                 <div style={{ flex: 1 }}>
                   <h3 style={{margin: '0 0 5px 0', fontSize: '16px', color: '#0369a1'}}>Connexion Telegram</h3>
-                  <p style={{margin: 0, fontSize: '13px', color: '#0ea5e9'}}>Recevez les notifications d'urgence en temps réel.</p>
+                  <p style={{margin: 0, fontSize: '13px', color: '#0ea5e9'}}>Recevez vos alertes instantanément en cas d'urgence.</p>
                 </div>
                 <div className={`status-badge ${telegramLinked ? 'status-linked' : 'status-unlinked'}`}>
                   {telegramLinked ? '✅ Connecté' : '❌ Non lié'}
                 </div>
               </div>
+
               <button onClick={handleTelegramSmartLink} className="btn-telegram">
                 {telegramLinked ? '🔄 Mettre à jour la connexion' : '✈️ Lier mon compte Telegram'}
               </button>
             </div>
           </div>
 
-        <div className="card" style={{border: '2px solid #0088cc', background:'#f0f9ff'}}>
-          <h2 style={{color:'#0088cc'}}>🔔 Liaison Telegram</h2>
-          <div style={{marginBottom:'15px', fontWeight:700, color: telegramLinked ? '#059669' : '#b91c1c'}}>
-            Statut : {telegramLinked ? '✅ Connecté' : '❌ Non lié'}
-          {/* SECTION ABONNEMENT */}
           <div className="settings-card">
             <h2>💳 Abonnement</h2>
             <div className="plan-box">
               <div className="plan-info">
                 <h3>{profile.active_licenses} Logement(s) Actif(s)</h3>
-                <p>Statut actuel : <b>{profile.subscription_status}</b></p>
+                <p>Statut : <b>{profile.subscription_status}</b></p>
               </div>
               <span className="badge-active">Pro</span>
             </div>
             <div style={{display: 'flex', gap: '15px'}}>
-              <button className="btn btn-outline" onClick={handleStripePortal}>Gérer les factures & paiements</button>
+              <button className="btn btn-outline" onClick={handleStripePortal}>Gérer le paiement & Factures</button>
             </div>
           </div>
-          <button className="btn-telegram" onClick={handleTelegramSmartLink}>
-            {telegramLinked ? '🔄 Reconnecter mon Telegram' : '✈️ Lier mon compte Telegram'}
-          </button>
         </div>
       </main>
     </div>
+  );
+}
