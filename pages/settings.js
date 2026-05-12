@@ -20,7 +20,7 @@ export default function Settings() {
   });
 
   const [telegramLinked, setTelegramLinked] = useState(false);
-  const botName = "MonMajordomeIARobot"; 
+  const botName = "Marc_Alerte_Bot"; 
 
   useEffect(() => {
     loadUserData();
@@ -46,7 +46,8 @@ export default function Settings() {
           active_licenses: data.active_licenses || 0,
           subscription_status: data.subscription_status || 'Inactif'
         });
-        // Cohérence avec la colonne telegram_id du Dashboard
+        
+        // Utilisation de telegram_id pour la cohérence globale
         if (data.telegram_id) {
           setTelegramLinked(true);
         }
@@ -68,10 +69,7 @@ export default function Settings() {
     const appStore = "https://apps.apple.com/app/telegram-messenger/id686449807";
 
     if (isMobile) {
-      // Tentative d'ouverture de l'app
       window.location.href = appLink;
-
-      // Fallback vers le store si l'app n'est pas détectée après 2.5s
       const start = Date.now();
       setTimeout(() => {
         if (Date.now() - start < 3500) {
@@ -117,7 +115,7 @@ export default function Settings() {
     }
   };
 
-  if (loading) return <div style={{padding: '50px', textAlign: 'center'}}>Chargement de vos réglages...</div>;
+  if (loading) return <div style={{padding: '50px', textAlign: 'center'}}>Chargement...</div>;
 
   return (
     <div className="dashboard-layout">
@@ -150,25 +148,18 @@ export default function Settings() {
         .input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         .input-group { display: flex; flex-direction: column; gap: 8px; }
         .input-group.full { grid-column: span 2; }
-        label { font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
-        input { padding: 14px; border: 1px solid #e2e8f0; border-radius: 12px; background: #f8fafc; font-size: 15px; color: #1e293b; outline: none; transition: 0.2s; }
-        input:focus { border-color: #1a2a6c; background: white; }
+        label { font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; }
+        input { padding: 14px; border: 1px solid #e2e8f0; border-radius: 12px; background: #f8fafc; font-size: 15px; outline: none; }
 
-        .telegram-box { background: #f0f9ff; border: 1px solid #0088cc; border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 15px; width: 100%; box-sizing: border-box; }
-        .telegram-status { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-        .status-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; padding: 6px 12px; border-radius: 20px; white-space: nowrap; }
+        .telegram-box { background: #f0f9ff; border: 1px solid #0088cc; border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
+        .telegram-status { display: flex; align-items: center; justify-content: space-between; }
+        .status-badge { font-size: 12px; font-weight: 700; padding: 6px 12px; border-radius: 20px; }
         .status-unlinked { background: #fee2e2; color: #b91c1c; }
         .status-linked { background: #ecfdf5; color: #059669; }
 
-        .btn { padding: 12px 24px; border-radius: 12px; font-weight: 700; font-size: 14px; cursor: pointer; border: none; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn { padding: 12px 24px; border-radius: 12px; font-weight: 700; cursor: pointer; border: none; }
         .btn-primary { background: #1a2a6c; color: white !important; }
-        .btn-outline { background: white; color: #1a2a6c !important; border: 1px solid #cbd5e1; }
-        
-        .btn-telegram { background: #0088cc; color: white !important; border: none; padding: 16px; border-radius: 12px; font-weight: 800; cursor: pointer; font-size: 15px; }
-
-        .plan-box { border: 2px solid #1a2a6c; border-radius: 16px; padding: 20px; display: flex; justify-content: space-between; align-items: center; background: #f8fafc; margin-bottom: 20px; }
-        .plan-info h3 { margin: 0; color: #1a2a6c; font-size: 18px; font-weight: 800; }
-        .badge-active { background: #ecfdf5; color: #059669; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 800; border: 1px solid #a7f3d0; }
+        .btn-telegram { background: #0088cc; color: white !important; padding: 16px; border-radius: 12px; font-weight: 800; border: none; cursor: pointer; }
 
         @media (max-width: 900px) {
           nav { width: 100%; height: 75px; position: fixed; bottom: 0; left: 0; top: auto; flex-direction: row; padding: 0; justify-content: space-around; align-items: center; z-index: 1000; box-shadow: 0 -4px 15px rgba(0,0,0,0.1); padding-bottom: env(safe-area-inset-bottom, 10px); }
@@ -201,24 +192,12 @@ export default function Settings() {
             <h2>👤 Profil & Facturation</h2>
             <div className="input-grid">
               <div className="input-group">
-                <label>Nom complet / Société</label>
+                <label>Nom complet</label>
                 <input type="text" value={profile.full_name} onChange={e => setProfile({...profile, full_name: e.target.value})} />
               </div>
               <div className="input-group">
-                <label>E-mail (Lecture seule)</label>
+                <label>E-mail</label>
                 <input type="email" value={profile.email} readOnly style={{opacity: 0.7}} />
-              </div>
-              <div className="input-group full">
-                <label>Adresse de facturation</label>
-                <input type="text" value={profile.address} onChange={e => setProfile({...profile, address: e.target.value})} />
-              </div>
-              <div className="input-group">
-                <label>Code Postal</label>
-                <input type="text" value={profile.zipcode} onChange={e => setProfile({...profile, zipcode: e.target.value})} />
-              </div>
-              <div className="input-group">
-                <label>Ville</label>
-                <input type="text" value={profile.city} onChange={e => setProfile({...profile, city: e.target.value})} />
               </div>
               <div className="input-group full">
                 <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
@@ -234,30 +213,15 @@ export default function Settings() {
               <div className="telegram-status">
                 <div style={{ flex: 1 }}>
                   <h3 style={{margin: '0 0 5px 0', fontSize: '16px', color: '#0369a1'}}>Connexion Telegram</h3>
-                  <p style={{margin: 0, fontSize: '13px', color: '#0ea5e9'}}>Recevez vos alertes instantanément en cas d'urgence.</p>
+                  <p style={{margin: 0, fontSize: '13px', color: '#0ea5e9'}}>Notifications d'urgence en temps réel.</p>
                 </div>
                 <div className={`status-badge ${telegramLinked ? 'status-linked' : 'status-unlinked'}`}>
                   {telegramLinked ? '✅ Connecté' : '❌ Non lié'}
                 </div>
               </div>
-
               <button onClick={handleTelegramSmartLink} className="btn-telegram">
                 {telegramLinked ? '🔄 Mettre à jour la connexion' : '✈️ Lier mon compte Telegram'}
               </button>
-            </div>
-          </div>
-
-          <div className="settings-card">
-            <h2>💳 Abonnement</h2>
-            <div className="plan-box">
-              <div className="plan-info">
-                <h3>{profile.active_licenses} Logement(s) Actif(s)</h3>
-                <p>Statut : <b>{profile.subscription_status}</b></p>
-              </div>
-              <span className="badge-active">Pro</span>
-            </div>
-            <div style={{display: 'flex', gap: '15px'}}>
-              <button className="btn btn-outline" onClick={handleStripePortal}>Gérer le paiement & Factures</button>
             </div>
           </div>
         </div>
