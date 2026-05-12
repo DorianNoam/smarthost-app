@@ -189,8 +189,14 @@ Bon séjour ! 🎩`;
 
         @media (max-width: 900px) {
           nav { width: 100%; height: 75px; position: fixed; bottom: 0; left: 0; top: auto; flex-direction: row; padding: 0; justify-content: space-around; align-items: center; z-index: 1000; box-shadow: 0 -4px 15px rgba(0,0,0,0.1); padding-bottom: env(safe-area-inset-bottom, 10px); }
-          .logo, .nav-text, .nav-footer { display: none; }
+          .logo, .nav-text { display: none; } /* On a enlevé .nav-footer de display:none */
+          
           .nav-item { margin: 0; padding: 10px; flex: 1; justify-content: center; font-size: 26px; border-radius: 0; background: transparent !important; height: 100%; }
+          
+          /* Ajustement de la zone tutoriel pour le mobile */
+          .nav-footer { border-top: none; padding: 0; margin: 0; flex: 1; display: flex; height: 100%; }
+          .tutorial-box { background: transparent; color: white; margin: 0; padding: 0; font-size: 26px; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; border-radius: 0; }
+          
           main { margin-left: 0; padding: 30px 20px; padding-bottom: 120px; }
           .grid { grid-template-columns: 1fr; }
         }
@@ -205,10 +211,10 @@ Bon séjour ! 🎩`;
           <a className="nav-item">⚙️ <span className="nav-text">Paramètres</span></a>
         </Link>
 
-        {/* --- SECTION TUTORIEL DANS LE NAV --- */}
+        {/* --- SECTION TUTORIEL --- */}
         <div className="nav-footer">
           <Link href="/tutorial" legacyBehavior>
-            <a className="tutorial-box">❓ Comment ça marche ?</a>
+            <a className="tutorial-box">❓ <span className="nav-text">Comment ça marche ?</span></a>
           </Link>
         </div>
       </nav>
@@ -247,7 +253,7 @@ Bon séjour ! 🎩`;
                   <div className="btn-stack">
                     <Link href={`/property/${prop.id}`} legacyBehavior><a className="action-btn btn-primary">📊 Configurer le logement</a></Link>
                     <button onClick={() => copyWelcomeMessage(prop)} className="action-btn btn-welcome">
-                      ✨ Kit de bienvenue (Copier)
+                      ✨ Lien Voyageur (Copier)
                     </button>
                     <Link href={`/history/${prop.id}`} legacyBehavior><a className="action-btn btn-history">📜 Historique des échanges</a></Link>
                     <Link href={`/m/${prop.slug || prop.id}`} legacyBehavior><a className="action-btn btn-light">🎭 Simuler un voyageur</a></Link>
@@ -273,7 +279,7 @@ Bon séjour ! 🎩`;
         </div>
       </main>
 
-      {/* Modals de limite et suppression inchangés */}
+      {/* Modals inchangés */}
     </div>
   );
 }
