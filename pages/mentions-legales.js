@@ -4,7 +4,7 @@ import Head from 'next/head';
 export default function MentionsLegales() {
   return (
     <div className="legal-container">
-      <Head><title>Mentions Légales | Major Marc</title></Head>
+      <Head><title>Mentions Légales | alfred major</title></Head>
       <style jsx>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Plus+Jakarta+Sans:wght@700;800&display=swap');
         .legal-container { font-family: 'Inter', sans-serif; color: #1e293b; line-height: 1.6; padding: 120px 5% 60px; max-width: 800px; margin: 0 auto; }
@@ -26,7 +26,7 @@ export default function MentionsLegales() {
       <section>
         <h2>1. Éditeur du site</h2>
         <p>
-          Le site <strong>Major Marc</strong> est édité par :<br />
+          Le site <strong>alfred major</strong> est édité par :<br />
           [TON NOM OU NOM DE TA SOCIÉTÉ]<br />
           [ADRESSE COMPLÈTE]<br />
           SIRET : [TON NUMÉRO SIRET]<br />
@@ -42,7 +42,7 @@ export default function MentionsLegales() {
 
         <h2>3. Propriété intellectuelle</h2>
         <p>
-          L'ensemble du contenu de ce site (textes, images, logos, icônes) est la propriété exclusive de Major Marc. Toute reproduction ou représentation, en tout ou partie, est strictement interdite sans accord écrit préalable.
+          L'ensemble du contenu de ce site (textes, images, logos, icônes) est la propriété exclusive de alfred major. Toute reproduction ou représentation, en tout ou partie, est strictement interdite sans accord écrit préalable.
         </p>
 
         <h2>4. Contact</h2>

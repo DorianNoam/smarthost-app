@@ -49,8 +49,8 @@ export default function Pricing() {
   return (
     <div className="container">
       <Head>
-        <title>Tarifs | Major Marc</title>
-        <meta name="description" content="Découvrez le tarif de Major Marc, votre majordome IA pour location courte durée. Sans engagement, 1er mois offert." />
+        <title>Tarifs | alfred major</title>
+        <meta name="description" content="Découvrez le tarif de alfred major, votre majordome IA pour location courte durée. Sans engagement, 1er mois offert." />
       </Head>
 
       <style jsx>{`
@@ -181,7 +181,7 @@ export default function Pricing() {
         </div>
       </div>
       
-      <footer>© 2026 Major Marc - Tous droits réservés.</footer>
+      <footer>© 2026 alfred major - Tous droits réservés.</footer>
     </div>
   );
 }

@@ -36,7 +36,7 @@ export default function UpdatePassword() {
   return (
     <div className="container">
       <Head>
-        <title>Nouveau mot de passe | Major Marc</title>
+        <title>Nouveau mot de passe | alfred major</title>
       </Head>
 
       <style jsx>{`
@@ -145,7 +145,7 @@ export default function UpdatePassword() {
 
       <div className="box">
         <h1>Sécurisez votre compte</h1>
-        <p>Veuillez choisir un nouveau mot de passe robuste pour votre accès Major Marc.</p>
+        <p>Veuillez choisir un nouveau mot de passe robuste pour votre accès alfred major.</p>
 
         {message && <div className="success-msg">{message}</div>}
         {error && <div className="error-msg">{error}</div>}

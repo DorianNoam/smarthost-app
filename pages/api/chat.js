@@ -62,7 +62,7 @@ async function sendTelegramAlert(originalMsg, translatedMsg, propertyData) {
 
     if (!profile?.telegram_chat_id) return;
 
-    let text = `🚨 *ALERTE MAJOR MARC*\n\n🏠 *Logement :* ${propertyData.name}\n💬 *Client :*\n"${originalMsg}"`;
+    let text = `🚨 *ALERTE alfred major*\n\n🏠 *Logement :* ${propertyData.name}\n💬 *Client :*\n"${originalMsg}"`;
     if (translatedMsg) {
       text += `\n\n🇫🇷 *Traduction :*\n"${translatedMsg}"`;
     }

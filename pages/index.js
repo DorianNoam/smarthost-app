@@ -5,7 +5,7 @@ export default function Home() {
   return (
     <div className="container">
       <Head>
-        <title>Major Marc | Le Majordome IA pour vos locations Courte durée</title>
+        <title>alfred major | Le Majordome IA pour vos locations Courte durée</title>
         <meta name="description" content="Déléguez la gestion de vos voyageurs à Marc, l'IA qui répond 24h/24, recommande des adresses locales et vous alerte uniquement en cas d'urgence." />
         {/* ✅ Open Graph — aperçu sur WhatsApp, LinkedIn, Facebook */}
         <meta property="og:title" content="MajorMarc — Le Majordome IA pour vos locations" />
@@ -367,7 +367,7 @@ export default function Home() {
                 <span>Maintenant</span>
               </div>
               <p style={{fontSize: '13px', margin: 0, color: '#475569', lineHeight: '1.5'}}>
-                🚨 <b>ALERTE MAJOR MARC</b><br/><br/>
+                🚨 <b>ALERTE alfred major</b><br/><br/>
                 🏠 Logement : La Villa Noam<br/>
                 💬 Client : "Il y a une énorme fuite sous l'évier !"
               </p>
@@ -528,7 +528,7 @@ export default function Home() {
           </div>
         </div>
         <div className="footer-bottom">
-          <p>© 2026 Major Marc - Tous droits réservés.</p>
+          <p>© 2026 alfred major - Tous droits réservés.</p>
         </div>
       </footer>
     </div>

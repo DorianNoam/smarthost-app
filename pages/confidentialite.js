@@ -4,7 +4,7 @@ import Head from 'next/head';
 export default function Confidentialite() {
   return (
     <div className="legal-container">
-      <Head><title>Politique de Confidentialité | Major Marc</title></Head>
+      <Head><title>Politique de Confidentialité | alfred major</title></Head>
       <style jsx>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Plus+Jakarta+Sans:wght@700;800&display=swap');
         .legal-container { font-family: 'Inter', sans-serif; color: #1e293b; line-height: 1.6; padding: 120px 5% 60px; max-width: 800px; margin: 0 auto; }
@@ -41,7 +41,7 @@ export default function Confidentialite() {
         <p>Les données sont conservées via <strong>Supabase</strong> pendant toute la durée de vie de votre compte. En cas de suppression de compte, vos données sont effacées de nos bases de données sous 30 jours.</p>
 
         <h2>4. Partage des données</h2>
-        <p>Major Marc ne revend aucune donnée. Vos données sont partagées uniquement avec nos prestataires techniques nécessaires au service : Stripe (Paiement) et OpenAI (Traitement de l'IA).</p>
+        <p>alfred major ne revend aucune donnée. Vos données sont partagées uniquement avec nos prestataires techniques nécessaires au service : Stripe (Paiement) et OpenAI (Traitement de l'IA).</p>
 
         <h2>5. Vos droits</h2>
         <p>Conformément au RGPD, vous disposez d'un droit d'accès, de rectification et de suppression de vos données. Contactez-nous à <strong>contact@majormarc.com</strong> pour toute demande.</p>
