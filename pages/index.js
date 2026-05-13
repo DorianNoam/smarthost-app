@@ -363,7 +363,7 @@ export default function Home() {
           <div className="pain-card">
             <div className="pain-card-photo">
               <img
-                src="https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?auto=format&fit=crop&w=800&q=80"
+                src="/pain-nuit.png"
                 alt="Personne réveillée la nuit regardant son téléphone"
                 loading="lazy"
               />
@@ -379,7 +379,7 @@ export default function Home() {
           <div className="pain-card">
             <div className="pain-card-photo">
               <img
-                src="https://images.unsplash.com/photo-1528360983277-13d401cdc186?auto=format&fit=crop&w=800&q=80"
+                src="/pain-langue.png"
                 alt="Couple de voyageurs internationaux"
                 loading="lazy"
               />
@@ -395,7 +395,7 @@ export default function Home() {
           <div className="pain-card">
             <div className="pain-card-photo">
               <img
-                src="https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80"
+                src="/pain-questions.png"
                 alt="Service de conciergerie professionnel"
                 loading="lazy"
               />
