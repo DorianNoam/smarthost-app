@@ -60,8 +60,7 @@ export default function Home() {
         }
         h1 {
           font-family: 'Plus Jakarta Sans', sans-serif; font-size: clamp(36px, 6vw, 68px);
-          color: white; margin-bottom: 24px; line-height: 1.08; font-weight: 900;
-          letter-spacing: -2px;
+          color: white; margin-bottom: 24px; line-height: 1.08; font-weight: 900; letter-spacing: -2px;
         }
         h1 em { font-style: normal; color: #d4af37; }
         .subtitle { font-size: clamp(16px, 2.5vw, 19px); margin-bottom: 44px; color: rgba(255,255,255,0.75); line-height: 1.7; font-weight: 400; max-width: 680px; }
@@ -112,14 +111,32 @@ export default function Home() {
         .pain-section .section-sub { color: rgba(255,255,255,0.65); }
         .pain-section .section-label { color: #fbbf24; }
         .pain-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; max-width: 1100px; margin: 50px auto 0; }
+
+        /* ✅ PAIN CARD AVEC PHOTO */
         .pain-card {
           background: rgba(255,255,255,0.07); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-          padding: 36px 32px; border-radius: 24px; text-align: left; transition: 0.3s;
+          border-radius: 24px; text-align: left; transition: 0.3s; overflow: hidden;
           border: 1px solid rgba(255,255,255,0.12);
         }
         .pain-card:hover { transform: translateY(-6px); background: rgba(255,255,255,0.12); border-color: rgba(212,175,55,0.4); }
-        .pain-emoji { font-size: 40px; margin-bottom: 20px; display: block; }
-        .pain-card h3 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 20px; color: white; margin-bottom: 12px; font-weight: 800; }
+
+        /* Photo en haut de la card */
+        .pain-card-photo {
+          width: 100%; height: 200px; overflow: hidden; position: relative;
+        }
+        .pain-card-photo img {
+          width: 100%; height: 100%; object-fit: cover; display: block;
+          transition: transform 0.5s ease;
+        }
+        .pain-card:hover .pain-card-photo img { transform: scale(1.05); }
+        .pain-card-photo-overlay {
+          position: absolute; inset: 0;
+          background: linear-gradient(to bottom, transparent 40%, rgba(15,23,42,0.6) 100%);
+        }
+
+        /* Contenu sous la photo */
+        .pain-card-body { padding: 28px 28px 32px; }
+        .pain-card h3 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 20px; color: white; margin: 0 0 12px; font-weight: 800; }
         .pain-card p { color: rgba(255,255,255,0.65); line-height: 1.7; font-size: 15px; margin: 0; }
 
         /* ══════════════════ DEMO ══════════════════ */
@@ -142,10 +159,7 @@ export default function Home() {
         .msg-time { display: block; font-size: 10px; color: #94a3b8; text-align: right; margin-top: 4px; }
         .demo-features { flex: 1; max-width: 520px; width: 100%; }
         .feat-row { margin-bottom: 36px; display: flex; gap: 18px; align-items: flex-start; }
-        .feat-icon {
-          width: 52px; height: 52px; border-radius: 16px; flex-shrink: 0;
-          display: flex; align-items: center; justify-content: center; font-size: 24px;
-        }
+        .feat-icon { width: 52px; height: 52px; border-radius: 16px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 24px; }
         .feat-icon.fi1 { background: linear-gradient(135deg, rgba(212,175,55,0.2), rgba(212,175,55,0.05)); }
         .feat-icon.fi2 { background: linear-gradient(135deg, rgba(99,102,241,0.2), rgba(99,102,241,0.05)); }
         .feat-icon.fi3 { background: linear-gradient(135deg, rgba(16,185,129,0.2), rgba(16,185,129,0.05)); }
@@ -174,26 +188,16 @@ export default function Home() {
         .notif-content { background: white; border-radius: 10px; padding: 14px; border-left: 3px solid #ef4444; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
         .notif-content p { font-size: 13px; margin: 0; color: #334155; line-height: 1.5; }
 
-        /* ══════════════════ BENEFITS (PHOTO) ══════════════════ */
-        .benefits {
-          padding: 110px 5%; text-align: center; position: relative;
-          background: white;
-        }
+        /* ══════════════════ BENEFITS ══════════════════ */
+        .benefits { padding: 110px 5%; text-align: center; background: white; }
         .benefits-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; max-width: 1100px; margin: 60px auto 0; align-items: center; }
         .benefits-image { border-radius: 28px; overflow: hidden; position: relative; height: 500px; }
         .benefits-image img { width: 100%; height: 100%; object-fit: cover; display: block; }
         .benefits-image-overlay { position: absolute; inset: 0; background: linear-gradient(135deg, rgba(26,42,108,0.3), transparent); }
         .benefits-cards { display: flex; flex-direction: column; gap: 20px; }
-        .benefit-card {
-          background: #f8fafc; padding: 28px; border-radius: 20px; text-align: left;
-          display: flex; gap: 18px; align-items: flex-start;
-          border: 1px solid #e2e8f0; transition: 0.3s;
-        }
+        .benefit-card { background: #f8fafc; padding: 28px; border-radius: 20px; text-align: left; display: flex; gap: 18px; align-items: flex-start; border: 1px solid #e2e8f0; transition: 0.3s; }
         .benefit-card:hover { transform: translateX(6px); border-color: #d4af37; box-shadow: 0 8px 24px rgba(0,0,0,0.06); }
-        .benefit-icon-wrap {
-          width: 52px; height: 52px; border-radius: 14px; flex-shrink: 0;
-          display: flex; align-items: center; justify-content: center; font-size: 24px;
-        }
+        .benefit-icon-wrap { width: 52px; height: 52px; border-radius: 14px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 24px; }
         .bi1 { background: linear-gradient(135deg, #dbeafe, #bfdbfe); }
         .bi2 { background: linear-gradient(135deg, #fef3c7, #fde68a); }
         .bi3 { background: linear-gradient(135deg, #d1fae5, #a7f3d0); }
@@ -201,28 +205,16 @@ export default function Home() {
         .benefit-card p { color: #64748b; font-size: 14px; line-height: 1.6; margin: 0; }
 
         /* ══════════════════ TESTIMONIALS ══════════════════ */
-        .testimonials {
-          padding: 110px 5%; text-align: center;
-          background: linear-gradient(180deg, #f8fafc 0%, white 100%);
-        }
+        .testimonials { padding: 110px 5%; text-align: center; background: linear-gradient(180deg, #f8fafc 0%, white 100%); }
         .testi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; max-width: 1100px; margin: 50px auto 0; }
-        .testi-card {
-          background: white; border-radius: 24px; padding: 36px; text-align: left;
-          border: 1px solid #e2e8f0; transition: 0.3s; position: relative;
-          box-shadow: 0 4px 16px rgba(0,0,0,0.04);
-        }
+        .testi-card { background: white; border-radius: 24px; padding: 36px; text-align: left; border: 1px solid #e2e8f0; transition: 0.3s; position: relative; box-shadow: 0 4px 16px rgba(0,0,0,0.04); }
         .testi-card:hover { transform: translateY(-6px); box-shadow: 0 20px 50px rgba(0,0,0,0.08); border-color: #d4af37; }
         .testi-stars { display: flex; gap: 3px; margin-bottom: 20px; }
         .star { color: #fbbf24; font-size: 16px; }
         .testi-quote { font-size: 15px; color: #334155; line-height: 1.75; margin-bottom: 28px; font-style: italic; }
         .testi-quote::before { content: '"'; font-family: Georgia, serif; font-size: 56px; color: #e2e8f0; line-height: 0; vertical-align: -28px; margin-right: 4px; font-style: normal; }
         .testi-author { display: flex; align-items: center; gap: 14px; }
-        .testi-avatar {
-          width: 48px; height: 48px; border-radius: 50%; flex-shrink: 0;
-          display: flex; align-items: center; justify-content: center;
-          font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 16px;
-          color: white;
-        }
+        .testi-avatar { width: 48px; height: 48px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 16px; color: white; }
         .av1 { background: linear-gradient(135deg, #f59e0b, #d97706); }
         .av2 { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
         .av3 { background: linear-gradient(135deg, #10b981, #059669); }
@@ -231,33 +223,13 @@ export default function Home() {
         .testi-badge { position: absolute; top: 20px; right: 20px; background: #ecfdf5; color: #059669; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 20px; border: 1px solid #a7f3d0; }
 
         /* ══════════════════ PRICING ══════════════════ */
-        .pricing-section {
-          padding: 110px 5%; text-align: center;
-          background: linear-gradient(135deg, #0f172a 0%, #1a2a6c 100%);
-          position: relative; overflow: hidden;
-        }
-        .pricing-section::before {
-          content: ''; position: absolute; top: -50%; right: -20%;
-          width: 600px; height: 600px; border-radius: 50%;
-          background: radial-gradient(circle, rgba(212,175,55,0.08) 0%, transparent 70%);
-        }
+        .pricing-section { padding: 110px 5%; text-align: center; background: linear-gradient(135deg, #0f172a 0%, #1a2a6c 100%); position: relative; overflow: hidden; }
+        .pricing-section::before { content: ''; position: absolute; top: -50%; right: -20%; width: 600px; height: 600px; border-radius: 50%; background: radial-gradient(circle, rgba(212,175,55,0.08) 0%, transparent 70%); }
         .pricing-section .section-title { color: white; }
         .pricing-section .section-sub { color: rgba(255,255,255,0.6); }
         .pricing-section .section-label { color: #fbbf24; }
-        .price-card-home {
-          background: white; padding: 52px 44px; border-radius: 28px;
-          box-shadow: 0 40px 80px rgba(0,0,0,0.3); text-align: center;
-          border: 2px solid transparent; position: relative; width: 100%; max-width: 460px;
-          margin: 50px auto 0; display: flex; flex-direction: column; box-sizing: border-box;
-          background-clip: padding-box;
-        }
-        .badge-promo {
-          position: absolute; top: -18px; left: 50%; transform: translateX(-50%);
-          background: linear-gradient(135deg, #d4af37, #f0cc5a); color: #1a2a6c;
-          padding: 8px 28px; border-radius: 50px; font-weight: 800; font-size: 13px;
-          text-transform: uppercase; letter-spacing: 1px;
-          box-shadow: 0 8px 24px rgba(212,175,55,0.4); white-space: nowrap;
-        }
+        .price-card-home { background: white; padding: 52px 44px; border-radius: 28px; box-shadow: 0 40px 80px rgba(0,0,0,0.3); text-align: center; border: 2px solid transparent; position: relative; width: 100%; max-width: 460px; margin: 50px auto 0; display: flex; flex-direction: column; box-sizing: border-box; background-clip: padding-box; }
+        .badge-promo { position: absolute; top: -18px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #d4af37, #f0cc5a); color: #1a2a6c; padding: 8px 28px; border-radius: 50px; font-weight: 800; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 8px 24px rgba(212,175,55,0.4); white-space: nowrap; }
         .plan-name { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 14px; color: #94a3b8; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 20px; }
         .price-old { font-size: 18px; color: #94a3b8; text-decoration: line-through; margin-bottom: 4px; }
         .price { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 60px; font-weight: 900; color: #0f172a; letter-spacing: -3px; margin-bottom: 4px; line-height: 1; }
@@ -266,12 +238,7 @@ export default function Home() {
         .features-list { text-align: left; margin-bottom: 36px; border-top: 1px solid #f1f5f9; padding-top: 28px; }
         .feature { margin-bottom: 16px; font-size: 15px; display: flex; align-items: center; gap: 12px; color: #334155; font-weight: 500; }
         .check-icon { background: linear-gradient(135deg, #d4af37, #f0cc5a); color: #1a2a6c; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 11px; font-weight: 900; }
-        .cta-pricing {
-          background: linear-gradient(135deg, #1a2a6c, #2a3f9f); color: white; padding: 18px;
-          border-radius: 16px; font-weight: 800; font-size: 16px; transition: 0.3s;
-          text-decoration: none; display: block;
-          box-shadow: 0 8px 24px rgba(26,42,108,0.3);
-        }
+        .cta-pricing { background: linear-gradient(135deg, #1a2a6c, #2a3f9f); color: white; padding: 18px; border-radius: 16px; font-weight: 800; font-size: 16px; transition: 0.3s; text-decoration: none; display: block; box-shadow: 0 8px 24px rgba(26,42,108,0.3); }
         .cta-pricing:hover { transform: translateY(-2px); box-shadow: 0 16px 40px rgba(26,42,108,0.4); }
         .guarantee { margin-top: 18px; font-size: 13px; color: #94a3b8; display: flex; align-items: center; justify-content: center; gap: 8px; }
 
@@ -312,6 +279,7 @@ export default function Home() {
           .price { font-size: 48px; }
           .footer-content { flex-direction: column; gap: 36px; }
           .footer-brand { max-width: 100%; }
+          .pain-card-photo { height: 160px; }
         }
       `}</style>
 
@@ -384,27 +352,61 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── PAIN POINTS — SECTION PHOTO ── */}
+      {/* ── PAIN POINTS — CARDS AVEC PHOTOS ── */}
       <section className="pain-section">
         <p className="section-label">Fini les nuits coupées</p>
         <h2 className="section-title">La gestion locative réinventée</h2>
         <p className="section-sub" style={{color: 'rgba(255,255,255,0.6)'}}>Alfred élimine les interruptions du quotidien pour vous laisser profiter de ce qui compte vraiment.</p>
         <div className="pain-grid">
+
+          {/* ✅ Card 1 — Personne réveillée la nuit */}
           <div className="pain-card">
-            <span className="pain-emoji">🌙</span>
-            <h3>Le message à 23h30</h3>
-            <p>Le voyageur arrive tard et ne trouve pas le WiFi. Votre téléphone sonne pendant votre sommeil. Laissez Alfred s'en charger — il répond instantanément, en pleine nuit.</p>
+            <div className="pain-card-photo">
+              <img
+                src="https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?auto=format&fit=crop&w=800&q=80"
+                alt="Personne réveillée la nuit regardant son téléphone"
+                loading="lazy"
+              />
+              <div className="pain-card-photo-overlay" />
+            </div>
+            <div className="pain-card-body">
+              <h3>Le message à 23h30</h3>
+              <p>Le voyageur arrive tard et ne trouve pas le WiFi. Votre téléphone sonne pendant votre sommeil. Laissez Alfred s'en charger — il répond instantanément, en pleine nuit.</p>
+            </div>
           </div>
+
+          {/* ✅ Card 2 — Couple en voyage */}
           <div className="pain-card">
-            <span className="pain-emoji">🌍</span>
-            <h3>La barrière de la langue</h3>
-            <p>Alfred parle couramment plus de 30 langues. Anglais, espagnol, allemand, japonais — vos touristes étrangers sont servis dans leur langue, sans effort de votre part.</p>
+            <div className="pain-card-photo">
+              <img
+                src="https://images.unsplash.com/photo-1528360983277-13d401cdc186?auto=format&fit=crop&w=800&q=80"
+                alt="Couple de voyageurs internationaux"
+                loading="lazy"
+              />
+              <div className="pain-card-photo-overlay" />
+            </div>
+            <div className="pain-card-body">
+              <h3>La barrière de la langue</h3>
+              <p>Alfred parle couramment plus de 30 langues. Anglais, espagnol, allemand, japonais — vos touristes étrangers sont servis dans leur langue, sans effort de votre part.</p>
+            </div>
           </div>
+
+          {/* ✅ Card 3 — Majordome professionnel */}
           <div className="pain-card">
-            <span className="pain-emoji">🔄</span>
-            <h3>Les questions répétées</h3>
-            <p>Poubelles, départ, commerces... Alfred répond inlassablement avec une politesse irréprochable, chaque fois comme si c'était la première question.</p>
+            <div className="pain-card-photo">
+              <img
+                src="https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80"
+                alt="Service de conciergerie professionnel"
+                loading="lazy"
+              />
+              <div className="pain-card-photo-overlay" />
+            </div>
+            <div className="pain-card-body">
+              <h3>Les questions répétées</h3>
+              <p>Poubelles, départ, commerces... Alfred répond inlassablement avec une politesse irréprochable, chaque fois comme si c'était la première question.</p>
+            </div>
           </div>
+
         </div>
       </section>
 
@@ -505,7 +507,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── BENEFITS — AVEC PHOTO ── */}
+      {/* ── BENEFITS ── */}
       <section className="benefits">
         <p className="section-label">Pourquoi Alfred</p>
         <h2 className="section-title">Ce que vivent nos hôtes au quotidien</h2>
@@ -594,7 +596,6 @@ export default function Home() {
         <p className="section-label">Tarifs</p>
         <h2 className="section-title">L'excellence accessible.</h2>
         <p className="section-sub">Un majordome privé 24h/24 pour une fraction du coût d'une conciergerie traditionnelle.</p>
-
         <div className="price-card-home">
           <div className="badge-promo">⚡ 1er mois à 9,90€ — Offre de lancement</div>
           <div className="plan-name">Licence par logement</div>
@@ -619,9 +620,7 @@ export default function Home() {
           <Link href="/register" passHref legacyBehavior>
             <a className="cta-pricing">Commencer maintenant — 9,90€ le 1er mois</a>
           </Link>
-          <div className="guarantee">
-            🔒 Paiement 100% sécurisé via Stripe
-          </div>
+          <div className="guarantee">🔒 Paiement 100% sécurisé via Stripe</div>
         </div>
       </section>
 
