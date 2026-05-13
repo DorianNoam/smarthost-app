@@ -29,6 +29,7 @@ export default function Dashboard() {
       const { data: props } = await supabase
         .from('properties')
         .select('*')
+        .eq('owner_id', user.id)
         .order('created_at', { ascending: false });
 
       const { data: prof } = await supabase
