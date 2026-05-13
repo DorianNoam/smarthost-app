@@ -28,7 +28,7 @@ async function getGoogleLocalData(category, fullAddress) {
       headers: {
         'Content-Type': 'application/json',
         'X-Goog-Api-Key': apiKey,
-        'X-Goog-FieldMask': 'places.displayName,places.shortFormattedAddress',
+        'X-Goog-FieldMask': 'places.displayName,places.shortFormattedAddress,places.primaryType,places.rating',
       },
       body: JSON.stringify({
         includedTypes: typeMap[category] || ["point_of_interest"],
@@ -42,7 +42,11 @@ async function getGoogleLocalData(category, fullAddress) {
 
     const data = await placesRes.json();
     if (data.error || !data.places?.length) return "";
-    return data.places.map(p => `- ${p.displayName.text} (${p.shortFormattedAddress})`).join('\n');
+    return data.places.map(p => {
+      const type = p.primaryType ? ` [${p.primaryType}]` : '';
+      const rating = p.rating ? ` ⭐${p.rating}` : '';
+      return `- ${p.displayName.text}${type}${rating} (${p.shortFormattedAddress})`;
+    }).join('\n');
   } catch (e) {
     return "";
   }
@@ -62,11 +66,11 @@ async function sendTelegramAlert(originalMsg, translatedMsg, propertyData) {
 
     if (!profile?.telegram_chat_id) return;
 
-  let text = `🚨 *ALERTE ALFRED MAJOR*\n\n🏠 *Logement :* ${propertyData.name}\n\n💬 *Message du client :*\n"${originalMsg}"`;
-if (translatedMsg) {
-  text += `\n\n🇫🇷 *Traduction :*\n"${translatedMsg}"`;
-}
-text += `\n\n⚡ *Action recommandée :*\nMerci de contacter votre client dans les plus brefs délais pour gérer cette urgence.\n\n_Cordialement,_\n_L'équipe Alfred Major_ 🎩`;
+    let text = `🚨 *ALERTE ALFRED MAJOR*\n\n🏠 *Logement :* ${propertyData.name}\n\n💬 *Message du client :*\n"${originalMsg}"`;
+    if (translatedMsg) {
+      text += `\n\n🇫🇷 *Traduction :*\n"${translatedMsg}"`;
+    }
+    text += `\n\n⚡ *Action recommandée :*\nMerci de contacter votre client dans les plus brefs délais pour gérer cette urgence.\n\n_Cordialement,_\n_L'équipe Alfred Major_ 🎩`;
 
     await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
       method: 'POST',
@@ -167,11 +171,35 @@ IDENTITÉ — RÈGLE ABSOLUE :
 LANGUE :
 - Réponds TOUJOURS dans la langue du voyageur, sans exception.
 
-STYLE :
-- CONCIS : 2-3 phrases max sauf explication indispensable.
-- Chaleureux et professionnel.
-- Ne donne JAMAIS d'infos non demandées.
-- Pour une salutation simple ("bonjour", "hi"), réponds poliment et demande comment aider. RIEN DE PLUS.
+STYLE — RÈGLES DE COMMUNICATION :
+- Ton chaleureux et raffiné, comme un majordome d'hôtel 5 étoiles : élégant sans être pompeux, attentionné sans être obséquieux.
+- Personnalise tes réponses : utilise "votre logement", "votre séjour", "à deux pas de chez vous" plutôt que des formulations neutres.
+- Évite les phrases robotiques comme "Il y a plusieurs options près de votre logement". Préfère "Le quartier regorge de bonnes adresses" ou "Vous avez de très belles tables à proximité immédiate".
+
+POUR LES RECOMMANDATIONS (restaurants, bars, sorties, commerces, transports) :
+- NE JAMAIS faire de liste sèche séparée par des virgules.
+- Présente 3 à 5 lieux maximum sous forme de petites recommandations distinctes.
+- UN lieu par ligne, avec un retour à la ligne entre chaque.
+- Pour chaque lieu : un emoji adapté, le nom en gras (avec des astérisques *), un tiret, puis 1 courte phrase qui décrit l'ambiance, le type, ou la distance.
+- Format type :
+  🥐 *Le Fournil de l'Univers* — Boulangerie artisanale, parfait pour le petit-déjeuner
+  🍕 *La Tortue Pizza* — Pizzeria conviviale, idéale en famille
+  🥙 *Ay Yildiz Kebab* — Cuisine turque savoureuse, parfait pour un déjeuner rapide
+- Termine si pertinent par une touche personnalisée : "Si vous me dites ce qui vous tente — italien, asiatique, bistrot français — je peux affiner mes suggestions selon vos envies."
+- Si tu as la note ou le type entre crochets [restaurant] dans tes données, sers-toi en intelligemment pour décrire le lieu, mais ne montre JAMAIS les crochets ou la note brute au voyageur.
+
+POUR LES QUESTIONS TECHNIQUES (wifi, code, parking, check-in) :
+- Reste CONCIS : 2-3 phrases maximum, droit au but.
+- Ton chaleureux mais efficace.
+
+POUR UNE SALUTATION SIMPLE ("bonjour", "hi", "hello") :
+- Réponds poliment et demande comment aider. RIEN DE PLUS.
+- Ex : "Bonjour, ravi de vous accueillir ! En quoi puis-je vous être utile durant votre séjour ?"
+
+FORMAT GÉNÉRAL :
+- N'utilise PAS de markdown lourd (pas de # titres, pas de longues listes à puces avec - ou *).
+- Reste fluide et conversationnel.
+- Les seuls éléments de mise en forme autorisés sont : les emojis, le gras avec *texte* pour les noms de lieux, et les retours à la ligne pour aérer.
 
 ━━━ INFORMATIONS DU LOGEMENT ━━━
 (Donner uniquement si le voyageur le demande explicitement)
@@ -231,9 +259,9 @@ ${localSection || "Aucune information disponible pour le moment."}
 
 1. INFO TECHNIQUE MANQUANTE : Si une info (wifi, code, parking...) est "Non renseigné", dis exactement : "Je n'ai pas cette information pour le moment, je contacte votre hôte." Ne demande jamais de numéro de réservation.
 
-2. QUARTIER & LOCAL : Pour toute question sur transports, restaurants, commerces, pharmacies — utilise la section QUARTIER & ENVIRONS et réponds directement avec ces infos. Si tu as des résultats, utilise-les sans hésiter.
+2. QUARTIER & LOCAL : Pour toute question sur transports, restaurants, commerces, pharmacies — utilise la section QUARTIER & ENVIRONS et réponds directement avec ces infos en suivant le FORMAT TYPE défini plus haut (un lieu par ligne, emoji, nom en gras, description courte). Si tu as des résultats, utilise-les sans hésiter.
 
-3. INVENTION INTERDITE : Ne jamais inventer une information.
+3. INVENTION INTERDITE : Ne jamais inventer une information. Si tu n'as pas la donnée dans tes infos, ne brode pas.
 
 4. URGENCE — RÈGLE LA PLUS IMPORTANTE :
 Si le voyageur signale une urgence réelle (fuite d'eau, panne électrique, incendie, gaz, porte bloquée, accident) :
@@ -252,8 +280,8 @@ Si le voyageur signale une urgence réelle (fuite d'eau, panne électrique, ince
           content: msg.text || '',
         })),
       ],
-      temperature: 0.1,
-      max_tokens: 400,
+      temperature: 0.5,
+      max_tokens: 500,
     });
 
     const responseText = chatResponse.choices[0].message.content;
