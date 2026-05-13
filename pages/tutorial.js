@@ -326,7 +326,7 @@ export default function Tutorial() {
               <span className="card-badge">Étape 1</span>
               <h2>Créez votre logement</h2>
               <p className="card-desc">
-                Donnez une identité à votre bien. C'est la base sur laquelle Marc va se construire — nom, adresse, localisation GPS pour que vos voyageurs le trouvent sans effort.
+                Donnez une identité à votre bien. C'est la base sur laquelle Alfred va se construire — nom, adresse, localisation GPS pour que vos voyageurs le trouvent sans effort.
               </p>
             </div>
           </div>
@@ -342,12 +342,12 @@ export default function Tutorial() {
           </div>
 
           <div className="tip">
-            💡 <span><strong>Conseil :</strong> Copiez l'URL Google Maps de votre logement et collez-la dans le champ GPS — Marc l'enverra directement au voyageur qui demande son chemin.</span>
+            💡 <span><strong>Conseil :</strong> Copiez l'URL Google Maps de votre logement et collez-la dans le champ GPS — Alfred l'enverra directement au voyageur qui demande son chemin.</span>
           </div>
 
           <div className="step-nav">
             <button className="btn-next" onClick={() => { setActiveStep(2); document.getElementById('step-2')?.scrollIntoView({ behavior: 'smooth' }); }}>
-              Continuer → Étape 2 : Configurer Marc
+              Continuer → Étape 2 : Configurer Alfred
             </button>
           </div>
 
@@ -368,7 +368,7 @@ export default function Tutorial() {
               <span className="card-badge">Étape 2</span>
               <h2>Dressez votre Majordome</h2>
               <p className="card-desc">
-                Plus Marc en sait sur votre logement, mieux il répond. Remplissez les 10 piliers de sa formation — il sera opérationnel en 5 minutes.
+                Plus Alfred en sait sur votre logement, mieux il répond. Remplissez les 10 piliers de sa formation — il sera opérationnel en 5 minutes.
               </p>
             </div>
           </div>
