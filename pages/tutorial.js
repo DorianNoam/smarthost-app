@@ -57,7 +57,7 @@ export default function Tutorial() {
   };
 
   const copyExampleMessage = () => {
-    const msg = `Bonjour ! 👋\nPour toute question pendant votre séjour — WiFi, équipements, bonnes adresses — contactez mon assistant disponible 24h/24 via ce lien :\n👉 [VOTRE LIEN MARC]\n\nBon séjour ! 🎩`;
+    const msg = `Bonjour ! 👋\nPour toute question pendant votre séjour — WiFi, équipements, bonnes adresses — contactez mon assistant disponible 24h/24 via ce lien :\n👉 [VOTRE LIEN ALFRED]\n\nBon séjour ! 🎩`;
     navigator.clipboard.writeText(msg);
     setCopied(true);
     setTimeout(() => setCopied(false), 2500);
@@ -416,7 +416,7 @@ export default function Tutorial() {
           </div>
 
           <div className="info-box">
-            <div className="info-box-title">📍 Où trouver votre lien Marc ?</div>
+            <div className="info-box-title">📍 Où trouver votre lien Alfred ?</div>
             <div style={{fontSize: '14px', color: '#475569', lineHeight: '1.8'}}>
               <div style={{display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px'}}>
                 <span style={{background: '#1a2a6c', color: 'white', borderRadius: '50%', width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: '800', flexShrink: 0}}>1</span>
@@ -440,7 +440,7 @@ export default function Tutorial() {
 
 Pour toute question pendant votre séjour — WiFi, équipements, bonnes adresses dans le quartier — contactez mon assistant disponible 24h/24 via ce lien :
 
-👉 `}<span className="msg-highlight">majormarc.fr/m/villa-noam</span>{`
+👉 `}<span className="msg-highlight">alfredmajor.com/m/villa-noam</span>{`
 
 Bon séjour ! 🎩`}
             </div>
@@ -450,7 +450,7 @@ Bon séjour ! 🎩`}
           </div>
 
           <div className="tip">
-            💡 <span><strong>Pro tip :</strong> Sur Airbnb, allez dans <strong>Messagerie → Réponses rapides</strong> et créez une réponse automatique "Instructions d'arrivée" avec le lien Marc dedans. Zéro effort à chaque nouvelle réservation.</span>
+            💡 <span><strong>Pro tip :</strong> Sur Airbnb, allez dans <strong>Messagerie → Réponses rapides</strong> et créez une réponse automatique "Instructions d'arrivée" avec le lien Alfred dedans. Zéro effort à chaque nouvelle réservation.</span>
           </div>
 
           <div className="step-nav">
@@ -473,7 +473,7 @@ Bon séjour ! 🎩`}
               <span className="card-badge">Étape 4</span>
               <h2>Activez vos alertes urgences</h2>
               <p className="card-desc">
-                C'est votre filet de sécurité. Si un voyageur signale une urgence (fuite, panne, blocage), Marc vous alerte <strong>instantanément</strong> sur Telegram — même à 3h du matin.
+                C'est votre filet de sécurité. Si un voyageur signale une urgence (fuite, panne, blocage), Alfred vous alerte <strong>instantanément</strong> sur Telegram — même à 3h du matin.
               </p>
             </div>
           </div>
@@ -497,7 +497,7 @@ Bon séjour ! 🎩`}
             <div className="tg-step">
               <div className="tg-step-num">2</div>
               <div className="tg-step-text">
-                <strong>Cliquez sur le bouton ci-dessous</strong> pour ouvrir le bot Marc directement dans Telegram.
+                <strong>Cliquez sur le bouton ci-dessous</strong> pour ouvrir le bot Alfred directement dans Telegram.
               </div>
             </div>
 
@@ -530,7 +530,7 @@ Bon séjour ! 🎩`}
         {/* ── CTA FINAL ── */}
         <div className="cta-footer">
           <h2>🎉 Vous êtes prêt !</h2>
-          <p>Marc est configuré et opérationnel. Vos voyageurs vont adorer.</p>
+          <p>Alfred est configuré et opérationnel. Vos voyageurs vont adorer.</p>
           <Link href="/dashboard" legacyBehavior>
             <a><button className="btn-cta">
               🏠 Retour à mes logements
