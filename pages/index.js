@@ -395,7 +395,7 @@ export default function Home() {
           <div className="pain-card">
             <div className="pain-card-photo">
               <img
-                src="/pain-questions.png"
+                src="pain-questions.png"
                 alt="Service de conciergerie professionnel"
                 loading="lazy"
               />
