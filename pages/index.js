@@ -23,191 +23,299 @@ export default function Home() {
       </Head>
 
       <style jsx>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700;800;900&display=swap');
 
         :global(a) { text-decoration: none; color: inherit; }
         :global(html), :global(body) { margin: 0; padding: 0; overflow-x: hidden; width: 100%; background-color: #fafafa; scroll-behavior: smooth; }
-        
         .container { font-family: 'Inter', sans-serif; color: #0f172a; width: 100%; }
 
-        /* --- NAVBAR --- */
+        /* ══════════════════ NAVBAR ══════════════════ */
         nav {
           display: flex; justify-content: space-between; align-items: center; padding: 15px 5%;
-          position: fixed; top: 0; left: 0; right: 0; background: rgba(255, 255, 255, 0.95);
-          backdrop-filter: blur(10px); z-index: 1000; box-shadow: 0 1px 10px rgba(0,0,0,0.05); box-sizing: border-box;
+          position: fixed; top: 0; left: 0; right: 0; background: rgba(255,255,255,0.92);
+          backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+          z-index: 1000; box-shadow: 0 1px 0 rgba(0,0,0,0.06); box-sizing: border-box;
         }
-        .brand { display: flex; align-items: center; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 24px; font-weight: 800; color: #1a2a6c; cursor: pointer; letter-spacing: -0.5px; }
+        .brand { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 24px; font-weight: 900; color: #1a2a6c; letter-spacing: -0.5px; }
         .gold { color: #d4af37; }
         .nav-links { display: flex; align-items: center; gap: 30px; }
-        .nav-link { color: #1e293b; font-weight: 500; font-size: 15px; transition: 0.3s; cursor: pointer; }
-        .nav-link:hover { color: #d4af37; }
-        .nav-login { font-weight: 600; color: #1a2a6c; padding: 10px 24px; border: 2px solid #1a2a6c; border-radius: 50px; font-size: 15px; transition: 0.3s; cursor: pointer; white-space: nowrap; }
-        .nav-login:hover { background: #1a2a6c; color: white; }
+        .nav-link { color: #475569; font-weight: 500; font-size: 15px; transition: 0.2s; }
+        .nav-link:hover { color: #1a2a6c; }
+        .nav-login { font-weight: 700; color: white; background: #1a2a6c; padding: 10px 24px; border-radius: 50px; font-size: 14px; transition: 0.3s; }
+        .nav-login:hover { background: #d4af37; color: #1a2a6c; transform: translateY(-1px); }
 
-        /* --- HERO SECTION --- */
+        /* ══════════════════ HERO ══════════════════ */
         .hero {
-          position: relative; min-height: 85vh; display: flex; align-items: center; justify-content: center;
-          text-align: center; padding: 140px 20px 80px; box-sizing: border-box;
-          background: linear-gradient(rgba(15, 23, 42, 0.8), rgba(15, 23, 42, 0.9)), url('https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1920&q=80') center/cover;
+          position: relative; min-height: 92vh; display: flex; align-items: center; justify-content: center;
+          text-align: center; padding: 140px 20px 100px; box-sizing: border-box; overflow: hidden;
+          background: linear-gradient(165deg, rgba(10,15,40,0.88) 0%, rgba(26,42,108,0.75) 50%, rgba(10,15,40,0.92) 100%),
+                      url('https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?auto=format&fit=crop&w=1920&q=80') center/cover fixed;
         }
-        .hero-content { max-width: 950px; z-index: 10; margin: 0 auto; display: flex; flex-direction: column; align-items: center; width: 100%; }
-        .badge-hero { background: rgba(212, 175, 55, 0.15); color: #d4af37; padding: 8px 16px; border-radius: 30px; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; display: inline-block; margin-bottom: 25px; border: 1px solid rgba(212, 175, 55, 0.3); }
-        h1 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: clamp(34px, 6vw, 64px); color: white; margin-bottom: 25px; line-height: 1.1; font-weight: 800; letter-spacing: -1px; }
-        .subtitle { font-size: clamp(15px, 3vw, 20px); margin-bottom: 40px; color: #cbd5e1; line-height: 1.6; font-weight: 400; max-width: 800px; }
-        
+        .hero-content { max-width: 900px; z-index: 10; margin: 0 auto; display: flex; flex-direction: column; align-items: center; width: 100%; }
+        .badge-hero {
+          background: rgba(212,175,55,0.18); color: #fbbf24; padding: 10px 20px; border-radius: 50px;
+          font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px;
+          display: inline-flex; align-items: center; gap: 8px; margin-bottom: 30px;
+          border: 1px solid rgba(212,175,55,0.35); backdrop-filter: blur(10px);
+        }
+        h1 {
+          font-family: 'Plus Jakarta Sans', sans-serif; font-size: clamp(36px, 6vw, 68px);
+          color: white; margin-bottom: 24px; line-height: 1.08; font-weight: 900;
+          letter-spacing: -2px;
+        }
+        h1 em { font-style: normal; color: #d4af37; }
+        .subtitle { font-size: clamp(16px, 2.5vw, 19px); margin-bottom: 44px; color: rgba(255,255,255,0.75); line-height: 1.7; font-weight: 400; max-width: 680px; }
         .cta-main {
-          background-color: #d4af37; color: #1a2a6c; padding: 20px 45px; border-radius: 50px; font-weight: 700; font-size: 16px;
-          box-shadow: 0 10px 30px rgba(212, 175, 55, 0.3); display: inline-flex; justify-content: center; align-items: center; gap: 10px; transition: 0.3s; cursor: pointer; letter-spacing: 0.5px;
+          background: linear-gradient(135deg, #d4af37, #f0cc5a); color: #1a2a6c; padding: 20px 48px;
+          border-radius: 50px; font-weight: 800; font-size: 16px; letter-spacing: 0.3px;
+          box-shadow: 0 12px 40px rgba(212,175,55,0.4); display: inline-flex; align-items: center;
+          gap: 10px; transition: 0.3s; cursor: pointer;
         }
-        .cta-main:hover { transform: translateY(-3px); background-color: #fff; box-shadow: 0 15px 40px rgba(255, 255, 255, 0.2); }
-        .trust-banner { margin-top: 25px; font-size: 13px; color: #94a3b8; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .cta-main:hover { transform: translateY(-3px); box-shadow: 0 20px 50px rgba(212,175,55,0.5); }
+        .trust-row { margin-top: 28px; display: flex; align-items: center; justify-content: center; gap: 24px; flex-wrap: wrap; }
+        .trust-item { font-size: 13px; color: rgba(255,255,255,0.6); display: flex; align-items: center; gap: 6px; }
+        .trust-dot { width: 4px; height: 4px; border-radius: 50%; background: rgba(255,255,255,0.3); }
 
-        /* --- LOGO BANNER --- */
-        .logos-section { background: white; padding: 30px 5%; border-bottom: 1px solid #e2e8f0; text-align: center; }
-        .logos-section p { font-size: 13px; color: #64748b; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; margin-bottom: 15px; }
-        .logos-flex { display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; opacity: 0.6; filter: grayscale(100%); }
-        .logos-flex span { font-weight: 800; font-size: 18px; font-family: 'Plus Jakarta Sans', sans-serif; color: #1e293b; }
+        /* ══════════════════ LOGOS ══════════════════ */
+        .logos-section { background: white; padding: 28px 5%; border-bottom: 1px solid #f1f5f9; text-align: center; }
+        .logos-label { font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 2px; font-weight: 700; margin-bottom: 18px; }
+        .logos-flex { display: flex; justify-content: center; align-items: center; gap: 40px; flex-wrap: wrap; }
+        .logo-item { font-weight: 800; font-size: 17px; font-family: 'Plus Jakarta Sans', sans-serif; color: #94a3b8; letter-spacing: -0.3px; transition: 0.2s; }
+        .logo-item:hover { color: #475569; }
 
-        /* --- HOW IT WORKS --- */
-        .steps-section { padding: 100px 5%; background: #f8fafc; text-align: center; }
-        .section-title { font-family: 'Plus Jakarta Sans', sans-serif; font-size: clamp(28px, 5vw, 40px); color: #0f172a; margin-bottom: 15px; font-weight: 800; letter-spacing: -0.5px; }
-        .steps-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 40px; max-width: 1100px; margin: 50px auto 0; }
-        .step-card { background: white; padding: 40px 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.03); position: relative; }
-        .step-number { position: absolute; top: -20px; left: 50%; transform: translateX(-50%); background: #1a2a6c; color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 18px; border: 4px solid #f8fafc; }
-        .step-card h3 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 20px; color: #0f172a; margin-top: 15px; margin-bottom: 15px; font-weight: 700; }
-        .step-card p { color: #475569; line-height: 1.6; font-size: 15px; margin: 0; }
+        /* ══════════════════ STEPS ══════════════════ */
+        .steps-section { padding: 110px 5%; background: #f8fafc; text-align: center; }
+        .section-label { font-size: 12px; font-weight: 700; color: #d4af37; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 14px; }
+        .section-title { font-family: 'Plus Jakarta Sans', sans-serif; font-size: clamp(28px, 5vw, 42px); color: #0f172a; margin: 0 0 12px; font-weight: 800; letter-spacing: -1px; }
+        .section-sub { color: #64748b; font-size: 17px; margin: 0 auto; max-width: 600px; line-height: 1.6; }
+        .steps-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; max-width: 1000px; margin: 60px auto 0; position: relative; }
+        .steps-grid::before { content: ''; position: absolute; top: 40px; left: calc(16.66% + 20px); right: calc(16.66% + 20px); height: 2px; background: linear-gradient(90deg, #d4af37, #1a2a6c, #d4af37); z-index: 0; }
+        .step-card { padding: 0 30px; text-align: center; position: relative; z-index: 1; }
+        .step-icon-wrap {
+          width: 80px; height: 80px; border-radius: 50%; margin: 0 auto 24px;
+          display: flex; align-items: center; justify-content: center; font-size: 32px;
+          position: relative; z-index: 2;
+        }
+        .step-icon-wrap.s1 { background: linear-gradient(135deg, #dbeafe, #bfdbfe); box-shadow: 0 8px 24px rgba(59,130,246,0.2); }
+        .step-icon-wrap.s2 { background: linear-gradient(135deg, #fef3c7, #fde68a); box-shadow: 0 8px 24px rgba(212,175,55,0.3); }
+        .step-icon-wrap.s3 { background: linear-gradient(135deg, #d1fae5, #a7f3d0); box-shadow: 0 8px 24px rgba(16,185,129,0.2); }
+        .step-card h3 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 19px; color: #0f172a; margin-bottom: 12px; font-weight: 800; }
+        .step-card p { color: #64748b; line-height: 1.65; font-size: 15px; margin: 0; }
 
-        /* --- PAIN POINTS --- */
-        .pain-section { padding: 100px 5%; background: #fff; text-align: center; }
-        .pain-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; max-width: 1100px; margin: 40px auto 0; }
-        .pain-card { background: #f8fafc; padding: 40px 30px; border-radius: 20px; text-align: left; transition: 0.3s; border: 1px solid #e2e8f0; }
-        .pain-card:hover { transform: translateY(-5px); box-shadow: 0 20px 40px rgba(0,0,0,0.04); border-color: #d4af37; }
-        .pain-icon-wrapper { width: 50px; height: 50px; background: rgba(26, 42, 108, 0.05); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; color: #1a2a6c; }
-        .pain-card h3 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 20px; color: #0f172a; margin-bottom: 15px; font-weight: 700; }
-        .pain-card p { color: #475569; line-height: 1.6; font-size: 15px; margin: 0; }
+        /* ══════════════════ PAIN — SECTION PHOTO ══════════════════ */
+        .pain-section {
+          padding: 110px 5%; text-align: center; position: relative; overflow: hidden;
+          background: linear-gradient(rgba(15,23,42,0.92), rgba(15,23,42,0.88)),
+                      url('https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=1920&q=80') center/cover fixed;
+        }
+        .pain-section .section-title { color: white; }
+        .pain-section .section-sub { color: rgba(255,255,255,0.65); }
+        .pain-section .section-label { color: #fbbf24; }
+        .pain-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; max-width: 1100px; margin: 50px auto 0; }
+        .pain-card {
+          background: rgba(255,255,255,0.07); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+          padding: 36px 32px; border-radius: 24px; text-align: left; transition: 0.3s;
+          border: 1px solid rgba(255,255,255,0.12);
+        }
+        .pain-card:hover { transform: translateY(-6px); background: rgba(255,255,255,0.12); border-color: rgba(212,175,55,0.4); }
+        .pain-emoji { font-size: 40px; margin-bottom: 20px; display: block; }
+        .pain-card h3 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 20px; color: white; margin-bottom: 12px; font-weight: 800; }
+        .pain-card p { color: rgba(255,255,255,0.65); line-height: 1.7; font-size: 15px; margin: 0; }
 
-        /* --- DEMO SECTION --- */
-        .demo-section { padding: 100px 5%; background: #0f172a; color: white; overflow: hidden; }
+        /* ══════════════════ DEMO ══════════════════ */
+        .demo-section { padding: 110px 5%; background: #0f172a; color: white; overflow: hidden; }
         .demo-header { text-align: center; margin-bottom: 70px; }
-        .demo-header h2 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: clamp(28px, 5vw, 42px); margin-bottom: 20px; font-weight: 800; letter-spacing: -1px; }
-        
+        .demo-header .section-title { color: white; }
+        .demo-header .section-sub { color: rgba(255,255,255,0.6); }
         .demo-layout { display: flex; flex-direction: column; gap: 60px; max-width: 1100px; margin: 0 auto; align-items: center; }
         @media (min-width: 1024px) { .demo-layout { flex-direction: row; justify-content: space-between; align-items: center; } }
-        
-        .phone-wrapper { position: relative; width: 100%; max-width: 340px; margin: 0 auto; }
-        .phone-frame { border: 10px solid #1e293b; border-radius: 40px; background: white; height: 600px; overflow: hidden; position: relative; box-shadow: 0 30px 60px rgba(0,0,0,0.5); }
-        .phone-notch { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 120px; height: 25px; background: #1e293b; border-bottom-left-radius: 15px; border-bottom-right-radius: 15px; z-index: 10; }
-        
+        .phone-wrapper { position: relative; width: 100%; max-width: 300px; margin: 0 auto; }
+        .phone-frame { border: 8px solid #1e293b; border-radius: 40px; background: white; height: 560px; overflow: hidden; position: relative; box-shadow: 0 40px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05); }
+        .phone-notch { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 100px; height: 22px; background: #1e293b; border-bottom-left-radius: 14px; border-bottom-right-radius: 14px; z-index: 10; }
         .chat-app { display: flex; flex-direction: column; height: 100%; background: #f0f2f5; }
-        .chat-header { background: #075e54; color: white; padding: 40px 20px 15px; text-align: center; font-weight: 600; font-size: 15px; font-family: 'Plus Jakarta Sans', sans-serif; }
-        .chat-body { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
-        .msg { padding: 12px 16px; border-radius: 15px; font-size: 13.5px; line-height: 1.5; max-width: 85%; position: relative; color: #111; }
-        .msg-user { background: #dcf8c6; align-self: flex-end; border-bottom-right-radius: 2px; }
-        .msg-alfred { background: white; align-self: flex-start; border-bottom-left-radius: 2px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
-        .msg-time { display: block; font-size: 10px; color: #888; text-align: right; margin-top: 5px; }
+        .chat-header { background: linear-gradient(135deg, #1a2a6c, #2a3f9f); color: white; padding: 36px 20px 14px; text-align: center; font-weight: 700; font-size: 14px; font-family: 'Plus Jakarta Sans', sans-serif; }
+        .chat-sub { font-size: 11px; opacity: 0.7; margin-top: 2px; }
+        .chat-body { flex: 1; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+        .msg { padding: 11px 14px; border-radius: 18px; font-size: 13px; line-height: 1.5; max-width: 85%; position: relative; color: #111; }
+        .msg-user { background: #dcf8c6; align-self: flex-end; border-bottom-right-radius: 4px; }
+        .msg-alfred { background: white; align-self: flex-start; border-bottom-left-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .msg-time { display: block; font-size: 10px; color: #94a3b8; text-align: right; margin-top: 4px; }
+        .demo-features { flex: 1; max-width: 520px; width: 100%; }
+        .feat-row { margin-bottom: 36px; display: flex; gap: 18px; align-items: flex-start; }
+        .feat-icon {
+          width: 52px; height: 52px; border-radius: 16px; flex-shrink: 0;
+          display: flex; align-items: center; justify-content: center; font-size: 24px;
+        }
+        .feat-icon.fi1 { background: linear-gradient(135deg, rgba(212,175,55,0.2), rgba(212,175,55,0.05)); }
+        .feat-icon.fi2 { background: linear-gradient(135deg, rgba(99,102,241,0.2), rgba(99,102,241,0.05)); }
+        .feat-icon.fi3 { background: linear-gradient(135deg, rgba(16,185,129,0.2), rgba(16,185,129,0.05)); }
+        .feat-text h4 { font-size: 19px; margin: 0 0 8px; color: white; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; }
+        .feat-text p { color: rgba(255,255,255,0.6); line-height: 1.65; font-size: 15px; margin: 0; }
 
-        .demo-features { flex: 1; max-width: 500px; width: 100%; }
-        .feat-row { margin-bottom: 40px; display: flex; gap: 20px; align-items: flex-start; }
-        .feat-icon-wrapper { background: rgba(212, 175, 55, 0.1); color: #d4af37; width: 50px; height: 50px; border-radius: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-        .feat-text h4 { font-size: 20px; margin-bottom: 10px; color: white; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; }
-        .feat-text p { color: #94a3b8; line-height: 1.6; font-size: 15px; margin: 0; }
+        /* ══════════════════ KILLER FEATURE ══════════════════ */
+        .killer-feature {
+          background: white; padding: 60px 50px; margin: 80px auto 0; max-width: 1000px;
+          border-radius: 28px; box-shadow: 0 30px 60px rgba(0,0,0,0.1);
+          display: flex; flex-wrap: wrap; align-items: center; gap: 50px; text-align: left;
+        }
+        .kf-text { flex: 1; min-width: 280px; }
+        .kf-label { color: #ef4444; font-weight: 800; letter-spacing: 1.5px; font-size: 12px; text-transform: uppercase; display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
+        .kf-dot { width: 8px; height: 8px; border-radius: 50%; background: #ef4444; animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.5); } }
+        .kf-text h3 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: clamp(22px, 3.5vw, 30px); color: #0f172a; margin: 0 0 16px; font-weight: 900; letter-spacing: -0.5px; }
+        .kf-text p { color: #64748b; line-height: 1.7; font-size: 15px; margin-bottom: 14px; }
+        .notif-mockup { flex: 1; min-width: 280px; }
+        .notif-phone { background: #1e293b; border-radius: 20px; padding: 20px; }
+        .notif-screen { background: #f8fafc; border-radius: 12px; padding: 16px; }
+        .notif-app { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+        .notif-app-icon { width: 32px; height: 32px; border-radius: 8px; background: linear-gradient(135deg, #0088cc, #006699); display: flex; align-items: center; justify-content: center; font-size: 16px; }
+        .notif-app-name { font-size: 13px; font-weight: 700; color: #1e293b; }
+        .notif-app-time { font-size: 11px; color: #94a3b8; margin-left: auto; }
+        .notif-content { background: white; border-radius: 10px; padding: 14px; border-left: 3px solid #ef4444; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .notif-content p { font-size: 13px; margin: 0; color: #334155; line-height: 1.5; }
 
-        /* --- KILLER FEATURE --- */
-        .killer-feature { background: #fff; padding: 60px 40px; margin: 80px auto 0; max-width: 1000px; border-radius: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.08); display: flex; flex-wrap: wrap; align-items: center; gap: 40px; text-align: left; }
-        .kf-text { flex: 1; min-width: 250px; color: #0f172a;}
-        .kf-text span { color: #ef4444; font-weight: 700; letter-spacing: 1px; font-size: 13px; text-transform: uppercase; }
-        .kf-text h3 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: clamp(24px, 4vw, 32px); color: #0f172a; margin: 15px 0; font-weight: 800; letter-spacing: -0.5px; }
-        .kf-text p { color: #475569; line-height: 1.6; font-size: 15px; margin-bottom: 15px; }
-        .notif-mockup { flex: 1; min-width: 250px; background: #f8fafc; padding: 25px; border-radius: 20px; border: 1px solid #e2e8f0; width: 100%; box-sizing: border-box; }
-        .notif-bubble { background: white; padding: 20px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border-left: 4px solid #ef4444; }
-        .notif-head { display: flex; justify-content: space-between; font-size: 12px; color: #64748b; font-weight: 600; margin-bottom: 10px; }
+        /* ══════════════════ BENEFITS (PHOTO) ══════════════════ */
+        .benefits {
+          padding: 110px 5%; text-align: center; position: relative;
+          background: white;
+        }
+        .benefits-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; max-width: 1100px; margin: 60px auto 0; align-items: center; }
+        .benefits-image { border-radius: 28px; overflow: hidden; position: relative; height: 500px; }
+        .benefits-image img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .benefits-image-overlay { position: absolute; inset: 0; background: linear-gradient(135deg, rgba(26,42,108,0.3), transparent); }
+        .benefits-cards { display: flex; flex-direction: column; gap: 20px; }
+        .benefit-card {
+          background: #f8fafc; padding: 28px; border-radius: 20px; text-align: left;
+          display: flex; gap: 18px; align-items: flex-start;
+          border: 1px solid #e2e8f0; transition: 0.3s;
+        }
+        .benefit-card:hover { transform: translateX(6px); border-color: #d4af37; box-shadow: 0 8px 24px rgba(0,0,0,0.06); }
+        .benefit-icon-wrap {
+          width: 52px; height: 52px; border-radius: 14px; flex-shrink: 0;
+          display: flex; align-items: center; justify-content: center; font-size: 24px;
+        }
+        .bi1 { background: linear-gradient(135deg, #dbeafe, #bfdbfe); }
+        .bi2 { background: linear-gradient(135deg, #fef3c7, #fde68a); }
+        .bi3 { background: linear-gradient(135deg, #d1fae5, #a7f3d0); }
+        .benefit-card h4 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 17px; color: #0f172a; margin: 0 0 8px; font-weight: 800; }
+        .benefit-card p { color: #64748b; font-size: 14px; line-height: 1.6; margin: 0; }
 
-        /* --- BENEFITS --- */
-        .benefits { padding: 100px 5%; background: #f8fafc; text-align: center; }
-        .benefits-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; max-width: 1100px; margin: 40px auto 0; }
-        .benefit-card { background: white; padding: 40px; border-radius: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); text-align: left; border-top: 4px solid #1a2a6c; }
-        .benefit-icon { font-size: 32px; margin-bottom: 15px; }
-        .benefit-card h4 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 18px; color: #0f172a; margin-bottom: 10px; font-weight: 700; }
-        .benefit-card p { color: #475569; font-size: 15px; line-height: 1.6; margin: 0; }
-
-        /* --- TÉMOIGNAGES --- */
-        .testimonials { padding: 100px 5%; background: white; text-align: center; }
-        .testi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 28px; max-width: 1100px; margin: 50px auto 0; }
-        .testi-card { background: #f8fafc; border-radius: 24px; padding: 36px; text-align: left; border: 1px solid #e2e8f0; transition: 0.3s; position: relative; }
-        .testi-card:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0,0,0,0.06); border-color: #d4af37; }
-        .testi-stars { color: #fbbf24; font-size: 18px; letter-spacing: 2px; margin-bottom: 18px; }
-        .testi-quote { font-style: italic; color: #334155; font-size: 15px; line-height: 1.7; margin-bottom: 24px; position: relative; }
-        .testi-quote::before { content: '"'; font-size: 60px; color: #e2e8f0; font-family: Georgia, serif; position: absolute; top: -20px; left: -10px; line-height: 1; z-index: 0; }
-        .testi-quote span { position: relative; z-index: 1; }
+        /* ══════════════════ TESTIMONIALS ══════════════════ */
+        .testimonials {
+          padding: 110px 5%; text-align: center;
+          background: linear-gradient(180deg, #f8fafc 0%, white 100%);
+        }
+        .testi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; max-width: 1100px; margin: 50px auto 0; }
+        .testi-card {
+          background: white; border-radius: 24px; padding: 36px; text-align: left;
+          border: 1px solid #e2e8f0; transition: 0.3s; position: relative;
+          box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+        }
+        .testi-card:hover { transform: translateY(-6px); box-shadow: 0 20px 50px rgba(0,0,0,0.08); border-color: #d4af37; }
+        .testi-stars { display: flex; gap: 3px; margin-bottom: 20px; }
+        .star { color: #fbbf24; font-size: 16px; }
+        .testi-quote { font-size: 15px; color: #334155; line-height: 1.75; margin-bottom: 28px; font-style: italic; }
+        .testi-quote::before { content: '"'; font-family: Georgia, serif; font-size: 56px; color: #e2e8f0; line-height: 0; vertical-align: -28px; margin-right: 4px; font-style: normal; }
         .testi-author { display: flex; align-items: center; gap: 14px; }
-        .testi-avatar { width: 46px; height: 46px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
-        .testi-name { font-weight: 800; color: #1e293b; font-size: 15px; margin: 0 0 2px; }
-        .testi-role { color: #64748b; font-size: 13px; margin: 0; }
+        .testi-avatar {
+          width: 48px; height: 48px; border-radius: 50%; flex-shrink: 0;
+          display: flex; align-items: center; justify-content: center;
+          font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 16px;
+          color: white;
+        }
+        .av1 { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .av2 { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+        .av3 { background: linear-gradient(135deg, #10b981, #059669); }
+        .testi-name { font-weight: 800; color: #1e293b; font-size: 15px; margin: 0 0 3px; }
+        .testi-role { color: #94a3b8; font-size: 13px; margin: 0; }
         .testi-badge { position: absolute; top: 20px; right: 20px; background: #ecfdf5; color: #059669; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 20px; border: 1px solid #a7f3d0; }
 
-        /* --- PRICING SECTION --- */
-        .pricing-section { padding: 100px 5%; background: white; text-align: center; }
-        .pricing-header { max-width: 800px; margin: 0 auto 50px; }
-        .pricing-header h2 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: clamp(28px, 5vw, 40px); color: #0f172a; margin-bottom: 15px; font-weight: 800; letter-spacing: -1px; }
-        .pricing-header p { font-size: 16px; color: #475569; line-height: 1.6; }
-        .price-card-home { 
-          background: white; padding: 50px 40px; border-radius: 24px; 
-          box-shadow: 0 25px 50px -12px rgba(0,0,0,0.1); text-align: center; 
-          border: 2px solid #d4af37; position: relative; width: 100%; max-width: 450px; 
-          margin: 0 auto; display: flex; flex-direction: column; box-sizing: border-box;
+        /* ══════════════════ PRICING ══════════════════ */
+        .pricing-section {
+          padding: 110px 5%; text-align: center;
+          background: linear-gradient(135deg, #0f172a 0%, #1a2a6c 100%);
+          position: relative; overflow: hidden;
+        }
+        .pricing-section::before {
+          content: ''; position: absolute; top: -50%; right: -20%;
+          width: 600px; height: 600px; border-radius: 50%;
+          background: radial-gradient(circle, rgba(212,175,55,0.08) 0%, transparent 70%);
+        }
+        .pricing-section .section-title { color: white; }
+        .pricing-section .section-sub { color: rgba(255,255,255,0.6); }
+        .pricing-section .section-label { color: #fbbf24; }
+        .price-card-home {
+          background: white; padding: 52px 44px; border-radius: 28px;
+          box-shadow: 0 40px 80px rgba(0,0,0,0.3); text-align: center;
+          border: 2px solid transparent; position: relative; width: 100%; max-width: 460px;
+          margin: 50px auto 0; display: flex; flex-direction: column; box-sizing: border-box;
+          background-clip: padding-box;
         }
         .badge-promo {
           position: absolute; top: -18px; left: 50%; transform: translateX(-50%);
-          background: #d4af37; color: #1a2a6c; padding: 8px 24px; border-radius: 30px;
-          font-weight: 800; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;
-          box-shadow: 0 10px 20px rgba(212, 175, 55, 0.3); white-space: nowrap;
+          background: linear-gradient(135deg, #d4af37, #f0cc5a); color: #1a2a6c;
+          padding: 8px 28px; border-radius: 50px; font-weight: 800; font-size: 13px;
+          text-transform: uppercase; letter-spacing: 1px;
+          box-shadow: 0 8px 24px rgba(212,175,55,0.4); white-space: nowrap;
         }
-        .plan-name { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 22px; color: #1a2a6c; margin-bottom: 15px; }
-        .price { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 56px; font-weight: 800; color: #0f172a; letter-spacing: -2px; margin-bottom: 5px; }
-        .price span { font-size: 18px; font-weight: 600; color: #64748b; letter-spacing: 0; }
-        .billing-cycle { color: #64748b; font-size: 14px; margin-bottom: 30px; font-weight: 500; }
-        .features-list { text-align: left; margin-bottom: 40px; border-top: 1px solid #e2e8f0; padding-top: 30px; }
-        .feature { margin-bottom: 18px; font-size: 15px; display: flex; align-items: center; gap: 12px; color: #1e293b; font-weight: 500; }
-        .check-icon { background: rgba(212, 175, 55, 0.15); color: #d4af37; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-        .cta-pricing { background: #1a2a6c; color: white; padding: 18px; border-radius: 16px; font-weight: 700; font-size: 16px; transition: 0.3s; text-decoration: none; display: block; }
-        .cta-pricing:hover { transform: translateY(-3px); box-shadow: 0 15px 30px rgba(26, 42, 108, 0.2); background: #1e3280; }
-        .guarantee { margin-top: 20px; font-size: 13px; color: #64748b; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .plan-name { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 14px; color: #94a3b8; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 20px; }
+        .price-old { font-size: 18px; color: #94a3b8; text-decoration: line-through; margin-bottom: 4px; }
+        .price { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 60px; font-weight: 900; color: #0f172a; letter-spacing: -3px; margin-bottom: 4px; line-height: 1; }
+        .price span { font-size: 20px; font-weight: 500; color: #64748b; letter-spacing: 0; }
+        .price-note { color: #94a3b8; font-size: 13px; margin-bottom: 32px; }
+        .features-list { text-align: left; margin-bottom: 36px; border-top: 1px solid #f1f5f9; padding-top: 28px; }
+        .feature { margin-bottom: 16px; font-size: 15px; display: flex; align-items: center; gap: 12px; color: #334155; font-weight: 500; }
+        .check-icon { background: linear-gradient(135deg, #d4af37, #f0cc5a); color: #1a2a6c; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 11px; font-weight: 900; }
+        .cta-pricing {
+          background: linear-gradient(135deg, #1a2a6c, #2a3f9f); color: white; padding: 18px;
+          border-radius: 16px; font-weight: 800; font-size: 16px; transition: 0.3s;
+          text-decoration: none; display: block;
+          box-shadow: 0 8px 24px rgba(26,42,108,0.3);
+        }
+        .cta-pricing:hover { transform: translateY(-2px); box-shadow: 0 16px 40px rgba(26,42,108,0.4); }
+        .guarantee { margin-top: 18px; font-size: 13px; color: #94a3b8; display: flex; align-items: center; justify-content: center; gap: 8px; }
 
-        /* --- FOOTER PRO --- */
-        footer { background: #0f172a; color: #94a3b8; padding: 60px 5% 30px; }
-        .footer-content { max-width: 1100px; margin: 0 auto; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 40px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 40px; margin-bottom: 30px; }
-        .footer-col h3 { color: white; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 20px; margin-bottom: 20px; }
+        /* ══════════════════ FOOTER ══════════════════ */
+        footer { background: #060d1f; color: #64748b; padding: 70px 5% 30px; }
+        .footer-content { max-width: 1100px; margin: 0 auto; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 50px; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 50px; margin-bottom: 30px; }
+        .footer-brand { max-width: 260px; }
+        .footer-brand .brand { font-size: 22px; display: block; margin-bottom: 14px; }
+        .footer-brand p { font-size: 14px; line-height: 1.7; color: #475569; }
+        .footer-col h4 { color: rgba(255,255,255,0.85); font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 20px; }
         .footer-col ul { list-style: none; padding: 0; margin: 0; }
         .footer-col ul li { margin-bottom: 12px; }
-        .footer-col ul li a { transition: 0.2s; }
+        .footer-col ul li a { font-size: 14px; color: #475569; transition: 0.2s; }
         .footer-col ul li a:hover { color: white; }
-        .footer-bottom { text-align: center; font-size: 14px; }
+        .footer-bottom { text-align: center; font-size: 13px; color: #334155; }
 
-        /* 📱 RESPONSIVE MOBILE */
+        /* ══════════════════ MOBILE ══════════════════ */
+        @media (max-width: 1023px) {
+          .benefits-layout { grid-template-columns: 1fr; }
+          .benefits-image { height: 300px; }
+          .steps-grid { grid-template-columns: 1fr; gap: 40px; }
+          .steps-grid::before { display: none; }
+        }
         @media (max-width: 768px) {
-          nav { padding: 15px 20px; }
-          .brand { font-size: 20px; }
+          nav { padding: 14px 20px; }
           .nav-link { display: none; }
-          .nav-login { padding: 8px 16px; font-size: 13px; }
-          .hero { padding: 120px 20px 60px; }
-          .steps-section, .pain-section, .demo-section, .benefits, .testimonials, .pricing-section { padding: 60px 20px; }
-          .steps-grid, .pain-grid, .benefits-grid, .testi-grid { grid-template-columns: 1fr; gap: 20px; }
-          .cta-main { width: 100%; justify-content: center; font-size: 14px; padding: 18px 20px; box-sizing: border-box; }
-          .badge-hero { font-size: 11px; padding: 6px 12px; }
-          .demo-features { text-align: left; margin-top: 20px; }
-          .phone-frame { height: 500px; }
-          .killer-feature { flex-direction: column; padding: 30px 20px; margin: 40px auto 0; text-align: center; }
+          .nav-login { padding: 8px 18px; font-size: 13px; }
+          .hero { padding: 120px 20px 70px; background-attachment: scroll; }
+          h1 { letter-spacing: -1px; }
+          .pain-section { background-attachment: scroll; }
+          .steps-section, .pain-section, .demo-section, .benefits, .testimonials, .pricing-section { padding: 70px 20px; }
+          .pain-grid, .testi-grid { grid-template-columns: 1fr; gap: 16px; }
+          .cta-main { width: 100%; justify-content: center; font-size: 15px; padding: 18px 24px; box-sizing: border-box; }
+          .phone-frame { height: 480px; }
+          .killer-feature { flex-direction: column; padding: 32px 24px; margin: 40px auto 0; }
           .kf-text, .notif-mockup { min-width: 100%; }
-          .price-card-home { padding: 40px 20px; }
-          .price { font-size: 44px; }
-          .badge-promo { font-size: 12px; padding: 6px 16px; }
-          .footer-content { flex-direction: column; gap: 30px; text-align: center; }
-          .footer-col { display: flex; flex-direction: column; align-items: center; }
-          .testi-card { padding: 28px 24px; }
+          .price-card-home { padding: 44px 24px; }
+          .price { font-size: 48px; }
+          .footer-content { flex-direction: column; gap: 36px; }
+          .footer-brand { max-width: 100%; }
         }
       `}</style>
 
-      {/* NAVIGATION */}
+      {/* ── NAVBAR ── */}
       <nav>
         <Link href="/" passHref legacyBehavior>
           <a className="brand">Alfred<span className="gold">Major</span></a>
@@ -219,87 +327,93 @@ export default function Home() {
         </div>
       </nav>
 
-      {/* HERO */}
+      {/* ── HERO ── */}
       <section className="hero">
         <div className="hero-content">
-          <div className="badge-hero">⚡ En ce moment : Votre 1er mois à 9,90€</div>
-          <h1>Dormez sur vos deux oreilles.<br/>Alfred gère vos voyageurs.</h1>
+          <div className="badge-hero">⚡ Offre de lancement — 1er mois à 9,90€</div>
+          <h1>Dormez sur vos deux oreilles.<br/><em>Alfred</em> gère vos voyageurs.</h1>
           <p className="subtitle">
             Le premier majordome IA qui répond aux questions 24h/24, recommande les meilleurs restaurants locaux, et vous alerte uniquement en cas d'urgence.
           </p>
           <Link href="/register" passHref legacyBehavior>
-            <a className="cta-main">Activer mon Majordome (1er mois à 9,90€) <span>→</span></a>
+            <a className="cta-main">Activer mon Majordome <span>→</span></a>
           </Link>
-          <div className="trust-banner">⭐ Rejoignez la nouvelle génération d'hôtes automatisés</div>
+          <div className="trust-row">
+            <span className="trust-item">✓ Sans engagement</span>
+            <span className="trust-dot" />
+            <span className="trust-item">✓ Configuration en 5 min</span>
+            <span className="trust-dot" />
+            <span className="trust-item">✓ 30+ langues</span>
+          </div>
         </div>
       </section>
 
-      {/* LOGOS */}
+      {/* ── LOGOS ── */}
       <section className="logos-section">
-        <p>Compatible avec les voyageurs de toutes les plateformes</p>
+        <p className="logos-label">Compatible avec les voyageurs de toutes les plateformes</p>
         <div className="logos-flex">
-          <span>Airbnb</span>
-          <span>Booking.com</span>
-          <span>Abritel</span>
-          <span>Expedia</span>
+          <span className="logo-item">Airbnb</span>
+          <span className="logo-item">Booking.com</span>
+          <span className="logo-item">Abritel</span>
+          <span className="logo-item">Expedia</span>
+          <span className="logo-item">VRBO</span>
         </div>
       </section>
 
-      {/* COMMENT ÇA MARCHE */}
+      {/* ── COMMENT ÇA MARCHE ── */}
       <section className="steps-section" id="fonctionnement">
-        <h2 className="section-title">Déploiement en 5 minutes</h2>
+        <p className="section-label">Simple & Rapide</p>
+        <h2 className="section-title">Déployez Alfred en 5 minutes</h2>
+        <p className="section-sub">Pas de technique, pas de code. Votre majordome est opérationnel avant votre prochain check-in.</p>
         <div className="steps-grid">
           <div className="step-card">
-            <div className="step-number">1</div>
+            <div className="step-icon-wrap s1">🏠</div>
             <h3>Créez votre logement</h3>
-            <p>Remplissez un formulaire guidé sur votre bien (codes, wifi, poubelles, règles...).</p>
+            <p>Remplissez le formulaire guidé avec les infos de votre bien — codes, WiFi, équipements, règles, bonnes adresses.</p>
           </div>
           <div className="step-card">
-            <div className="step-number">2</div>
+            <div className="step-icon-wrap s2">🔗</div>
             <h3>Partagez le lien</h3>
-            <p>Copiez le lien unique de votre majordome dans votre message d'accueil Airbnb ou Booking.</p>
+            <p>Copiez le lien unique d'Alfred dans votre message d'accueil Airbnb ou Booking. Un QR code est aussi disponible.</p>
           </div>
           <div className="step-card">
-            <div className="step-number">3</div>
+            <div className="step-icon-wrap s3">😴</div>
             <h3>Soufflez</h3>
-            <p>Alfred répond à 95% des questions de vos voyageurs. Vous n'intervenez qu'en cas d'urgence.</p>
+            <p>Alfred répond à 95% des questions de vos voyageurs. Vous n'intervenez qu'en cas d'urgence réelle.</p>
           </div>
         </div>
       </section>
 
-      {/* PAIN POINTS */}
+      {/* ── PAIN POINTS — SECTION PHOTO ── */}
       <section className="pain-section">
+        <p className="section-label">Fini les nuits coupées</p>
         <h2 className="section-title">La gestion locative réinventée</h2>
+        <p className="section-sub" style={{color: 'rgba(255,255,255,0.6)'}}>Alfred élimine les interruptions du quotidien pour vous laisser profiter de ce qui compte vraiment.</p>
         <div className="pain-grid">
           <div className="pain-card">
-            <div className="pain-icon-wrapper">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-            </div>
+            <span className="pain-emoji">🌙</span>
             <h3>Le message à 23h30</h3>
-            <p>Le voyageur arrive tard et ne trouve pas le wifi. Votre téléphone sonne pendant votre sommeil. Laissez Alfred s'en charger.</p>
+            <p>Le voyageur arrive tard et ne trouve pas le WiFi. Votre téléphone sonne pendant votre sommeil. Laissez Alfred s'en charger — il répond instantanément, en pleine nuit.</p>
           </div>
           <div className="pain-card">
-            <div className="pain-icon-wrapper">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
-            </div>
+            <span className="pain-emoji">🌍</span>
             <h3>La barrière de la langue</h3>
-            <p>Alfred parle couramment plus de 30 langues pour assister vos touristes étrangers sans aucun effort de traduction.</p>
+            <p>Alfred parle couramment plus de 30 langues. Anglais, espagnol, allemand, japonais — vos touristes étrangers sont servis dans leur langue, sans effort de votre part.</p>
           </div>
           <div className="pain-card">
-            <div className="pain-icon-wrapper">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="1 4 1 10 7 10"></polyline><polyline points="23 20 23 14 17 14"></polyline><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"></path></svg>
-            </div>
+            <span className="pain-emoji">🔄</span>
             <h3>Les questions répétées</h3>
-            <p>Départ, commerces... Alfred répond inlassablement à toutes les demandes avec une politesse irréprochable.</p>
+            <p>Poubelles, départ, commerces... Alfred répond inlassablement avec une politesse irréprochable, chaque fois comme si c'était la première question.</p>
           </div>
         </div>
       </section>
 
-      {/* DEMO SECTION */}
+      {/* ── DEMO ── */}
       <section id="demo" className="demo-section">
         <div className="demo-header">
-          <h2>L'illusion parfaite d'une conciergerie</h2>
-          <p style={{fontSize: '16px', color: '#cbd5e1', maxWidth: '700px', margin: '0 auto'}}>Alfred comprend le contexte, cherche des recommandations locales et répond naturellement.</p>
+          <p className="section-label">En action</p>
+          <h2 className="section-title">L'illusion parfaite d'une conciergerie</h2>
+          <p className="section-sub">Alfred comprend le contexte, cherche des recommandations locales et répond naturellement.</p>
         </div>
 
         <div className="demo-layout">
@@ -307,7 +421,10 @@ export default function Home() {
             <div className="phone-frame">
               <div className="phone-notch"></div>
               <div className="chat-app">
-                <div className="chat-header">La Villa Noam</div>
+                <div className="chat-header">
+                  🎩 Alfred — Villa Noam
+                  <div className="chat-sub">Assistant disponible 24h/24</div>
+                </div>
                 <div className="chat-body">
                   <div className="msg msg-user">
                     Hi! We just arrived. Where are the trash bins and do you have a restaurant recommendation?
@@ -315,8 +432,16 @@ export default function Home() {
                   </div>
                   <div className="msg msg-alfred">
                     Welcome to Villa Noam! 🎩<br/><br/>
-                    The grey and green bins are under the sink. For dinner, I highly recommend "Pizzeria Da Luigi", located just a 5-minute walk from the villa! 🍕
+                    Bins are under the kitchen sink. For dinner, I recommend "Pizzeria Da Luigi" — just 5 min walk! 🍕
                     <span className="msg-time">19:42</span>
+                  </div>
+                  <div className="msg msg-user">
+                    Perfect! And what's the WiFi password?
+                    <span className="msg-time">19:43</span>
+                  </div>
+                  <div className="msg msg-alfred">
+                    The network is <strong>VillaNomad_Guest</strong> and the password is <strong>Holiday2024</strong>. Enjoy! 🌐
+                    <span className="msg-time">19:43</span>
                   </div>
                 </div>
               </div>
@@ -325,119 +450,136 @@ export default function Home() {
 
           <div className="demo-features">
             <div className="feat-row">
-              <div className="feat-icon-wrapper">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
-              </div>
+              <div className="feat-icon fi1">⚡</div>
               <div className="feat-text">
                 <h4>Réponses Instantanées</h4>
-                <p>Vos voyageurs n'attendent plus. Alfred répond dans la seconde en piochant dans votre base de données sécurisée.</p>
+                <p>Vos voyageurs n'attendent plus. Alfred répond en moins d'une seconde, en piochant dans votre base de données personnalisée.</p>
               </div>
             </div>
             <div className="feat-row">
-              <div className="feat-icon-wrapper">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-              </div>
+              <div className="feat-icon fi2">🔍</div>
               <div className="feat-text">
-                <h4>Recherche Web Intégrée</h4>
-                <p>Alfred scanne les environs du logement sur internet pour faire des recommandations précises (restos, pharmacies...).</p>
+                <h4>Recherche Locale en Temps Réel</h4>
+                <p>Alfred scanne les environs de votre logement pour faire des recommandations précises — restos, pharmacies, transports, activités.</p>
               </div>
             </div>
-            <div style={{marginTop: '30px'}}>
+            <div className="feat-row">
+              <div className="feat-icon fi3">🌐</div>
+              <div className="feat-text">
+                <h4>30+ Langues Automatiquement</h4>
+                <p>Alfred détecte la langue de votre voyageur et répond dans la sienne — anglais, espagnol, allemand, japonais et bien plus.</p>
+              </div>
+            </div>
+            <div style={{marginTop: '10px'}}>
               <Link href="/register" passHref legacyBehavior>
-                <a className="cta-main" style={{backgroundColor: '#fff', color: '#1a2a6c'}}>Créer mon compte (1er mois à 9,90€)</a>
+                <a className="cta-main" style={{background: 'linear-gradient(135deg, #d4af37, #f0cc5a)', color: '#1a2a6c', fontSize: '15px', padding: '16px 36px'}}>
+                  Essayer Alfred — 1er mois à 9,90€
+                </a>
               </Link>
             </div>
           </div>
         </div>
 
+        {/* KILLER FEATURE */}
         <div className="killer-feature">
           <div className="kf-text">
-            <span>Le Filet de Sécurité</span>
+            <div className="kf-label"><div className="kf-dot"></div> Alerte en temps réel</div>
             <h3>Vous n'êtes dérangé que lorsque c'est vital.</h3>
-            <p>Si un client signale une urgence (fuite d'eau, panne), Alfred vous transfère immédiatement l'information via Telegram.</p>
-            <p><b>Résultat :</b> Vous filtrez 95% du bruit quotidien et gardez le contrôle sur l'essentiel.</p>
+            <p>Si un voyageur signale une urgence (fuite d'eau, panne électrique), Alfred vous transfère immédiatement l'information via Telegram — avec traduction automatique si nécessaire.</p>
+            <p><strong>Résultat :</strong> Vous filtrez 95% du bruit quotidien et gardez le contrôle sur l'essentiel.</p>
           </div>
           <div className="notif-mockup">
-            <div className="notif-bubble">
-              <div className="notif-head">
-                <span>Telegram</span>
-                <span>Maintenant</span>
+            <div className="notif-phone">
+              <div className="notif-screen">
+                <div className="notif-app">
+                  <div className="notif-app-icon">✈️</div>
+                  <span className="notif-app-name">Telegram</span>
+                  <span className="notif-app-time">maintenant</span>
+                </div>
+                <div className="notif-content">
+                  <p>🚨 <strong>ALERTE ALFRED MAJOR</strong><br/><br/>🏠 Logement : La Villa Noam<br/>💬 Client : "Il y a une énorme fuite sous l'évier !"</p>
+                </div>
               </div>
-              <p style={{fontSize: '13px', margin: 0, color: '#475569', lineHeight: '1.5'}}>
-                🚨 <b>ALERTE ALFRED MAJOR</b><br/><br/>
-                🏠 Logement : La Villa Noam<br/>
-                💬 Client : "Il y a une énorme fuite sous l'évier !"
-              </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* BENEFITS */}
+      {/* ── BENEFITS — AVEC PHOTO ── */}
       <section className="benefits">
-        <h2 className="section-title">Pourquoi les hôtes nous font confiance</h2>
-        <div className="benefits-grid">
-          <div className="benefit-card">
-            <div className="benefit-icon">🔋</div>
-            <h4>Déconnexion totale</h4>
-            <p>Plus besoin de garder un œil sur votre téléphone à 22h pour donner un code WiFi ou expliquer où se trouvent les poubelles.</p>
+        <p className="section-label">Pourquoi Alfred</p>
+        <h2 className="section-title">Ce que vivent nos hôtes au quotidien</h2>
+        <div className="benefits-layout">
+          <div className="benefits-image">
+            <img
+              src="https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?auto=format&fit=crop&w=800&q=80"
+              alt="Hôte détendu avec son téléphone"
+              loading="lazy"
+            />
+            <div className="benefits-image-overlay" />
           </div>
-          <div className="benefit-card">
-            <div className="benefit-icon">🛡️</div>
-            <h4>Tranquillité d'esprit</h4>
-            <p>Avec le système d'alerte Telegram, vous avez la certitude de ne rater aucune urgence vitale (fuite, panne) qui nécessite votre intervention.</p>
-          </div>
-          <div className="benefit-card">
-            <div className="benefit-icon">⭐</div>
-            <h4>Des voyageurs ravis</h4>
-            <p>Offrez à vos clients l'expérience d'un service premium avec un assistant instantané et multilingue capable de leur faire des recommandations sur mesure.</p>
+          <div className="benefits-cards">
+            <div className="benefit-card">
+              <div className="benefit-icon-wrap bi1">😴</div>
+              <div>
+                <h4>Nuits complètes garanties</h4>
+                <p>Plus besoin de garder un œil sur votre téléphone. Alfred gère les questions WiFi, codes et équipements à votre place, 24h/24.</p>
+              </div>
+            </div>
+            <div className="benefit-card">
+              <div className="benefit-icon-wrap bi2">🛡️</div>
+              <div>
+                <h4>Zéro urgence ratée</h4>
+                <p>Avec les alertes Telegram instantanées, vous êtes toujours informé des vrais problèmes — sans être noyé dans les questions banales.</p>
+              </div>
+            </div>
+            <div className="benefit-card">
+              <div className="benefit-icon-wrap bi3">⭐</div>
+              <div>
+                <h4>Notes Airbnb améliorées</h4>
+                <p>Des voyageurs mieux accompagnés laissent de meilleures notes. Plusieurs hôtes ont vu leurs avis progresser après l'adoption d'Alfred.</p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* TÉMOIGNAGES */}
+      {/* ── TÉMOIGNAGES ── */}
       <section className="testimonials">
+        <p className="section-label">Ils nous font confiance</p>
         <h2 className="section-title">Ce que disent nos premiers hôtes</h2>
-        <p style={{color: '#64748b', fontSize: '16px', marginTop: '10px'}}>Ils ont adopté Alfred et ne reviendront plus en arrière.</p>
+        <p className="section-sub" style={{color: '#64748b', marginTop: '12px'}}>Ils ont adopté Alfred et ne reviendront plus en arrière.</p>
         <div className="testi-grid">
           <div className="testi-card">
             <span className="testi-badge">✓ Hôte vérifié</span>
-            <div className="testi-stars">★★★★★</div>
-            <div className="testi-quote">
-              <span>Alfred répond à toutes les questions de mes voyageurs, même à 3h du matin. Je n'ai plus reçu un seul appel pour le code WiFi depuis que je l'ai installé. Un vrai soulagement.</span>
-            </div>
+            <div className="testi-stars">{'★★★★★'.split('').map((s,i) => <span key={i} className="star">{s}</span>)}</div>
+            <p className="testi-quote">Alfred répond à toutes les questions de mes voyageurs, même à 3h du matin. Je n'ai plus reçu un seul appel pour le code WiFi depuis que je l'ai installé. Un vrai soulagement.</p>
             <div className="testi-author">
-              <div className="testi-avatar" style={{background: '#fef3c7'}}>👩</div>
+              <div className="testi-avatar av1">SL</div>
               <div>
                 <p className="testi-name">Sophie L.</p>
                 <p className="testi-role">3 logements · Nice</p>
               </div>
             </div>
           </div>
-
           <div className="testi-card">
             <span className="testi-badge">✓ Hôte vérifié</span>
-            <div className="testi-stars">★★★★★</div>
-            <div className="testi-quote">
-              <span>J'avais des voyageurs étrangers qui ne parlaient pas français. Alfred leur a répondu en anglais, espagnol et même en allemand. Mes notes Airbnb ont augmenté depuis.</span>
-            </div>
+            <div className="testi-stars">{'★★★★★'.split('').map((s,i) => <span key={i} className="star">{s}</span>)}</div>
+            <p className="testi-quote">J'avais des voyageurs étrangers qui ne parlaient pas français. Alfred leur a répondu en anglais, espagnol et même en allemand. Mes notes Airbnb ont augmenté depuis.</p>
             <div className="testi-author">
-              <div className="testi-avatar" style={{background: '#dbeafe'}}>👨</div>
+              <div className="testi-avatar av2">TR</div>
               <div>
                 <p className="testi-name">Thomas R.</p>
                 <p className="testi-role">2 logements · Bordeaux</p>
               </div>
             </div>
           </div>
-
           <div className="testi-card">
             <span className="testi-badge">✓ Hôte vérifié</span>
-            <div className="testi-stars">★★★★★</div>
-            <div className="testi-quote">
-              <span>L'alerte Telegram m'a sauvé la mise : un voyageur a signalé une fuite, j'ai reçu le message instantanément et j'ai pu envoyer un plombier avant que ça empire.</span>
-            </div>
+            <div className="testi-stars">{'★★★★★'.split('').map((s,i) => <span key={i} className="star">{s}</span>)}</div>
+            <p className="testi-quote">L'alerte Telegram m'a sauvé la mise : un voyageur a signalé une fuite, j'ai reçu le message instantanément et j'ai pu envoyer un plombier avant que ça empire.</p>
             <div className="testi-author">
-              <div className="testi-avatar" style={{background: '#dcfce7'}}>👩</div>
+              <div className="testi-avatar av3">MC</div>
               <div>
                 <p className="testi-name">Marie C.</p>
                 <p className="testi-role">5 logements · Paris</p>
@@ -447,67 +589,58 @@ export default function Home() {
         </div>
       </section>
 
-      {/* PRICING */}
+      {/* ── PRICING ── */}
       <section className="pricing-section" id="tarifs">
-        <div className="pricing-header">
-          <h2>L'excellence accessible.</h2>
-          <p>Profitez du service d'un majordome privé 24h/24 pour une fraction du coût d'une conciergerie traditionnelle.</p>
-        </div>
+        <p className="section-label">Tarifs</p>
+        <h2 className="section-title">L'excellence accessible.</h2>
+        <p className="section-sub">Un majordome privé 24h/24 pour une fraction du coût d'une conciergerie traditionnelle.</p>
+
         <div className="price-card-home">
-          <div className="badge-promo">⚡ Offre : 1er mois à 9,90€</div>
-          <div className="plan-name">Licence Unique</div>
-          <div className="price">19,90€<span>/mois</span></div>
-          <div className="billing-cycle">Facturé par logement. Sans engagement.</div>
+          <div className="badge-promo">⚡ 1er mois à 9,90€ — Offre de lancement</div>
+          <div className="plan-name">Licence par logement</div>
+          <div className="price-old">~~19,90€~~</div>
+          <div className="price">9,90€<span>/1er mois</span></div>
+          <div className="price-note">puis 19,90€/mois — sans engagement</div>
           <div className="features-list">
-            <div className="feature">
-              <div className="check-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-              Majordome IA disponible 24h/24
-            </div>
-            <div className="feature">
-              <div className="check-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-              Traduction automatique (30+ langues)
-            </div>
-            <div className="feature">
-              <div className="check-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-              Recherche locale web intégrée
-            </div>
-            <div className="feature">
-              <div className="check-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-              Alerte urgence en direct sur Telegram
-            </div>
-            <div className="feature">
-              <div className="check-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-              Lien web personnalisé pour vos clients
-            </div>
+            {[
+              'Majordome IA disponible 24h/24 et 7j/7',
+              'Traduction automatique (30+ langues)',
+              'Recherche locale Google Maps intégrée',
+              'Alerte urgence instantanée sur Telegram',
+              'Lien web & QR code personnalisés',
+              'Historique des conversations voyageurs',
+            ].map((f, i) => (
+              <div key={i} className="feature">
+                <div className="check-icon">✓</div>
+                {f}
+              </div>
+            ))}
           </div>
           <Link href="/register" passHref legacyBehavior>
-            <a className="cta-pricing">Créer mon compte (1er mois à 9,90€)</a>
+            <a className="cta-pricing">Commencer maintenant — 9,90€ le 1er mois</a>
           </Link>
           <div className="guarantee">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-            Paiement sécurisé via Stripe
+            🔒 Paiement 100% sécurisé via Stripe
           </div>
         </div>
       </section>
 
-      {/* FOOTER */}
+      {/* ── FOOTER ── */}
       <footer>
         <div className="footer-content">
-          <div className="footer-col">
-            <h3>Alfred<span className="gold">Major</span></h3>
-            <p style={{maxWidth: '300px', lineHeight: '1.6'}}>
-              Le premier majordome IA qui simplifie la vie des hôtes courte durée.
-            </p>
+          <div className="footer-brand">
+            <span className="brand">Alfred<span className="gold">Major</span></span>
+            <p>Le premier majordome IA qui simplifie la vie des hôtes de location courte durée. Disponible 24h/24, multilingue, et toujours discret.</p>
           </div>
           <div className="footer-col">
-            <h4 style={{color: 'white', marginBottom: '15px'}}>Produit</h4>
+            <h4>Produit</h4>
             <ul>
               <li><Link href="/login" passHref legacyBehavior><a>Espace Hôte</a></Link></li>
-              <li><Link href="/register" passHref legacyBehavior><a>Inscription</a></Link></li>
+              <li><Link href="/register" passHref legacyBehavior><a>Créer un compte</a></Link></li>
             </ul>
           </div>
           <div className="footer-col">
-            <h4 style={{color: 'white', marginBottom: '15px'}}>Légal</h4>
+            <h4>Légal</h4>
             <ul>
               <li><Link href="/conditions-generales" passHref legacyBehavior><a>Conditions Générales</a></Link></li>
               <li><Link href="/confidentialite" passHref legacyBehavior><a>Confidentialité (RGPD)</a></Link></li>
@@ -515,14 +648,14 @@ export default function Home() {
             </ul>
           </div>
           <div className="footer-col">
-            <h4 style={{color: 'white', marginBottom: '15px'}}>Contact</h4>
+            <h4>Contact</h4>
             <ul>
               <li><a href="mailto:contact@alfredmajor.com">contact@alfredmajor.com</a></li>
             </ul>
           </div>
         </div>
         <div className="footer-bottom">
-          <p>© 2026 Alfred Major - Tous droits réservés.</p>
+          <p>© 2026 Alfred Major — Tous droits réservés · Dorian BISCARRAT · SIRET 531 965 044 00039</p>
         </div>
       </footer>
     </div>
