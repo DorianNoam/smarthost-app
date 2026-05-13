@@ -205,6 +205,21 @@ export default function Dashboard() {
         <Link href="/settings" legacyBehavior><a className="nav-item">⚙️ <span className="nav-text">Paramètres</span></a></Link>
         <div className="nav-footer">
           <Link href="/tutorial" legacyBehavior><a className="tutorial-box">❓ <span className="nav-text">Comment ça marche ?</span></a></Link>
+          <button
+            onClick={async () => { await supabase.auth.signOut(); router.push('/'); }}
+            style={{
+              width: '100%', marginTop: '10px', padding: '12px',
+              background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)',
+              borderRadius: '12px', color: 'rgba(255,255,255,0.7)', fontWeight: 700,
+              fontSize: '13px', cursor: 'pointer', display: 'flex',
+              alignItems: 'center', justifyContent: 'center', gap: '8px',
+              transition: '0.2s', fontFamily: 'inherit',
+            }}
+            onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.15)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
+          >
+            🚪 <span className="nav-text">Déconnexion</span>
+          </button>
         </div>
       </nav>
 
