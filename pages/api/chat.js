@@ -2,7 +2,7 @@ import Groq from 'groq-sdk';
 import { supabase } from '../../lib/supabase';
 
 // ─────────────────────────────────────────────
-// 1. RECHERCHE GOOGLE MAPS (local à 500m)
+// 1. RECHERCHE GOOGLE MAPS (local à 600m)
 // ─────────────────────────────────────────────
 async function getGoogleLocalData(category, fullAddress) {
   const apiKey = process.env.MAPS_API_KEY;
@@ -45,7 +45,8 @@ async function getGoogleLocalData(category, fullAddress) {
     return data.places.map(p => {
       const type = p.primaryType ? ` [${p.primaryType}]` : '';
       const rating = p.rating ? ` ⭐${p.rating}` : '';
-      return `- ${p.displayName.text}${type}${rating} (${p.shortFormattedAddress})`;
+      const addr = p.shortFormattedAddress || '';
+      return `- ${p.displayName.text}${type}${rating} | Adresse : ${addr}`;
     }).join('\n');
   } catch (e) {
     return "";
@@ -138,7 +139,6 @@ export default async function handler(req, res) {
     const formattedKB = kb?.map(item => `[${item.category}] : ${item.content}`).join('\n') || "";
 
     // ── B. RECHERCHE LOCALE ──
-    // Priorité : infos hôte → Google Maps si rien de renseigné
     const hostLocalInfo = [
       propertyData.transport_info,
       propertyData.local_shops,
@@ -149,12 +149,10 @@ export default async function handler(req, res) {
     const localCategory = detectLocalCategory(lastUserMsg);
     let googleData = "";
 
-    // On appelle Google Maps si c'est une question locale
     if (localCategory) {
       googleData = await getGoogleLocalData(localCategory, fullAddress);
     }
 
-    // Section quartier : infos hôte en priorité, Google en complément
     const localSection = hostLocalInfo
       ? `${hostLocalInfo}${googleData ? `\n\nComplément Google Maps :\n${googleData}` : ''}`
       : googleData || "";
@@ -179,14 +177,23 @@ STYLE — RÈGLES DE COMMUNICATION :
 POUR LES RECOMMANDATIONS (restaurants, bars, sorties, commerces, transports) :
 - NE JAMAIS faire de liste sèche séparée par des virgules.
 - Présente 3 à 5 lieux maximum sous forme de petites recommandations distinctes.
-- UN lieu par ligne, avec un retour à la ligne entre chaque.
-- Pour chaque lieu : un emoji adapté, le nom en gras (avec des astérisques *), un tiret, puis 1 courte phrase qui décrit l'ambiance, le type, ou la distance.
-- Format type :
-  🥐 *Le Fournil de l'Univers* — Boulangerie artisanale, parfait pour le petit-déjeuner
-  🍕 *La Tortue Pizza* — Pizzeria conviviale, idéale en famille
-  🥙 *Ay Yildiz Kebab* — Cuisine turque savoureuse, parfait pour un déjeuner rapide
+- UN lieu par bloc, avec une LIGNE VIDE entre chaque recommandation pour aérer.
+- Pour chaque lieu, utilise EXACTEMENT ce format sur deux lignes :
+  [emoji] **[Nom du lieu]** — [Courte description : ambiance, type, distance]
+  📍 [Adresse complète du lieu]
+
+- Exemple exact à imiter :
+  🥐 **Le Fournil de l'Univers** — Boulangerie artisanale, parfait pour le petit-déjeuner
+  📍 12 Rue de la République, 33270 Floirac
+
+  🍕 **La Tortue Pizza** — Pizzeria conviviale, idéale en famille
+  📍 5 Avenue Jean Jaurès, 33270 Floirac
+
+- IMPORTANT : Le nom du lieu doit toujours être entouré de DOUBLE astérisques **comme ceci**.
+- IMPORTANT : L'adresse doit toujours être précédée d'un emoji 📍 sur sa propre ligne.
+- Si une adresse n'est PAS disponible dans tes données, NE METS PAS la ligne 📍. Ne JAMAIS inventer d'adresse.
 - Termine si pertinent par une touche personnalisée : "Si vous me dites ce qui vous tente — italien, asiatique, bistrot français — je peux affiner mes suggestions selon vos envies."
-- Si tu as la note ou le type entre crochets [restaurant] dans tes données, sers-toi en intelligemment pour décrire le lieu, mais ne montre JAMAIS les crochets ou la note brute au voyageur.
+- Si tu as la note ⭐ ou le type entre crochets [restaurant] dans tes données, sers-toi en pour mieux décrire, mais ne montre JAMAIS les crochets ou la note brute au voyageur.
 
 POUR LES QUESTIONS TECHNIQUES (wifi, code, parking, check-in) :
 - Reste CONCIS : 2-3 phrases maximum, droit au but.
@@ -197,9 +204,9 @@ POUR UNE SALUTATION SIMPLE ("bonjour", "hi", "hello") :
 - Ex : "Bonjour, ravi de vous accueillir ! En quoi puis-je vous être utile durant votre séjour ?"
 
 FORMAT GÉNÉRAL :
-- N'utilise PAS de markdown lourd (pas de # titres, pas de longues listes à puces avec - ou *).
+- N'utilise PAS de titres markdown avec #.
 - Reste fluide et conversationnel.
-- Les seuls éléments de mise en forme autorisés sont : les emojis, le gras avec *texte* pour les noms de lieux, et les retours à la ligne pour aérer.
+- Seuls éléments de mise en forme autorisés : emojis, gras avec **texte**, retours à la ligne.
 
 ━━━ INFORMATIONS DU LOGEMENT ━━━
 (Donner uniquement si le voyageur le demande explicitement)
@@ -259,9 +266,9 @@ ${localSection || "Aucune information disponible pour le moment."}
 
 1. INFO TECHNIQUE MANQUANTE : Si une info (wifi, code, parking...) est "Non renseigné", dis exactement : "Je n'ai pas cette information pour le moment, je contacte votre hôte." Ne demande jamais de numéro de réservation.
 
-2. QUARTIER & LOCAL : Pour toute question sur transports, restaurants, commerces, pharmacies — utilise la section QUARTIER & ENVIRONS et réponds directement avec ces infos en suivant le FORMAT TYPE défini plus haut (un lieu par ligne, emoji, nom en gras, description courte). Si tu as des résultats, utilise-les sans hésiter.
+2. QUARTIER & LOCAL : Pour toute question sur transports, restaurants, commerces, pharmacies — utilise la section QUARTIER & ENVIRONS et réponds en suivant le FORMAT TYPE défini plus haut (nom en gras avec **, adresse sur ligne séparée précédée de 📍). Si tu as des résultats, utilise-les sans hésiter.
 
-3. INVENTION INTERDITE : Ne jamais inventer une information. Si tu n'as pas la donnée dans tes infos, ne brode pas.
+3. INVENTION INTERDITE : Ne jamais inventer une information. Si tu n'as pas l'adresse d'un lieu dans tes données, OMETS la ligne 📍 pour ce lieu plutôt que d'inventer.
 
 4. URGENCE — RÈGLE LA PLUS IMPORTANTE :
 Si le voyageur signale une urgence réelle (fuite d'eau, panne électrique, incendie, gaz, porte bloquée, accident) :
@@ -281,7 +288,7 @@ Si le voyageur signale une urgence réelle (fuite d'eau, panne électrique, ince
         })),
       ],
       temperature: 0.5,
-      max_tokens: 500,
+      max_tokens: 600,
     });
 
     const responseText = chatResponse.choices[0].message.content;
@@ -299,7 +306,6 @@ Si le voyageur signale une urgence réelle (fuite d'eau, panne électrique, ince
       );
 
     // ── F. ALERTE TELEGRAM ──
-    // Double détection : phrase déclencheur dans la réponse OU urgence détectée côté code
     const triggerPhrase = "je préviens immédiatement votre hôte";
     const shouldAlert = responseText.toLowerCase().includes(triggerPhrase) || isEmergency(lastUserMsg);
 
