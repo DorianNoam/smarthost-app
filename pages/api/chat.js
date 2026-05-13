@@ -62,10 +62,11 @@ async function sendTelegramAlert(originalMsg, translatedMsg, propertyData) {
 
     if (!profile?.telegram_chat_id) return;
 
-    let text = `🚨 *ALERTE ALFRED MAJOR*\n\n🏠 *Logement :* ${propertyData.name}\n💬 *Client :*\n"${originalMsg}"`;
-    if (translatedMsg) {
-      text += `\n\n🇫🇷 *Traduction :*\n"${translatedMsg}"`;
-    }
+  let text = `🚨 *ALERTE ALFRED MAJOR*\n\n🏠 *Logement :* ${propertyData.name}\n\n💬 *Message du client :*\n"${originalMsg}"`;
+if (translatedMsg) {
+  text += `\n\n🇫🇷 *Traduction :*\n"${translatedMsg}"`;
+}
+text += `\n\n⚡ *Action recommandée :*\nMerci de contacter votre client dans les plus brefs délais pour gérer cette urgence.\n\n_Cordialement,_\n_L'équipe Alfred Major_ 🎩`;
 
     await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
       method: 'POST',
