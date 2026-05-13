@@ -132,7 +132,7 @@ export default function Home() {
 
       <div className="chat-card">
         <div style={{ padding: '10px 15px', borderBottom: '1px solid #eee', fontSize: '12px', color: '#666' }}>
-          🟢 Marc est en ligne {userName ? `pour ${userName}` : ''}
+          🟢 Alfred est en ligne {userName ? `pour ${userName}` : ''}
         </div>
 
         <div className="chat-body">
@@ -147,7 +147,7 @@ export default function Home() {
               {m.content}
             </div>
           ))}
-          {loading && <div style={{ fontSize: '11px', color: '#aaa' }}>Marc répond...</div>}
+          {loading && <div style={{ fontSize: '11px', color: '#aaa' }}>Alfred répond...</div>}
           <div ref={messagesEndRef} />
         </div>
 
