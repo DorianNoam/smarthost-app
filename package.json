@@ -16,5 +16,9 @@
     "recharts": "latest",
     "stripe": "latest",
     "@stripe/stripe-js": "latest"
+    "dependencies": {
+  "cheerio": "^1.0.0",
+  ...autres dépendances existantes
+    }
   }
 }
