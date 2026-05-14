@@ -100,7 +100,7 @@ function getInitialEmail(prospect) {
 
       <p style="color:#1e293b;font-size:16px;line-height:1.7;margin:0 0 24px;">
         Essayez Alfred sur un de vos logements — le premier mois est à <strong style="color:#d4af37;">9,90 €</strong> 
-        au lieu de 19,90 €. Sans engagement, résiliable en 2 clics.
+au lieu de 19,90 €. Sans engagement, vous arrêtez quand vous voulez.
       </p>
 
       <!-- CTA -->
