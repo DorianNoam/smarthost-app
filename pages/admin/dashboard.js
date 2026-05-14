@@ -19,7 +19,6 @@ export default function SuperAdminDashboard() {
   useEffect(() => {
     const checkAdmin = async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      console.log('USER EMAIL:', user?.email);
       if (!user || user.email !== 'contact@alfredmajor.com') {
         router.push('/');
       } else {
@@ -55,7 +54,8 @@ export default function SuperAdminDashboard() {
       // 4. PROSPECTS (depuis la table prospects)
       const { count: prospectsCount } = await supabase
         .from('prospects')
-        .select('*', { count: 'exact', head: true });
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'contacted');
 
       const { count: convertedCount } = await supabase
         .from('prospects')
