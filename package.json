@@ -15,6 +15,7 @@
     "groq-sdk": "latest",
     "recharts": "latest",
     "stripe": "latest",
-    "@stripe/stripe-js": "latest"
+    "@stripe/stripe-js": "latest",
+    "nodemailer": "^6.9.0"
   }
 }
