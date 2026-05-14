@@ -298,7 +298,7 @@ export default function Home() {
       {/* ── HERO ── */}
       <section className="hero">
         <div className="hero-content">
-          <div className="badge-hero">⚡ Offre de lancement — 1er mois à 9,90€</div>
+          <div className="badge-hero">⚡ En ce moment — 1er mois à 9,90€</div>
           <h1>Dormez sur vos deux oreilles.<br/><em>Alfred</em> gère vos voyageurs.</h1>
           <p className="subtitle">
             Le premier majordome IA qui répond aux questions 24h/24, recommande les meilleurs restaurants locaux, et vous alerte uniquement en cas d'urgence.
@@ -597,7 +597,7 @@ export default function Home() {
         <h2 className="section-title">L'excellence accessible.</h2>
         <p className="section-sub">Un majordome privé 24h/24 pour une fraction du coût d'une conciergerie traditionnelle.</p>
         <div className="price-card-home">
-          <div className="badge-promo">⚡ 1er mois à 9,90€ — Offre de lancement</div>
+          <div className="badge-promo">⚡ 1er mois à 9,90€ — Essayer Alfred</div>
           <div className="plan-name">Licence par logement</div>
           <div className="price-old">~~19,90€~~</div>
           <div className="price">9,90€<span>/1er mois</span></div>
