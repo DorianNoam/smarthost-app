@@ -12,12 +12,44 @@ const supabaseAdmin = createClient(
 const transporter = nodemailer.createTransport({
   host: process.env.EMAIL_SMTP_HOST,
   port: parseInt(process.env.EMAIL_SMTP_PORT),
-  secure: true, // SSL sur port 465
+  secure: false,
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
+  tls: { rejectUnauthorized: false }
 });
+
+// ─────────────────────────────────────────────
+// HELPERS — gestion sans nom ni ville
+// ─────────────────────────────────────────────
+function getGreeting(prospect) {
+  const firstName = prospect.name?.split(' ')[0];
+  if (firstName && firstName.toLowerCase() !== 'test') {
+    return `Bonjour ${firstName},`;
+  }
+  return 'Bonjour,';
+}
+
+function getIntro(prospect) {
+  const city = prospect.city;
+  if (city) {
+    return `Je m'appelle <strong>Dorian</strong>, je suis le fondateur d'<strong>Alfred Major</strong>. 
+        J'ai trouvé votre activité à ${city} et je pense qu'Alfred peut vous faire gagner un temps précieux.`;
+  }
+  return `Je m'appelle <strong>Dorian</strong>, je suis le fondateur d'<strong>Alfred Major</strong>. 
+        Je me permets de vous contacter car je pense qu'Alfred peut transformer votre gestion de locations courte durée.`;
+}
+
+function getSubjectInitial(prospect) {
+  if (prospect.city) return `Gagnez du temps sur vos locations à ${prospect.city} 🎩`;
+  return `Gérez vos locations courte durée sans effort 🎩`;
+}
+
+function getSubjectJ3(prospect) {
+  if (prospect.city) return `Re: Gagnez du temps sur vos locations à ${prospect.city} 🎩`;
+  return `Re: Alfred Major — une question rapide 🎩`;
+}
 
 // ─────────────────────────────────────────────
 // TEMPLATES D'EMAILS
@@ -25,12 +57,10 @@ const transporter = nodemailer.createTransport({
 
 // Email initial (J0)
 function getInitialEmail(prospect) {
-  const firstName = prospect.name?.split(' ')[0] || 'Madame, Monsieur';
-  const city = prospect.city || 'votre ville';
   const unsubscribeUrl = `https://www.alfredmajor.com/api/admin/unsubscribe?email=${encodeURIComponent(prospect.email)}`;
 
   return {
-    subject: `Gagnez du temps sur vos locations à ${city} 🎩`,
+    subject: getSubjectInitial(prospect),
     html: `
 <!DOCTYPE html>
 <html>
@@ -52,13 +82,11 @@ function getInitialEmail(prospect) {
     <!-- Corps -->
     <div style="padding:36px 40px;">
       <p style="color:#1e293b;font-size:16px;line-height:1.7;margin:0 0 20px;">
-        Bonjour ${firstName},
+        ${getGreeting(prospect)}
       </p>
       
       <p style="color:#1e293b;font-size:16px;line-height:1.7;margin:0 0 20px;">
-        Je m'appelle <strong>Dorian</strong>, je suis le fondateur d'<strong>Alfred Major</strong>. 
-        J'ai trouvé votre activité de conciergerie à ${city} et je pense qu'Alfred peut vous faire 
-        gagner un temps précieux.
+        ${getIntro(prospect)}
       </p>
 
       <p style="color:#1e293b;font-size:16px;line-height:1.7;margin:0 0 24px;">
@@ -100,7 +128,7 @@ function getInitialEmail(prospect) {
 
       <p style="color:#1e293b;font-size:16px;line-height:1.7;margin:0 0 24px;">
         Essayez Alfred sur un de vos logements — le premier mois est à <strong style="color:#d4af37;">9,90 €</strong> 
-au lieu de 19,90 €. Sans engagement, vous arrêtez quand vous voulez.
+        au lieu de 19,90 €. Sans engagement, vous arrêtez quand vous voulez.
       </p>
 
       <!-- CTA -->
@@ -141,12 +169,10 @@ au lieu de 19,90 €. Sans engagement, vous arrêtez quand vous voulez.
 
 // Email de relance J+3
 function getFollowupJ3Email(prospect) {
-  const firstName = prospect.name?.split(' ')[0] || 'Madame, Monsieur';
-  const city = prospect.city || 'votre ville';
   const unsubscribeUrl = `https://www.alfredmajor.com/api/admin/unsubscribe?email=${encodeURIComponent(prospect.email)}`;
 
   return {
-    subject: `Re: Gagnez du temps sur vos locations à ${city} 🎩`,
+    subject: getSubjectJ3(prospect),
     html: `
 <!DOCTYPE html>
 <html>
@@ -161,7 +187,7 @@ function getFollowupJ3Email(prospect) {
 
     <div style="padding:32px 40px;">
       <p style="color:#1e293b;font-size:16px;line-height:1.7;margin:0 0 16px;">
-        Bonjour ${firstName},
+        ${getGreeting(prospect)}
       </p>
       
       <p style="color:#1e293b;font-size:16px;line-height:1.7;margin:0 0 16px;">
@@ -173,7 +199,7 @@ function getFollowupJ3Email(prospect) {
       </p>
 
       <p style="color:#1e293b;font-size:16px;line-height:1.7;margin:0 0 20px;">
-        La plupart des conciergeries que je rencontre passent entre <strong>1h et 3h par jour</strong> 
+        La plupart des gestionnaires que je rencontre passent entre <strong>1h et 3h par jour</strong> 
         à répondre aux mêmes questions répétitives. Alfred s'occupe de 95% de ces échanges 
         à votre place.
       </p>
@@ -211,7 +237,6 @@ function getFollowupJ3Email(prospect) {
 
 // Email de relance J+7
 function getFollowupJ7Email(prospect) {
-  const firstName = prospect.name?.split(' ')[0] || 'Madame, Monsieur';
   const unsubscribeUrl = `https://www.alfredmajor.com/api/admin/unsubscribe?email=${encodeURIComponent(prospect.email)}`;
 
   return {
@@ -230,7 +255,7 @@ function getFollowupJ7Email(prospect) {
 
     <div style="padding:32px 40px;">
       <p style="color:#1e293b;font-size:16px;line-height:1.7;margin:0 0 16px;">
-        Bonjour ${firstName},
+        ${getGreeting(prospect)}
       </p>
 
       <p style="color:#1e293b;font-size:16px;line-height:1.7;margin:0 0 16px;">
@@ -243,11 +268,11 @@ function getFollowupJ7Email(prospect) {
       </p>
 
       <div style="text-align:center;margin:24px 0;">
-        <a href="https://www.alfredmajor.com/m/villa-05"
+        <a href="https://www.alfredmajor.com/m/demo-alfred-major"
            style="background:#1a2a6c;color:white;padding:14px 32px;border-radius:30px;text-decoration:none;font-weight:700;font-size:15px;display:inline-block;margin-bottom:12px;">
           🎭 Voir la démo Alfred →
         </a>
-        <br>
+        <br><br>
         <a href="https://www.alfredmajor.com/register"
            style="background:#d4af37;color:#1a2a6c;padding:14px 32px;border-radius:30px;text-decoration:none;font-weight:900;font-size:15px;display:inline-block;">
           Essayer à 9,90 € →
@@ -290,23 +315,20 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Vérifier la connexion SMTP
     await transporter.verify();
 
     let prospects = [];
     const now = new Date();
 
     if (type === 'initial') {
-      // Prospects nouveaux jamais contactés
       const { data } = await supabaseAdmin
         .from('prospects')
         .select('*')
         .eq('status', 'new')
-        .limit(50); // Max 50 par batch
+        .limit(50);
       prospects = data || [];
 
     } else if (type === 'followup_j3') {
-      // Prospects contactés il y a 3+ jours sans réponse
       const threeDaysAgo = new Date(now - 3 * 24 * 60 * 60 * 1000).toISOString();
       const { data } = await supabaseAdmin
         .from('prospects')
@@ -317,7 +339,6 @@ export default async function handler(req, res) {
       prospects = data || [];
 
     } else if (type === 'followup_j7') {
-      // Prospects contactés il y a 7+ jours sans réponse
       const sevenDaysAgo = new Date(now - 7 * 24 * 60 * 60 * 1000).toISOString();
       const { data } = await supabaseAdmin
         .from('prospects')
@@ -334,7 +355,6 @@ export default async function handler(req, res) {
 
     for (const prospect of prospects) {
       try {
-        // Choisir le bon template
         let emailContent;
         let emailType;
 
@@ -349,7 +369,6 @@ export default async function handler(req, res) {
           emailType = 'followup_j7';
         }
 
-        // Envoyer l'email
         await transporter.sendMail({
           from: `"Dorian — Alfred Major" <${process.env.EMAIL_USER}>`,
           to: prospect.email,
@@ -357,7 +376,6 @@ export default async function handler(req, res) {
           html: emailContent.html,
         });
 
-        // Mettre à jour le statut dans Supabase
         await supabaseAdmin
           .from('prospects')
           .update({
@@ -366,7 +384,6 @@ export default async function handler(req, res) {
           })
           .eq('id', prospect.id);
 
-        // Enregistrer dans email_campaigns
         await supabaseAdmin
           .from('email_campaigns')
           .insert({
@@ -379,7 +396,6 @@ export default async function handler(req, res) {
         sent++;
         console.log(`✅ Email envoyé à ${prospect.email}`);
 
-        // Pause entre chaque email (2 secondes) pour éviter le spam
         await new Promise(r => setTimeout(r, 2000));
 
       } catch (e) {
