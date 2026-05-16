@@ -300,7 +300,7 @@ export default function Home() {
         <div className="hero-content">
           <div className="badge-hero">⚡ En ce moment — 9,90€/mois sans engagement</div>
           <h1>Dormez sur vos deux oreilles.<br/><em>Alfred</em> gère vos voyageurs.</h1>
-          <p className="subtitle"
+          <p className="subtitle">
             Le premier majordome qui répond aux questions 24h/24, recommande les meilleurs restaurants locaux, et vous alerte uniquement en cas d'urgence.
           </p>
           <Link href="/register" passHref legacyBehavior>
