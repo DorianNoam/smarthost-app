@@ -3,6 +3,99 @@ import { supabase } from '../lib/supabase';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 
+// ── Hook notifications push ──
+function usePushNotifications() {
+  const [isSupported, setIsSupported] = useState(false);
+  const [isSubscribed, setIsSubscribed] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [permission, setPermission] = useState('default');
+
+  useEffect(() => {
+    const supported = 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+    setIsSupported(supported);
+    if (supported) {
+      setPermission(Notification.permission);
+      checkExistingSubscription();
+    }
+  }, []);
+
+  const checkExistingSubscription = async () => {
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      const sub = await reg.pushManager.getSubscription();
+      setIsSubscribed(!!sub);
+    } catch (err) {
+      console.error('Erreur vérification abonnement:', err);
+    }
+  };
+
+  const subscribe = async () => {
+    setIsLoading(true);
+    try {
+      const perm = await Notification.requestPermission();
+      setPermission(perm);
+      if (perm !== 'granted') { setIsLoading(false); return { success: false }; }
+
+      const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+      const padding = '='.repeat((4 - (vapidPublicKey.length % 4)) % 4);
+      const base64 = (vapidPublicKey + padding).replace(/-/g, '+').replace(/_/g, '/');
+      const rawData = window.atob(base64);
+      const convertedKey = Uint8Array.from([...rawData].map(c => c.charCodeAt(0)));
+
+      const reg = await navigator.serviceWorker.ready;
+      const subscription = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: convertedKey,
+      });
+
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Non connecté');
+
+      const response = await fetch('/api/push-subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.id, subscription: subscription.toJSON() }),
+      });
+
+      if (!response.ok) throw new Error('Erreur enregistrement');
+      setIsSubscribed(true);
+      return { success: true };
+    } catch (err) {
+      console.error('Erreur abonnement push:', err);
+      return { success: false };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const unsubscribe = async () => {
+    setIsLoading(true);
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      const sub = await reg.pushManager.getSubscription();
+      if (sub) await sub.unsubscribe();
+
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await fetch('/api/push-subscribe', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: user.id }),
+        });
+      }
+      setIsSubscribed(false);
+      return { success: true };
+    } catch (err) {
+      console.error('Erreur désabonnement:', err);
+      return { success: false };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return { isSupported, isSubscribed, isLoading, permission, subscribe, unsubscribe };
+}
+
 export default function Dashboard() {
   const router = useRouter();
   const [properties, setProperties] = useState([]);
@@ -12,6 +105,9 @@ export default function Dashboard() {
   const [showLimitModal, setShowLimitModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [propertyToDelete, setPropertyToDelete] = useState(null);
+  const [pushSuccess, setPushSuccess] = useState(false);
+
+  const push = usePushNotifications();
 
   useEffect(() => {
     fetchData();
@@ -27,16 +123,11 @@ export default function Dashboard() {
       if (!user) { router.push('/login'); return; }
 
       const { data: props } = await supabase
-        .from('properties')
-        .select('*')
-        .eq('owner_id', user.id)
+        .from('properties').select('*').eq('owner_id', user.id)
         .order('created_at', { ascending: false });
 
       const { data: prof } = await supabase
-        .from('profiles')
-        .select('*, telegram_chat_id')
-        .eq('id', user.id)
-        .single();
+        .from('profiles').select('*, telegram_chat_id').eq('id', user.id).single();
 
       if (props) setProperties(props);
       if (prof) setProfile(prof);
@@ -45,6 +136,11 @@ export default function Dashboard() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handlePushSubscribe = async () => {
+    const result = await push.subscribe();
+    if (result.success) setPushSuccess(true);
   };
 
   const copyWelcomeMessage = (prop) => {
@@ -58,11 +154,7 @@ export default function Dashboard() {
   const handleAddClick = (e) => {
     e.preventDefault();
     const hasInactive = properties.some(prop => !prop.is_active);
-    if (hasInactive) {
-      setShowLimitModal(true);
-    } else {
-      router.push('/add-property');
-    }
+    if (hasInactive) { setShowLimitModal(true); } else { router.push('/add-property'); }
   };
 
   const handlePayment = async (e) => {
@@ -123,6 +215,7 @@ export default function Dashboard() {
   if (loading) return <div style={{ padding: '50px', textAlign: 'center' }}>Chargement...</div>;
 
   const telegramLinked = !!profile?.telegram_chat_id;
+  const alertsActive = push.isSubscribed || telegramLinked;
 
   return (
     <div className="dashboard-layout">
@@ -144,14 +237,19 @@ export default function Dashboard() {
         .header-area { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
         h1 { margin: 0; color: #1e293b; font-size: 32px; font-weight: 800; }
 
-        .telegram-banner { background: #f0f9ff; border: 1px solid #0088cc; border-radius: 20px; padding: 20px; margin-bottom: 40px; display: flex; align-items: center; gap: 20px; box-shadow: 0 4px 12px rgba(0, 136, 204, 0.1); }
-        .tg-icon { font-size: 32px; }
-        .tg-text h4 { margin: 0 0 5px 0; color: #0088cc; font-weight: 800; }
-        .tg-text p { margin: 0; font-size: 13px; color: #475569; line-height: 1.4; }
-        .btn-link-tg { background: #0088cc; color: white; padding: 10px 20px; border-radius: 10px; font-weight: 700; font-size: 13px; border: none; cursor: pointer; white-space: nowrap; }
-
-        .telegram-banner-linked { background: #f0fdf4; border: 1px solid #10b981; border-radius: 20px; padding: 16px 20px; margin-bottom: 40px; display: flex; align-items: center; gap: 15px; }
-        .tg-linked-text { font-size: 14px; color: #059669; font-weight: 600; }
+        /* ── BANNIÈRE ALERTES ── */
+        .alert-banner { border-radius: 20px; padding: 20px; margin-bottom: 40px; display: flex; align-items: center; gap: 20px; }
+        .alert-banner.warning { background: #fff7ed; border: 1px solid #f97316; box-shadow: 0 4px 12px rgba(249,115,22,0.1); }
+        .alert-banner.success { background: #f0fdf4; border: 1px solid #10b981; }
+        .alert-icon { font-size: 32px; }
+        .alert-text h4 { margin: 0 0 5px 0; font-weight: 800; }
+        .alert-text p { margin: 0; font-size: 13px; color: #475569; line-height: 1.4; }
+        .alert-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-left: auto; }
+        .btn-push { background: #1a2a6c; color: white; padding: 10px 20px; border-radius: 10px; font-weight: 700; font-size: 13px; border: none; cursor: pointer; white-space: nowrap; transition: 0.2s; }
+        .btn-push:disabled { opacity: 0.6; cursor: not-allowed; }
+        .btn-push:hover:not(:disabled) { background: #0f1a4a; }
+        .btn-tg { background: #0088cc; color: white; padding: 10px 20px; border-radius: 10px; font-weight: 700; font-size: 13px; border: none; cursor: pointer; white-space: nowrap; }
+        .btn-unsub { background: none; border: 1px solid #10b981; color: #059669; padding: 8px 16px; border-radius: 10px; font-size: 12px; font-weight: 700; cursor: pointer; }
 
         .empty-state { background: white; padding: 60px; border-radius: 32px; text-align: center; border: 2px dashed #e2e8f0; grid-column: 1 / -1; }
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 25px; }
@@ -195,11 +293,12 @@ export default function Dashboard() {
           .btn-portal { width: 100%; }
           .modal-card { padding: 30px 20px; }
           .modal-actions { flex-direction: column; }
-          .telegram-banner { flex-direction: column; text-align: center; padding: 25px; gap: 15px; }
+          .alert-banner { flex-direction: column; text-align: center; padding: 25px; gap: 15px; }
+          .alert-actions { margin-left: 0; justify-content: center; }
         }
       `}</style>
 
-      {/* ✅ SIDEBAR — Alfred Major */}
+      {/* SIDEBAR */}
       <nav>
         <div className="logo">Alfred Major 🎩</div>
         <Link href="/dashboard" legacyBehavior><a className="nav-item active">🏠 <span className="nav-text">Mes Logements</span></a></Link>
@@ -208,14 +307,7 @@ export default function Dashboard() {
           <Link href="/tutorial" legacyBehavior><a className="tutorial-box">❓ <span className="nav-text">Comment ça marche ?</span></a></Link>
           <button
             onClick={async () => { await supabase.auth.signOut(); router.push('/'); }}
-            style={{
-              width: '100%', marginTop: '10px', padding: '12px',
-              background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)',
-              borderRadius: '12px', color: 'rgba(255,255,255,0.7)', fontWeight: 700,
-              fontSize: '13px', cursor: 'pointer', display: 'flex',
-              alignItems: 'center', justifyContent: 'center', gap: '8px',
-              transition: '0.2s', fontFamily: 'inherit',
-            }}
+            style={{ width: '100%', marginTop: '10px', padding: '12px', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '12px', color: 'rgba(255,255,255,0.7)', fontWeight: 700, fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', transition: '0.2s', fontFamily: 'inherit' }}
             onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.15)'}
             onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
           >
@@ -230,25 +322,54 @@ export default function Dashboard() {
           <button onClick={handleAddClick} className="btn-add">+ Ajouter</button>
         </div>
 
-        {/* BANNIÈRE TELEGRAM — disparaît quand lié */}
-        {!telegramLinked && (
-          <div className="telegram-banner">
-            <div className="tg-icon">🚨</div>
-            <div className="tg-text">
-              <h4>Action Requise : Sécurisez vos urgences</h4>
-              <p>Liez votre compte Telegram pour être alerté immédiatement en cas d'urgence.</p>
+        {/* ── BANNIÈRE ALERTES ── */}
+        {!alertsActive && (
+          <div className="alert-banner warning">
+            <div className="alert-icon">🚨</div>
+            <div className="alert-text">
+              <h4 style={{ color: '#c2410c' }}>Action requise : activez vos alertes urgences</h4>
+              <p>Recevez une notification instantanée sur votre téléphone en cas d'urgence détectée par Alfred.</p>
             </div>
-            <Link href="/settings" legacyBehavior>
-              <a><button className="btn-link-tg">Lier mon Telegram →</button></a>
-            </Link>
+            <div className="alert-actions">
+              {push.isSupported && (
+                <button className="btn-push" onClick={handlePushSubscribe} disabled={push.isLoading}>
+                  {push.isLoading ? 'Activation...' : '🔔 Activer les notifications'}
+                </button>
+              )}
+              {!telegramLinked && (
+                <Link href="/settings" legacyBehavior>
+                  <a><button className="btn-tg">Telegram →</button></a>
+                </Link>
+              )}
+            </div>
           </div>
         )}
 
-        {/* BANNIÈRE VERTE quand Telegram est connecté */}
-        {telegramLinked && (
-          <div className="telegram-banner-linked">
+        {/* BANNIÈRE VERTE — notifications push actives */}
+        {push.isSubscribed && (
+          <div className="alert-banner success">
             <span style={{ fontSize: '20px' }}>✅</span>
-            <span className="tg-linked-text">Telegram connecté — vous recevrez une alerte en cas d'urgence</span>
+            <span style={{ fontSize: '14px', color: '#059669', fontWeight: 600, flex: 1 }}>
+              Notifications actives — Alfred vous alertera directement sur ce téléphone
+            </span>
+            <button className="btn-unsub" onClick={push.unsubscribe} disabled={push.isLoading}>
+              {push.isLoading ? '...' : 'Désactiver'}
+            </button>
+          </div>
+        )}
+
+        {/* BANNIÈRE VERTE — Telegram actif (si pas de push) */}
+        {!push.isSubscribed && telegramLinked && (
+          <div className="alert-banner success">
+            <span style={{ fontSize: '20px' }}>✅</span>
+            <span style={{ fontSize: '14px', color: '#059669', fontWeight: 600 }}>
+              Telegram connecté — vous recevrez une alerte en cas d'urgence
+            </span>
+            {push.isSupported && (
+              <button className="btn-push" style={{ marginLeft: 'auto', fontSize: '12px', padding: '8px 14px' }} onClick={handlePushSubscribe} disabled={push.isLoading}>
+                {push.isLoading ? '...' : '+ Activer aussi les notifications'}
+              </button>
+            )}
           </div>
         )}
 
@@ -256,80 +377,7 @@ export default function Dashboard() {
           {properties.length === 0 ? (
             <div className="empty-state">
               <span style={{ fontSize: '60px' }}>✨</span>
-              {/* ✅ Bienvenue sur Alfred Major */}
               <h2 style={{ color: '#1a2a6c', fontWeight: 800 }}>Bienvenue sur Alfred Major !</h2>
-              <p style={{ color: '#64748b', maxWidth: '400px', margin: '15px auto 30px' }}>Ajoutez votre premier logement pour configurer votre majordome IA.</p>
+              <p style={{ color: '#64748b', maxWidth: '400px', margin: '15px auto 30px' }}>Ajoutez votre premier logement pour configurer votre majordome.</p>
               <button onClick={handleAddClick} className="btn-add">Créer mon premier logement</button>
-            </div>
-          ) : (
-            properties.map((prop) => (
-              <div key={prop.id} className="card">
-                <button className="btn-delete" onClick={(e) => triggerDeleteRequest(e, prop)}>🗑️</button>
-                <h3>{prop.name}</h3>
-                <div className="address">📍 {prop.street_number} {prop.address}{prop.city ? `, ${prop.city}` : ''}</div>
-
-                {!prop.is_active ? (
-                  <div className="activation-zone">
-                    <p style={{ fontSize: '13px', color: '#92400e', marginBottom: '15px', fontWeight: 600 }}>Prêt à entrer en service.</p>
-                    <button onClick={handlePayment} className="btn-activate">
-                      {paymentLoading ? 'Connexion...' : 'Activer ce logement'}
-                    </button>
-                  </div>
-                ) : (
-                  <div className="btn-stack">
-                    <Link href={`/property/${prop.id}`} legacyBehavior><a className="action-btn btn-primary">📊 Configurer le logement</a></Link>
-                    <button onClick={() => copyWelcomeMessage(prop)} className="action-btn btn-welcome">✨ Lien Voyageur (Copier)</button>
-                    <Link href={`/history/${prop.id}`} legacyBehavior><a className="action-btn btn-history">📜 Historique des échanges</a></Link>
-                  
-                  </div>
-                )}
-              </div>
-            ))
-          )}
-        </div>
-
-        <div className="subscription-card">
-          <div className="sub-info">
-            <h3 style={{ margin: '0 0 5px 0', color: '#1a2a6c' }}>Gestion des abonnements</h3>
-            <p style={{ margin: 0, color: '#64748b' }}>Gérez vos factures et moyens de paiement.</p>
-          </div>
-          <button onClick={handleManageSubscription} className="btn-portal">Accéder au portail</button>
-        </div>
-
-        <div style={{ textAlign: 'center', marginTop: '40px' }}>
-          <button onClick={handleDeleteAccount} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', textDecoration: 'underline' }}>
-            Supprimer mon compte
-          </button>
-        </div>
-      </main>
-
-      {/* MODAL LIMITE */}
-      {showLimitModal && (
-        <div className="modal-overlay" onClick={() => setShowLimitModal(false)}>
-          <div className="modal-card" onClick={e => e.stopPropagation()}>
-            <span style={{ fontSize: '54px', marginBottom: '20px', display: 'block' }}>🎩</span>
-            <h2 style={{ color: '#1a2a6c', fontWeight: 800 }}>Activation requise</h2>
-            <p style={{ color: '#64748b' }}>Veuillez activer votre logement actuel avant d'en ajouter un nouveau.</p>
-            <button className="btn-close-modal" onClick={() => setShowLimitModal(false)}>D'accord</button>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL SUPPRESSION */}
-      {showDeleteModal && (
-        <div className="modal-overlay" onClick={() => setShowDeleteModal(false)}>
-          <div className="modal-card" onClick={e => e.stopPropagation()}>
-            <span style={{ fontSize: '50px', marginBottom: '15px', display: 'block' }}>⚠️</span>
-            <h2 style={{ color: '#1a2a6c', fontWeight: 800 }}>Supprimer {propertyToDelete?.name} ?</h2>
-            <p style={{ color: '#64748b' }}>Êtes-vous sûr ? Toute la configuration sera effacée.</p>
-            <div className="info-box"><strong>📌 Note :</strong> Votre licence reste active jusqu'à la fin du mois.</div>
-            <div className="modal-actions">
-              <button className="btn-abort" onClick={() => setShowDeleteModal(false)}>Annuler</button>
-              <button className="btn-confirm-delete" onClick={confirmDelete}>Supprimer</button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
+         
