@@ -8,7 +8,7 @@ export default function Home() {
         <title>Alfred Major | Le Majordome IA pour vos locations Courte durée</title>
         <meta name="description" content="Déléguez la gestion de vos voyageurs à Alfred, l'IA qui répond 24h/24, recommande des adresses locales et vous alerte uniquement en cas d'urgence." />
         <meta property="og:title" content="Alfred Major — Le Majordome IA pour vos locations" />
-        <meta property="og:description" content="Alfred répond à vos voyageurs 24h/24, recommande les meilleures adresses locales et vous alerte en cas d'urgence. seulement 9,90€/mois et c'est sans engagement." />
+        <meta property="og:description" content="Alfred répond à vos voyageurs 24h/24, recommande les meilleures adresses locales et vous alerte en cas d'urgence. 1er mois 100% offert, sans engagement." />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://alfredmajor.com" />
         <meta property="og:image" content="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1200&h=630&q=80" />
@@ -17,7 +17,7 @@ export default function Home() {
         <meta property="og:locale" content="fr_FR" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Alfred Major — Le Majordome IA pour vos locations" />
-        <meta name="twitter:description" content="Alfred répond à vos voyageurs 24h/24. seulement 9,90€/mois sans engagement." />
+        <meta name="twitter:description" content="Alfred répond à vos voyageurs 24h/24. 1er mois 100% offert, sans engagement." />
         <meta name="twitter:image" content="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1200&h=630&q=80" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
@@ -298,13 +298,13 @@ export default function Home() {
       {/* ── HERO ── */}
       <section className="hero">
         <div className="hero-content">
-          <div className="badge-hero">⚡ En ce moment — 9,90€/mois sans engagement</div>
+          <div className="badge-hero">🎁 1er mois 100% offert — Sans engagement, sans carte bancaire</div>
           <h1>Dormez sur vos deux oreilles.<br/><em>Alfred</em> gère vos voyageurs.</h1>
           <p className="subtitle">
-            Le premier majordome qui répond aux questions 24h/24, recommande les meilleurs restaurants locaux, et vous alerte uniquement en cas d'urgence.
+            Le premier majordome IA qui répond aux questions 24h/24, recommande les meilleurs restaurants locaux, et vous alerte uniquement en cas d'urgence.
           </p>
           <Link href="/register" passHref legacyBehavior>
-            <a className="cta-main">Activer mon Majordome <span>→</span></a>
+            <a className="cta-main">Démarrer gratuitement <span>→</span></a>
           </Link>
           <div className="trust-row">
             <span className="trust-item">✓ Sans engagement</span>
@@ -475,7 +475,7 @@ export default function Home() {
             <div style={{marginTop: '10px'}}>
               <Link href="/register" passHref legacyBehavior>
                 <a className="cta-main" style={{background: 'linear-gradient(135deg, #d4af37, #f0cc5a)', color: '#1a2a6c', fontSize: '15px', padding: '16px 36px'}}>
-                  Essayer Alfred — 1er mois à 9,90€
+                  Essayer Alfred gratuitement — 1er mois offert
                 </a>
               </Link>
             </div>
@@ -597,11 +597,11 @@ export default function Home() {
         <h2 className="section-title">L'excellence accessible.</h2>
         <p className="section-sub">Un majordome privé 24h/24 pour une fraction du coût d'une conciergerie traditionnelle.</p>
         <div className="price-card-home">
-          <div className="badge-promo">⚡ 9,90€/mois sans engagement — Essayer Alfred</div>
+          <div className="badge-promo">🎁 1er mois 100% OFFERT — Sans engagement</div>
           <div className="plan-name">Licence par logement</div>
-          <div className="price-old">~~19,90€~~</div>
-          <div className="price">9,90€<span>/mois</span></div>
-          <div className="price-note">sans engagement</div>
+          <div className="price-old">9,90€/mois</div>
+          <div className="price">0€<span>/1er mois</span></div>
+          <div className="price-note">puis 9,90€/mois — sans engagement, résiliable à tout moment</div>
           <div className="features-list">
             {[
               'Majordome IA disponible 24h/24 et 7j/7',
@@ -618,7 +618,7 @@ export default function Home() {
             ))}
           </div>
           <Link href="/register" passHref legacyBehavior>
-            <a className="cta-pricing">Commencer maintenant — 9,90€/mois</a>
+            <a className="cta-pricing">Commencer gratuitement — 1er mois offert</a>
           </Link>
           <div className="guarantee">🔒 Paiement 100% sécurisé via Stripe</div>
         </div>
