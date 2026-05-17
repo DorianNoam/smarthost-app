@@ -380,4 +380,75 @@ export default function Dashboard() {
               <h2 style={{ color: '#1a2a6c', fontWeight: 800 }}>Bienvenue sur Alfred Major !</h2>
               <p style={{ color: '#64748b', maxWidth: '400px', margin: '15px auto 30px' }}>Ajoutez votre premier logement pour configurer votre majordome.</p>
               <button onClick={handleAddClick} className="btn-add">Créer mon premier logement</button>
-         
+            </div>
+          ) : (
+            properties.map((prop) => (
+              <div key={prop.id} className="card">
+                <button className="btn-delete" onClick={(e) => triggerDeleteRequest(e, prop)}>🗑️</button>
+                <h3>{prop.name}</h3>
+                <div className="address">📍 {prop.street_number} {prop.address}{prop.city ? `, ${prop.city}` : ''}</div>
+
+                {!prop.is_active ? (
+                  <div className="activation-zone">
+                    <p style={{ fontSize: '13px', color: '#92400e', marginBottom: '15px', fontWeight: 600 }}>Prêt à entrer en service.</p>
+                    <button onClick={handlePayment} className="btn-activate">
+                      {paymentLoading ? 'Connexion...' : 'Activer ce logement'}
+                    </button>
+                  </div>
+                ) : (
+                  <div className="btn-stack">
+                    <Link href={`/property/${prop.id}`} legacyBehavior><a className="action-btn btn-primary">📊 Configurer le logement</a></Link>
+                    <button onClick={() => copyWelcomeMessage(prop)} className="action-btn btn-welcome">✨ Lien Voyageur (Copier)</button>
+                    <Link href={`/history/${prop.id}`} legacyBehavior><a className="action-btn btn-history">📜 Historique des échanges</a></Link>
+                  </div>
+                )}
+              </div>
+            ))
+          )}
+        </div>
+
+        <div className="subscription-card">
+          <div className="sub-info">
+            <h3 style={{ margin: '0 0 5px 0', color: '#1a2a6c' }}>Gestion des abonnements</h3>
+            <p style={{ margin: 0, color: '#64748b' }}>Gérez vos factures et moyens de paiement.</p>
+          </div>
+          <button onClick={handleManageSubscription} className="btn-portal">Accéder au portail</button>
+        </div>
+
+        <div style={{ textAlign: 'center', marginTop: '40px' }}>
+          <button onClick={handleDeleteAccount} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', textDecoration: 'underline' }}>
+            Supprimer mon compte
+          </button>
+        </div>
+      </main>
+
+      {/* MODAL LIMITE */}
+      {showLimitModal && (
+        <div className="modal-overlay" onClick={() => setShowLimitModal(false)}>
+          <div className="modal-card" onClick={e => e.stopPropagation()}>
+            <span style={{ fontSize: '54px', marginBottom: '20px', display: 'block' }}>🎩</span>
+            <h2 style={{ color: '#1a2a6c', fontWeight: 800 }}>Activation requise</h2>
+            <p style={{ color: '#64748b' }}>Veuillez activer votre logement actuel avant d'en ajouter un nouveau.</p>
+            <button className="btn-close-modal" onClick={() => setShowLimitModal(false)}>D'accord</button>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL SUPPRESSION */}
+      {showDeleteModal && (
+        <div className="modal-overlay" onClick={() => setShowDeleteModal(false)}>
+          <div className="modal-card" onClick={e => e.stopPropagation()}>
+            <span style={{ fontSize: '50px', marginBottom: '15px', display: 'block' }}>⚠️</span>
+            <h2 style={{ color: '#1a2a6c', fontWeight: 800 }}>Supprimer {propertyToDelete?.name} ?</h2>
+            <p style={{ color: '#64748b' }}>Êtes-vous sûr ? Toute la configuration sera effacée.</p>
+            <div className="info-box"><strong>📌 Note :</strong> Votre licence reste active jusqu'à la fin du mois.</div>
+            <div className="modal-actions">
+              <button className="btn-abort" onClick={() => setShowDeleteModal(false)}>Annuler</button>
+              <button className="btn-confirm-delete" onClick={confirmDelete}>Supprimer</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
