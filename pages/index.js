@@ -298,7 +298,7 @@ export default function Home() {
       {/* ── HERO ── */}
       <section className="hero">
         <div className="hero-content">
-          <div className="badge-hero">🎁 1er mois 100% offert — Sans engagement, sans carte bancaire</div>
+          <div className="badge-hero">🎁 1er mois 100% offert — Sans engagement</div>
           <h1>Dormez sur vos deux oreilles.<br/><em>Alfred</em> gère vos voyageurs.</h1>
           <p className="subtitle">
             Le premier majordome IA qui répond aux questions 24h/24, recommande les meilleurs restaurants locaux, et vous alerte uniquement en cas d'urgence.
