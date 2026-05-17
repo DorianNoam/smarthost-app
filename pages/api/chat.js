@@ -88,6 +88,42 @@ async function sendTelegramAlert(originalMsg, translatedMsg, propertyData) {
 }
 
 // ─────────────────────────────────────────────
+// 2B. ALERTE PUSH (PWA)
+// ─────────────────────────────────────────────
+async function sendPushAlert(originalMsg, translatedMsg, propertyData) {
+  try {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('id, push_subscription')
+      .eq('id', propertyData.owner_id)
+      .single();
+
+    if (!profile?.push_subscription) return;
+
+    const body = translatedMsg
+      ? `${propertyData.name} : "${translatedMsg}"`
+      : `${propertyData.name} : "${originalMsg}"`;
+
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.alfredmajor.com';
+
+    await fetch(`${siteUrl}/api/push-send`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        userId: profile.id,
+        title: '🚨 Alfred Major — Urgence détectée',
+        body,
+        url: '/dashboard',
+        urgent: true,
+        propertyName: propertyData.name,
+      }),
+    });
+  } catch (e) {
+    console.error("Erreur Push:", e);
+  }
+}
+
+// ─────────────────────────────────────────────
 // 3. DÉTECTION D'INTENTION LOCALE (côté code)
 // ─────────────────────────────────────────────
 function detectLocalCategory(msg) {
@@ -305,7 +341,7 @@ Si le voyageur signale une urgence réelle (fuite d'eau, panne électrique, ince
         { onConflict: 'property_id' }
       );
 
-    // ── F. ALERTE TELEGRAM ──
+    // ── F. ALERTES URGENCES (Telegram + Push) ──
     const triggerPhrase = "je préviens immédiatement votre hôte";
     const shouldAlert = responseText.toLowerCase().includes(triggerPhrase) || isEmergency(lastUserMsg);
 
@@ -324,7 +360,12 @@ Si le voyageur signale une urgence réelle (fuite d'eau, panne électrique, ince
           translatedMsg = transRes.choices[0].message.content;
         } catch (_) {}
       }
-      await sendTelegramAlert(lastUserMsg, translatedMsg, propertyData);
+
+      // Envoi en parallèle — Telegram ET Push
+      await Promise.allSettled([
+        sendTelegramAlert(lastUserMsg, translatedMsg, propertyData),
+        sendPushAlert(lastUserMsg, translatedMsg, propertyData),
+      ]);
     }
 
     res.status(200).json({ answer: responseText });
