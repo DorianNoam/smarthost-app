@@ -3,80 +3,6 @@ import { supabase } from '../lib/supabase';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 
-function usePushNotifications() {
-  const [isSupported, setIsSupported] = useState(false);
-  const [isSubscribed, setIsSubscribed] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-
-  useEffect(() => {
-    const supported = 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
-    setIsSupported(supported);
-    if (supported) checkExistingSubscription();
-  }, []);
-
-  const checkExistingSubscription = async () => {
-    try {
-      const reg = await navigator.serviceWorker.ready;
-      const sub = await reg.pushManager.getSubscription();
-      setIsSubscribed(!!sub);
-    } catch (err) {}
-  };
-
-  const subscribe = async () => {
-    setIsLoading(true);
-    try {
-      const perm = await Notification.requestPermission();
-      if (perm !== 'granted') { setIsLoading(false); return { success: false }; }
-      const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
-      const padding = '='.repeat((4 - (vapidPublicKey.length % 4)) % 4);
-      const base64 = (vapidPublicKey + padding).replace(/-/g, '+').replace(/_/g, '/');
-      const rawData = window.atob(base64);
-      const convertedKey = Uint8Array.from([...rawData].map(c => c.charCodeAt(0)));
-      const reg = await navigator.serviceWorker.ready;
-      const subscription = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: convertedKey });
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Non connecté');
-      const response = await fetch('/api/push-subscribe', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user.id, subscription: subscription.toJSON() }),
-      });
-      if (!response.ok) throw new Error('Erreur enregistrement');
-      setIsSubscribed(true);
-      return { success: true };
-    } catch (err) {
-      return { success: false };
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const unsubscribe = async () => {
-    setIsLoading(true);
-    try {
-      const reg = await navigator.serviceWorker.ready;
-      const sub = await reg.pushManager.getSubscription();
-      if (sub) await sub.unsubscribe();
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        await fetch('/api/push-subscribe', {
-          method: 'DELETE',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId: user.id }),
-        });
-      }
-      setIsSubscribed(false);
-      return { success: true };
-    } catch (err) {
-      return { success: false };
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  return { isSupported, isSubscribed, isLoading, subscribe, unsubscribe };
-}
-
 export default function Dashboard() {
   const router = useRouter();
   const [properties, setProperties] = useState([]);
@@ -86,7 +12,6 @@ export default function Dashboard() {
   const [showLimitModal, setShowLimitModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [propertyToDelete, setPropertyToDelete] = useState(null);
-  const push = usePushNotifications();
 
   useEffect(() => {
     fetchData();
@@ -183,7 +108,6 @@ export default function Dashboard() {
   if (loading) return <div style={{ padding: '50px', textAlign: 'center' }}>Chargement...</div>;
 
   const telegramLinked = !!profile?.telegram_chat_id;
-  const alertsActive = push.isSubscribed || telegramLinked;
 
   return (
     <div className="dashboard-layout">
@@ -210,30 +134,27 @@ export default function Dashboard() {
         h1 { margin: 0; color: #1e293b; font-size: 28px; font-weight: 800; }
         .btn-add { background: #fbbf24; color: #1a2a6c; padding: 11px 22px; border-radius: 12px; font-weight: 800; font-size: 14px; cursor: pointer; border: none; white-space: nowrap; flex-shrink: 0; }
 
-        .alert-banner { border-radius: 16px; padding: 16px; margin-bottom: 20px; }
-        .alert-banner.warning { background: #fff7ed; border: 1px solid #f97316; }
-        .alert-banner.success { background: #f0fdf4; border: 1px solid #10b981; }
-        .alert-top-row { display: flex; align-items: flex-start; gap: 12px; }
-        .alert-icon { font-size: 22px; flex-shrink: 0; margin-top: 1px; }
-        .alert-text h4 { margin: 0 0 3px 0; font-weight: 800; font-size: 14px; color: #c2410c; }
-        .alert-text p { margin: 0; font-size: 12px; color: #64748b; line-height: 1.4; }
-        .alert-btns { display: flex; gap: 8px; margin-top: 12px; }
-        .btn-push { background: #1a2a6c; color: white; padding: 10px 14px; border-radius: 10px; font-weight: 700; font-size: 13px; border: none; cursor: pointer; flex: 1; }
-        .btn-push:disabled { opacity: 0.6; }
-        .btn-tg { background: #0088cc; color: white; padding: 10px 14px; border-radius: 10px; font-weight: 700; font-size: 13px; border: none; cursor: pointer; flex: 1; text-align: center; display: block; }
-        .alert-success-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-        .alert-success-text { flex: 1; font-size: 13px; color: #059669; font-weight: 600; min-width: 0; }
-        .btn-unsub { background: none; border: 1px solid #10b981; color: #059669; padding: 7px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; }
-        .btn-push-also { background: #1a2a6c; color: white; padding: 7px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; border: none; cursor: pointer; white-space: nowrap; }
+        /* BANNIÈRES */
+        .banner { border-radius: 16px; padding: 16px 20px; margin-bottom: 20px; display: flex; align-items: center; gap: 14px; }
+        .banner.warning { background: #fff7ed; border: 1px solid #f97316; }
+        .banner.success { background: #f0fdf4; border: 1px solid #10b981; }
+        .banner-icon { font-size: 24px; flex-shrink: 0; }
+        .banner-text { flex: 1; }
+        .banner-text h4 { margin: 0 0 3px; font-weight: 800; font-size: 14px; color: #c2410c; }
+        .banner-text p { margin: 0; font-size: 12px; color: #64748b; line-height: 1.4; }
+        .btn-tg { background: #0088cc; color: white; padding: 10px 16px; border-radius: 10px; font-weight: 700; font-size: 13px; border: none; cursor: pointer; white-space: nowrap; }
+        .banner-success-text { font-size: 14px; color: #059669; font-weight: 600; }
 
+        /* GRID */
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 18px; }
         .empty-state { background: white; padding: 50px 24px; border-radius: 24px; text-align: center; border: 2px dashed #e2e8f0; grid-column: 1 / -1; }
 
+        /* CARD */
         .card { background: white; border-radius: 20px; padding: 18px; border: 1px solid #e2e8f0; position: relative; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
         .card-header { padding-right: 32px; }
-        h3 { margin: 0 0 4px 0; color: #1a2a6c; font-size: 16px; font-weight: 800; line-height: 1.3; word-break: break-word; }
+        h3 { margin: 0 0 4px; color: #1a2a6c; font-size: 16px; font-weight: 800; line-height: 1.3; word-break: break-word; }
         .address { color: #64748b; font-size: 12px; margin-bottom: 14px; }
-        .btn-delete { position: absolute; top: 14px; right: 12px; border: none; background: none; cursor: pointer; color: #cbd5e1; font-size: 15px; padding: 4px; line-height: 1; }
+        .btn-delete { position: absolute; top: 14px; right: 12px; border: none; background: none; cursor: pointer; color: #cbd5e1; font-size: 15px; padding: 4px; }
         .btn-delete:hover { color: #e11d48; }
         .btn-stack { display: flex; flex-direction: column; gap: 8px; }
         .action-btn { padding: 11px; border-radius: 10px; font-weight: 700; font-size: 13px; text-align: center; border: none; cursor: pointer; display: block; width: 100%; }
@@ -243,9 +164,11 @@ export default function Dashboard() {
         .activation-zone { background: #fffbeb; padding: 14px; border-radius: 12px; border: 1px solid #fef3c7; text-align: center; margin-top: 10px; }
         .btn-activate { background: #fbbf24; border: none; padding: 12px; width: 100%; border-radius: 10px; font-weight: 800; color: #1a2a6c; cursor: pointer; font-size: 14px; }
 
+        /* ABONNEMENT */
         .subscription-card { margin-top: 36px; padding: 22px; background: white; border-radius: 20px; border: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; gap: 16px; }
         .btn-portal { background: #1a2a6c; color: white; padding: 11px 20px; border-radius: 12px; font-weight: 700; font-size: 14px; cursor: pointer; border: none; white-space: nowrap; }
 
+        /* MODALS */
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15,23,42,0.85); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
         .modal-card { background: white; border-radius: 28px; padding: 32px 24px; max-width: 420px; width: 100%; text-align: center; }
         .btn-close-modal { background: #fbbf24; border: none; padding: 13px; width: 100%; border-radius: 12px; font-weight: 800; color: #1a2a6c; cursor: pointer; margin-top: 18px; font-size: 15px; }
@@ -265,14 +188,13 @@ export default function Dashboard() {
           .btn-logout { display: none; }
           main { margin-left: 0; padding: 20px 16px 90px; }
           h1 { font-size: 22px; }
-          .btn-add { padding: 12px 18px; font-size: 14px; }
           .grid { grid-template-columns: 1fr; gap: 12px; }
+          .banner { flex-wrap: wrap; }
+          .btn-tg { width: 100%; text-align: center; }
           .subscription-card { flex-direction: column; align-items: stretch; padding: 18px; text-align: center; }
           .btn-portal { width: 100%; }
           .modal-card { padding: 24px 18px; }
           .modal-actions { flex-direction: column; }
-          .alert-btns { flex-direction: column; }
-          .btn-push, .btn-tg { text-align: center; }
         }
       `}</style>
 
@@ -294,53 +216,25 @@ export default function Dashboard() {
           <button onClick={handleAddClick} className="btn-add">+ Ajouter</button>
         </div>
 
-        {!alertsActive && (
-          <div className="alert-banner warning">
-            <div className="alert-top-row">
-              <div className="alert-icon">🚨</div>
-              <div className="alert-text">
-                <h4>Activez vos alertes urgences</h4>
-                <p>Recevez une notification sur votre téléphone dès qu'Alfred détecte une urgence dans l'un de vos logements.</p>
-              </div>
+        {/* BANNIÈRE : Telegram non lié */}
+        {!telegramLinked && (
+          <div className="banner warning">
+            <div className="banner-icon">🚨</div>
+            <div className="banner-text">
+              <h4>Activez vos alertes urgences</h4>
+              <p>Liez votre compte Telegram pour être alerté instantanément en cas d'urgence dans vos logements.</p>
             </div>
-            <div className="alert-btns">
-              {push.isSupported && (
-                <button className="btn-push" onClick={push.subscribe} disabled={push.isLoading}>
-                  {push.isLoading ? 'Activation...' : "🔔 Notifications de l'application"}
-                </button>
-              )}
-              {!telegramLinked && (
-                <Link href="/settings" legacyBehavior>
-                  <a className="btn-tg">📲 Via Telegram</a>
-                </Link>
-              )}
-            </div>
+            <Link href="/settings" legacyBehavior>
+              <a><button className="btn-tg">Lier Telegram →</button></a>
+            </Link>
           </div>
         )}
 
-        {push.isSubscribed && (
-          <div className="alert-banner success">
-            <div className="alert-success-row">
-              <span style={{ fontSize: '18px' }}>✅</span>
-              <span className="alert-success-text">Notifications de l'application activées — Alfred vous alerte directement sur ce téléphone</span>
-              <button className="btn-unsub" onClick={push.unsubscribe} disabled={push.isLoading}>
-                {push.isLoading ? '...' : 'Désactiver'}
-              </button>
-            </div>
-          </div>
-        )}
-
-        {!push.isSubscribed && telegramLinked && (
-          <div className="alert-banner success">
-            <div className="alert-success-row">
-              <span style={{ fontSize: '18px' }}>✅</span>
-              <span className="alert-success-text">Telegram connecté — alertes urgences actives</span>
-              {push.isSupported && (
-                <button className="btn-push-also" onClick={push.subscribe} disabled={push.isLoading}>
-                  {push.isLoading ? '...' : '+ Notif. application'}
-                </button>
-              )}
-            </div>
+        {/* BANNIÈRE : Telegram lié */}
+        {telegramLinked && (
+          <div className="banner success">
+            <span style={{ fontSize: '20px' }}>✅</span>
+            <span className="banner-success-text">Telegram connecté — alertes urgences actives</span>
           </div>
         )}
 
