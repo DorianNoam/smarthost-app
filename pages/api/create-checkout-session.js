@@ -10,6 +10,9 @@ export default async function handler(req, res) {
   try {
     const { userEmail, userId } = req.body;
 
+    // S'il n'y a pas d'origin (cas de l'app mobile), on force ton vrai domaine
+    const origin = req.headers.origin || 'https://www.alfredmajor.com';
+
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       customer_email: userEmail,
@@ -22,13 +25,13 @@ export default async function handler(req, res) {
       ],
       mode: 'subscription',
       
-      // 👇 AJOUT DE LA RÉDUCTION ICI 👇
+      // AJOUT DE LA RÉDUCTION ICI
       discounts: [{
         coupon: 'promo_990', 
       }],
 
-      success_url: `${req.headers.origin}/dashboard?success=true`,
-      cancel_url: `${req.headers.origin}/dashboard?canceled=true`, 
+      success_url: `${origin}/dashboard?success=true`,
+      cancel_url: `${origin}/dashboard?canceled=true`, 
     });
 
     res.status(200).json({ url: session.url });
