@@ -88,38 +88,74 @@ async function sendTelegramAlert(originalMsg, translatedMsg, propertyData) {
 }
 
 // ─────────────────────────────────────────────
-// 2B. ALERTE PUSH (PWA)
+// 2B. ALERTE PUSH DOUBLE CANAL (PWA WEB + EXPO MOBILE)
 // ─────────────────────────────────────────────
 async function sendPushAlert(originalMsg, translatedMsg, propertyData) {
   try {
+    // MODIFICATION : On récupère aussi 'expo_push_token' depuis Supabase
     const { data: profile } = await supabase
       .from('profiles')
-      .select('id, push_subscription')
+      .select('id, push_subscription, expo_push_token')
       .eq('id', propertyData.owner_id)
       .single();
 
-    if (!profile?.push_subscription) return;
+    if (!profile) return;
 
+    const title = '🚨 Alfred Major — Urgence détectée';
     const body = translatedMsg
       ? `${propertyData.name} : "${translatedMsg}"`
       : `${propertyData.name} : "${originalMsg}"`;
 
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.alfredmajor.com';
+    const promises = [];
 
-    await fetch(`${siteUrl}/api/push-send`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        userId: profile.id,
-        title: '🚨 Alfred Major — Urgence détectée',
-        body,
-        url: '/dashboard',
-        urgent: true,
-        propertyName: propertyData.name,
-      }),
-    });
+    // Envoi sur le Web (PWA) si l'abonnement existe
+    if (profile.push_subscription) {
+      promises.push(
+        fetch(`${siteUrl}/api/push-send`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: profile.id,
+            title,
+            body,
+            url: '/dashboard',
+            urgent: true,
+            propertyName: propertyData.name,
+          }),
+        })
+      );
+    }
+
+    // AJOUT : Envoi direct sur l'Application Mobile (Expo) si le token existe
+    if (profile.expo_push_token) {
+      promises.push(
+        fetch('https://exp.host/--/api/v2/push/send', {
+          method: 'POST',
+          headers: {
+            'Accept': 'application/json',
+            'Accept-encoding': 'gzip, deflate',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            to: profile.expo_push_token,
+            sound: 'default',
+            title,
+            body,
+            priority: 'high',
+            data: { url: '/dashboard', propertyName: propertyData.name },
+          }),
+        })
+      );
+    }
+
+    // Exécution des envois push de manière asynchrone
+    if (promises.length > 0) {
+      await Promise.allSettled(promises);
+    }
+
   } catch (e) {
-    console.error("Erreur Push:", e);
+    console.error("Erreur globale lors de l'envoi des alertes push:", e);
   }
 }
 
@@ -229,7 +265,7 @@ POUR LES RECOMMANDATIONS (restaurants, bars, sorties, commerces, transports) :
 - IMPORTANT : L'adresse doit toujours être précédée d'un emoji 📍 sur sa propre ligne.
 - Si une adresse n'est PAS disponible dans tes données, NE METS PAS la ligne 📍. Ne JAMAIS inventer d'adresse.
 - Termine si pertinent par une touche personnalisée : "Si vous me dites ce qui vous tente — italien, asiatique, bistrot français — je peux affiner mes suggestions selon vos envies."
-- Si tu as la note ⭐ ou le type entre crochets [restaurant] dans tes données, sers-toi en pour mieux décrire, mais ne montre JAMAIS les crochets ou la note brute au voyageur.
+- Si tu au la note ⭐ ou le type entre crochets [restaurant] dans tes données, sers-toi en pour mieux décrire, mais ne montre JAMAIS les crochets ou la note brute au voyageur.
 
 POUR LES QUESTIONS TECHNIQUES (wifi, code, parking, check-in) :
 - Reste CONCIS : 2-3 phrases maximum, droit au but.
@@ -341,7 +377,7 @@ Si le voyageur signale une urgence réelle (fuite d'eau, panne électrique, ince
         { onConflict: 'property_id' }
       );
 
-    // ── F. ALERTES URGENCES (Telegram + Push) ──
+    // ── F. ALERTES URGENCES (Telegram + Push + Expo Mobile) ──
     const triggerPhrase = "je préviens immédiatement votre hôte";
     const shouldAlert = responseText.toLowerCase().includes(triggerPhrase) || isEmergency(lastUserMsg);
 
@@ -361,7 +397,7 @@ Si le voyageur signale une urgence réelle (fuite d'eau, panne électrique, ince
         } catch (_) {}
       }
 
-      // Envoi en parallèle — Telegram ET Push
+      // Envoi en parallèle — Telegram ET le système Push Double Canal
       await Promise.allSettled([
         sendTelegramAlert(lastUserMsg, translatedMsg, propertyData),
         sendPushAlert(lastUserMsg, translatedMsg, propertyData),
@@ -375,7 +411,7 @@ Si le voyageur signale une urgence réelle (fuite d'eau, panne électrique, ince
     const errorMessages = {
       fr: "Je rencontre un problème technique momentané. Veuillez réessayer dans quelques instants.",
       en: "I'm experiencing a brief technical issue. Please try again in a moment.",
-      es: "Estoy experimentando un problema técnico. Por favor, inténtelo de nuevo.",
+      es: "Estoy experimentando un problème técnico. Por favor, inténtelo de nuevo.",
       de: "Ich habe gerade ein technisches Problem. Bitte versuchen Sie es erneut.",
       it: "Sto riscontrando un problema tecnico. Si prega di riprovare.",
     };
