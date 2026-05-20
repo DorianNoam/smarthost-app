@@ -92,7 +92,6 @@ async function sendTelegramAlert(originalMsg, translatedMsg, propertyData) {
 // ─────────────────────────────────────────────
 async function sendPushAlert(originalMsg, translatedMsg, propertyData) {
   try {
-    // MODIFICATION : On récupère aussi 'expo_push_token' depuis Supabase
     const { data: profile } = await supabase
       .from('profiles')
       .select('id, push_subscription, expo_push_token')
@@ -127,7 +126,7 @@ async function sendPushAlert(originalMsg, translatedMsg, propertyData) {
       );
     }
 
-    // AJOUT : Envoi direct sur l'Application Mobile (Expo) si le token existe
+    // Envoi direct sur l'Application Mobile (Expo) si le token existe
     if (profile.expo_push_token) {
       promises.push(
         fetch('https://exp.host/--/api/v2/push/send', {
@@ -149,7 +148,6 @@ async function sendPushAlert(originalMsg, translatedMsg, propertyData) {
       );
     }
 
-    // Exécution des envois push de manière asynchrone
     if (promises.length > 0) {
       await Promise.allSettled(promises);
     }
@@ -347,7 +345,7 @@ Si le voyageur signale une urgence réelle (fuite d'eau, panne électrique, ince
    a) Rassure-le en 1 phrase.
    b) Donne l'info technique si disponible (vanne, disjoncteur...).
    c) Termine ta réponse OBLIGATOIREMENT et EXACTEMENT par cette phrase : "Je préviens immédiatement votre hôte."
-   IMPORTANT : Cette phrase doit apparaître TELLE QUELLE dans ta réponse pour déclencher l'alerte. Ne la reformule JAMAIS.`;
+   IMPORTANT : This phrase must appear EXACTLY as is to trigger alerts. Do not reformulate.`;
 
     // ── D. APPEL IA ──
     const chatResponse = await groq.chat.completions.create({
@@ -382,6 +380,12 @@ Si le voyageur signale une urgence réelle (fuite d'eau, panne électrique, ince
     const shouldAlert = responseText.toLowerCase().includes(triggerPhrase) || isEmergency(lastUserMsg);
 
     if (shouldAlert) {
+      // MODIFICATION : On bascule has_emergency à true sur Supabase dès que l'urgence tombe
+      await supabase
+        .from('properties')
+        .update({ has_emergency: true })
+        .eq('id', propertyData.id);
+
       let translatedMsg = null;
       if (langCode !== 'fr') {
         try {
@@ -411,7 +415,7 @@ Si le voyageur signale une urgence réelle (fuite d'eau, panne électrique, ince
     const errorMessages = {
       fr: "Je rencontre un problème technique momentané. Veuillez réessayer dans quelques instants.",
       en: "I'm experiencing a brief technical issue. Please try again in a moment.",
-      es: "Estoy experimentando un problème técnico. Por favor, inténtelo de nuevo.",
+      es: "Estoy experimentando un problème técnico. Por favor, inténtelo de nouveau.",
       de: "Ich habe gerade ein technisches Problem. Bitte versuchen Sie es erneut.",
       it: "Sto riscontrando un problema tecnico. Si prega di riprovare.",
     };
