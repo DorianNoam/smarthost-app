@@ -32,7 +32,7 @@ export default function Dashboard() {
     } catch (err) {
       console.error("Erreur chargement:", err);
     } finally {
-      setLoading(false);
+      loading && setLoading(false);
     }
   };
 
@@ -150,7 +150,16 @@ export default function Dashboard() {
         .empty-state { background: white; padding: 50px 24px; border-radius: 24px; text-align: center; border: 2px dashed #e2e8f0; grid-column: 1 / -1; }
 
         /* CARD */
-        .card { background: white; border-radius: 20px; padding: 18px; border: 1px solid #e2e8f0; position: relative; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+        .card { background: white; border-radius: 20px; padding: 18px; border: 1px solid #e2e8f0; position: relative; box-shadow: 0 2px 8px rgba(0,0,0,0.04); transition: border-color 0.3s; }
+        
+        /* AJOUT : Style si le logement a une urgence active */
+        .card.emergency-active { border: 2px solid #ef4444 !important; box-shadow: 0 0 12px rgba(239, 68, 68, 0.15); }
+        .emergency-badge { position: absolute; top: 14px; right: 40px; background: #e11d48; color: white; padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 800; animation: blinker 1.5s linear infinite; }
+        
+        @keyframes blinker {
+          50% { opacity: 0.4; }
+        }
+
         .card-header { padding-right: 32px; }
         h3 { margin: 0 0 4px; color: #1a2a6c; font-size: 16px; font-weight: 800; line-height: 1.3; word-break: break-word; }
         .address { color: #64748b; font-size: 12px; margin-bottom: 14px; }
@@ -174,145 +183,4 @@ export default function Dashboard() {
         .btn-close-modal { background: #fbbf24; border: none; padding: 13px; width: 100%; border-radius: 12px; font-weight: 800; color: #1a2a6c; cursor: pointer; margin-top: 18px; font-size: 15px; }
         .info-box { background: #f1f5f9; padding: 13px; border-radius: 12px; margin-bottom: 18px; font-size: 13px; color: #475569; border-left: 4px solid #fbbf24; text-align: left; }
         .modal-actions { display: flex; gap: 10px; margin-top: 16px; }
-        .btn-abort { flex: 1; padding: 12px; border-radius: 10px; border: 1px solid #e2e8f0; background: white; color: #64748b; font-weight: 700; cursor: pointer; }
-        .btn-confirm-delete { flex: 1; padding: 12px; border-radius: 10px; border: none; background: #e11d48; color: white; font-weight: 700; cursor: pointer; }
-
-        @media (max-width: 768px) {
-          nav { width: 100%; height: 60px; position: fixed; bottom: 0; left: 0; top: auto; flex-direction: row; padding: 0 0 env(safe-area-inset-bottom, 0px) 0; justify-content: space-around; align-items: center; box-shadow: 0 -2px 12px rgba(0,0,0,0.1); }
-          .logo { display: none; }
-          .nav-text { display: none; }
-          .nav-item { margin: 0; padding: 0; flex: 1; justify-content: center; font-size: 22px; border-radius: 0; background: transparent !important; height: 100%; opacity: 1; }
-          .nav-item.active { background: transparent !important; color: #fbbf24; }
-          .nav-footer { border-top: none; padding: 0; margin: 0; flex: 1; display: flex; height: 100%; align-items: center; justify-content: center; }
-          .tutorial-box { background: transparent; color: white; margin: 0; padding: 0; font-size: 22px; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; border-radius: 0; }
-          .btn-logout { display: none; }
-          main { margin-left: 0; padding: 20px 16px 90px; }
-          h1 { font-size: 22px; }
-          .grid { grid-template-columns: 1fr; gap: 12px; }
-          .banner { flex-wrap: wrap; }
-          .btn-tg { width: 100%; text-align: center; }
-          .subscription-card { flex-direction: column; align-items: stretch; padding: 18px; text-align: center; }
-          .btn-portal { width: 100%; }
-          .modal-card { padding: 24px 18px; }
-          .modal-actions { flex-direction: column; }
-        }
-      `}</style>
-
-      <nav>
-        <div className="logo">Alfred Major 🎩</div>
-        <Link href="/dashboard" legacyBehavior><a className="nav-item active">🏠 <span className="nav-text">Mes Logements</span></a></Link>
-        <Link href="/settings" legacyBehavior><a className="nav-item">⚙️ <span className="nav-text">Paramètres</span></a></Link>
-        <div className="nav-footer">
-          <Link href="/tutorial" legacyBehavior><a className="tutorial-box">❓ <span className="nav-text">Comment ça marche ?</span></a></Link>
-          <button className="btn-logout" onClick={async () => { await supabase.auth.signOut(); router.push('/'); }}>
-            🚪 <span className="nav-text">Déconnexion</span>
-          </button>
-        </div>
-      </nav>
-
-      <main>
-        <div className="header-area">
-          <h1>Mes Logements</h1>
-          <button onClick={handleAddClick} className="btn-add">+ Ajouter</button>
-        </div>
-
-        {/* BANNIÈRE : Telegram non lié */}
-        {!telegramLinked && (
-          <div className="banner warning">
-            <div className="banner-icon">🚨</div>
-            <div className="banner-text">
-              <h4>Activez vos alertes urgences</h4>
-              <p>Liez votre compte Telegram pour être alerté instantanément en cas d'urgence dans vos logements.</p>
-            </div>
-            <Link href="/settings" legacyBehavior>
-              <a><button className="btn-tg">Lier Telegram →</button></a>
-            </Link>
-          </div>
-        )}
-
-        {/* BANNIÈRE : Telegram lié */}
-        {telegramLinked && (
-          <div className="banner success">
-            <span style={{ fontSize: '20px' }}>✅</span>
-            <span className="banner-success-text">Telegram connecté — alertes urgences actives</span>
-          </div>
-        )}
-
-        <div className="grid">
-          {properties.length === 0 ? (
-            <div className="empty-state">
-              <span style={{ fontSize: '48px' }}>✨</span>
-              <h2 style={{ color: '#1a2a6c', fontWeight: 800, margin: '14px 0 8px' }}>Bienvenue sur Alfred Major !</h2>
-              <p style={{ color: '#64748b', maxWidth: '340px', margin: '0 auto 22px', fontSize: '14px' }}>Ajoutez votre premier logement pour configurer votre majordome.</p>
-              <button onClick={handleAddClick} className="btn-add">Créer mon premier logement</button>
-            </div>
-          ) : (
-            properties.map((prop) => (
-              <div key={prop.id} className="card">
-                <button className="btn-delete" onClick={(e) => triggerDeleteRequest(e, prop)}>🗑️</button>
-                <div className="card-header">
-                  <h3>{prop.name}</h3>
-                </div>
-                <div className="address">📍 {prop.street_number} {prop.address}{prop.city ? `, ${prop.city}` : ''}</div>
-                {!prop.is_active ? (
-                  <div className="activation-zone">
-                    <p style={{ fontSize: '13px', color: '#92400e', margin: '0 0 12px', fontWeight: 600 }}>Prêt à entrer en service.</p>
-                    <button onClick={handlePayment} className="btn-activate">
-                      {paymentLoading ? 'Connexion...' : 'Activer ce logement'}
-                    </button>
-                  </div>
-                ) : (
-                  <div className="btn-stack">
-                    <Link href={`/property/${prop.id}`} legacyBehavior><a className="action-btn btn-primary">📊 Configurer le logement</a></Link>
-                    <button onClick={() => copyWelcomeMessage(prop)} className="action-btn btn-welcome">✨ Lien Voyageur (Copier)</button>
-                    <Link href={`/history/${prop.id}`} legacyBehavior><a className="action-btn btn-history">📜 Historique des échanges</a></Link>
-                  </div>
-                )}
-              </div>
-            ))
-          )}
-        </div>
-
-        <div className="subscription-card">
-          <div>
-            <h3 style={{ margin: '0 0 4px', color: '#1a2a6c', fontSize: '16px' }}>Gestion des abonnements</h3>
-            <p style={{ margin: 0, color: '#64748b', fontSize: '13px' }}>Gérez vos factures et moyens de paiement.</p>
-          </div>
-          <button onClick={handleManageSubscription} className="btn-portal">Accéder au portail</button>
-        </div>
-
-        <div style={{ textAlign: 'center', marginTop: '28px', paddingBottom: '16px' }}>
-          <button onClick={handleDeleteAccount} style={{ background: 'none', border: 'none', color: '#cbd5e1', cursor: 'pointer', textDecoration: 'underline', fontSize: '12px' }}>
-            Supprimer mon compte
-          </button>
-        </div>
-      </main>
-
-      {showLimitModal && (
-        <div className="modal-overlay" onClick={() => setShowLimitModal(false)}>
-          <div className="modal-card" onClick={e => e.stopPropagation()}>
-            <span style={{ fontSize: '46px', marginBottom: '14px', display: 'block' }}>🎩</span>
-            <h2 style={{ color: '#1a2a6c', fontWeight: 800, margin: '0 0 8px' }}>Activation requise</h2>
-            <p style={{ color: '#64748b', margin: 0 }}>Veuillez activer votre logement actuel avant d'en ajouter un nouveau.</p>
-            <button className="btn-close-modal" onClick={() => setShowLimitModal(false)}>D'accord</button>
-          </div>
-        </div>
-      )}
-
-      {showDeleteModal && (
-        <div className="modal-overlay" onClick={() => setShowDeleteModal(false)}>
-          <div className="modal-card" onClick={e => e.stopPropagation()}>
-            <span style={{ fontSize: '42px', marginBottom: '12px', display: 'block' }}>⚠️</span>
-            <h2 style={{ color: '#1a2a6c', fontWeight: 800, margin: '0 0 8px' }}>Supprimer {propertyToDelete?.name} ?</h2>
-            <p style={{ color: '#64748b', margin: '0 0 16px' }}>Êtes-vous sûr ? Toute la configuration sera effacée.</p>
-            <div className="info-box"><strong>📌 Note :</strong> Votre licence reste active jusqu'à la fin du mois.</div>
-            <div className="modal-actions">
-              <button className="btn-abort" onClick={() => setShowDeleteModal(false)}>Annuler</button>
-              <button className="btn-confirm-delete" onClick={confirmDelete}>Supprimer</button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
+        .btn-abort { flex: 1; padding: 12px; border-radius: 10px; border: 1px solid #e2e8
