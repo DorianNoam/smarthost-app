@@ -90,7 +90,7 @@ async function sendTelegramAlert(originalMsg, translatedMsg, propertyData) {
 // ─────────────────────────────────────────────
 // 2B. ALERTE PUSH DOUBLE CANAL (PWA WEB + EXPO MOBILE)
 // ─────────────────────────────────────────────
-async function sendPushAlert(originalMsg, translatedMsg, propertyData) {
+async function sendPushAlert(originalMsg, translatedMsg, propertyData, targetPropertyId) {
   try {
     const { data: profile } = await supabase
       .from('profiles')
@@ -142,7 +142,7 @@ async function sendPushAlert(originalMsg, translatedMsg, propertyData) {
             title,
             body,
             priority: 'high',
-            data: { url: '/dashboard', propertyName: propertyData.name },
+            data: { url: '/dashboard', propertyId: targetPropertyId, propertyName: propertyData.name },
           }),
         })
       );
@@ -193,6 +193,9 @@ export default async function handler(req, res) {
     return res.status(400).json({ answer: "Données manquantes." });
   }
 
+  // SÉCURITÉ IDENTIFIANT : Résolution explicite de l'ID du logement
+  const targetPropertyId = propertyData.id || propertyData.property_id;
+
   const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
   const langCode = userLanguage ? userLanguage.split('-')[0] : 'fr';
   const lastUserMsg = messagesHistory[messagesHistory.length - 1]?.text || "";
@@ -205,7 +208,7 @@ export default async function handler(req, res) {
     const { data: kb } = await supabase
       .from('knowledge_base')
       .select('category, content')
-      .eq('property_id', propertyData.id);
+      .eq('property_id', targetPropertyId);
     const formattedKB = kb?.map(item => `[${item.category}] : ${item.content}`).join('\n') || "";
 
     // ── B. RECHERCHE LOCALE ──
@@ -240,7 +243,7 @@ LANGUE :
 - Réponds TOUJOURS dans la langue du voyageur, sans exception.
 
 STYLE — RÈGLES DE COMMUNICATION :
-- Ton chaleureux et raffiné, comme un majordome d'hôtel 5 étoiles : élégant sans être pompeux, attentionné sans être obséquieux.
+- Ton chaleureux et raffiné, comme un majordome d'hôtel 5 étoiles : élégant sans être pompux, attentionné sans être obséquieux.
 - Personnalise tes réponses : utilise "votre logement", "votre séjour", "à deux pas de chez vous" plutôt que des formulations neutres.
 - Évite les phrases robotiques comme "Il y a plusieurs options près de votre logement". Préfère "Le quartier regorge de bonnes adresses" ou "Vous avez de très belles tables à proximité immédiate".
 
@@ -371,7 +374,7 @@ Si le voyageur signale une urgence réelle (fuite d'eau, panne électrique, ince
     await supabase
       .from('conversations')
       .upsert(
-        { property_id: propertyData.id, history: newHistory, last_message_at: new Date().toISOString() },
+        { property_id: targetPropertyId, history: newHistory, last_message_at: new Date().toISOString() },
         { onConflict: 'property_id' }
       );
 
@@ -380,11 +383,13 @@ Si le voyageur signale une urgence réelle (fuite d'eau, panne électrique, ince
     const shouldAlert = responseText.toLowerCase().includes(triggerPhrase) || isEmergency(lastUserMsg);
 
     if (shouldAlert) {
-      // MODIFICATION : On bascule has_emergency à true sur Supabase dès que l'urgence tombe
-      await supabase
-        .from('properties')
-        .update({ has_emergency: true })
-        .eq('id', propertyData.id);
+      if (targetPropertyId) {
+        // Enregistre l'état d'urgence dans la base de données
+        await supabase
+          .from('properties')
+          .update({ has_emergency: true })
+          .eq('id', targetPropertyId);
+      }
 
       let translatedMsg = null;
       if (langCode !== 'fr') {
@@ -401,10 +406,10 @@ Si le voyageur signale une urgence réelle (fuite d'eau, panne électrique, ince
         } catch (_) {}
       }
 
-      // Envoi en parallèle — Telegram ET le système Push Double Canal
+      // Envoi simultané des notifications (Telegram, PWA Web et Application Expo)
       await Promise.allSettled([
         sendTelegramAlert(lastUserMsg, translatedMsg, propertyData),
-        sendPushAlert(lastUserMsg, translatedMsg, propertyData),
+        sendPushAlert(lastUserMsg, translatedMsg, propertyData, targetPropertyId),
       ]);
     }
 
