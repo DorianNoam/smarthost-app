@@ -1,14 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-
-  // ✅ Configuration i18n — URLs /en/ /es/ automatiques
-  i18n: {
-    locales: ['fr', 'en', 'es'],
-    defaultLocale: 'fr',
-    
-  },
-
   async headers() {
     return [
       {
