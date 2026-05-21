@@ -5,8 +5,15 @@ export default function ConditionsGenerales() {
   return (
     <div className="page">
       <Head>
-        <title>Conditions Générales de Vente | Alfred Major</title>
-        <meta name="description" content="Conditions Générales de Vente d'Alfred Major" />
+        <title>Conditions Générales de Vente — Alfred Major | Majordome IA location courte durée</title>
+        <meta name="description" content="Consultez les Conditions Générales de Vente d'Alfred Major, le majordome IA pour locations courte durée. Abonnement sans engagement à 19,90€/mois par logement." />
+        <meta name="robots" content="index, follow" />
+        <link rel="canonical" href="https://www.alfredmajor.com/conditions-generales" />
+        <meta property="og:title" content="Conditions Générales de Vente — Alfred Major" />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://www.alfredmajor.com/conditions-generales" />
+        <meta property="og:site_name" content="Alfred Major" />
+        <meta property="og:locale" content="fr_FR" />
       </Head>
 
       <style jsx>{`
