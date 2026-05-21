@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/router';
 import { supabase } from '../lib/supabase';
 import Link from 'next/link';
+import Head from 'next/head';
 
 export default function Login() {
   const router = useRouter();
@@ -30,6 +31,22 @@ export default function Login() {
 
   return (
     <div className="container">
+      <Head>
+        <title>Connexion — Alfred Major | Espace Hôte</title>
+        <meta name="description" content="Connectez-vous à votre espace hôte Alfred Major pour gérer vos logements, consulter les conversations voyageurs et configurer votre majordome IA." />
+        <meta name="robots" content="index, follow" />
+        <link rel="canonical" href="https://www.alfredmajor.com/login" />
+        <meta property="og:title" content="Connexion — Alfred Major | Espace Hôte" />
+        <meta property="og:description" content="Accédez à votre tableau de bord Alfred Major pour gérer vos logements et votre majordome IA." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://www.alfredmajor.com/login" />
+        <meta property="og:image" content="https://www.alfredmajor.com/og-image.jpg" />
+        <meta property="og:locale" content="fr_FR" />
+        <meta property="og:site_name" content="Alfred Major" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Connexion — Alfred Major" />
+        <meta name="twitter:image" content="https://www.alfredmajor.com/og-image.jpg" />
+      </Head>
       <style jsx>{`
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Montserrat:wght@300;400;600;700&display=swap');
         :global(a) { text-decoration: none; color: inherit; }
