@@ -1,70 +1,53 @@
 import Link from 'next/link';
 import Head from 'next/head';
+import { useRouter } from 'next/router';
+import { useTranslation } from '../lib/useTranslation';
 
 export default function Home() {
+  const router = useRouter();
+  const { t, locale } = useTranslation();
+
+  const switchLocale = (newLocale) => {
+    router.push(router.pathname, router.asPath, { locale: newLocale });
+  };
   return (
     <div className="container">
       <Head>
-        <title>Alfred Major | Le Majordome IA pour vos locations Courte durée</title>
-        <meta name="description" content="Déléguez la gestion de vos voyageurs à Alfred, l'IA qui répond 24h/24, recommande des adresses locales et vous alerte uniquement en cas d'urgence. Premier mois offert, sans engagement." />
+        <title>{t.meta.title}</title>
+        <meta name="description" content={t.meta.description} />
         <meta name="robots" content="index, follow" />
-        <link rel="canonical" href="https://www.alfredmajor.com/" />
-
-        {/* Open Graph */}
-        <meta property="og:title" content="Alfred Major — Le Majordome IA pour vos locations" />
-        <meta property="og:description" content="Alfred répond à vos voyageurs 24h/24, recommande les meilleures adresses locales et vous alerte en cas d'urgence. Premier mois offert, sans engagement." />
+        <link rel="canonical" href={`https://www.alfredmajor.com${locale === 'fr' ? '/' : `/${locale}/`}`} />
+        <link rel="alternate" hrefLang="fr" href="https://www.alfredmajor.com/" />
+        <link rel="alternate" hrefLang="en" href="https://www.alfredmajor.com/en" />
+        <link rel="alternate" hrefLang="es" href="https://www.alfredmajor.com/es" />
+        <link rel="alternate" hrefLang="x-default" href="https://www.alfredmajor.com/" />
+        <meta property="og:title" content={t.meta.ogTitle} />
+        <meta property="og:description" content={t.meta.ogDescription} />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://www.alfredmajor.com/" />
+        <meta property="og:url" content={`https://www.alfredmajor.com${locale === 'fr' ? '/' : `/${locale}/`}`} />
         <meta property="og:image" content="https://www.alfredmajor.com/og-image.jpg" />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
         <meta property="og:image:alt" content="Alfred Major — Majordome IA pour locations courte durée" />
-        <meta property="og:locale" content="fr_FR" />
+        <meta property="og:locale" content={t.meta.ogLocale} />
         <meta property="og:site_name" content="Alfred Major" />
-
-        {/* Twitter Card */}
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Alfred Major — Le Majordome IA pour vos locations" />
-        <meta name="twitter:description" content="Alfred répond à vos voyageurs 24h/24. Premier mois offert, sans engagement." />
+        <meta name="twitter:title" content={t.meta.ogTitle} />
+        <meta name="twitter:description" content={t.meta.ogDescription} />
         <meta name="twitter:image" content="https://www.alfredmajor.com/og-image.jpg" />
-        <meta name="twitter:image:alt" content="Alfred Major — Majordome IA pour locations courte durée" />
-
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="theme-color" content="#1a2a6c" />
-
-        {/* Schema.org — SoftwareApplication */}
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": "SoftwareApplication",
-              "name": "Alfred Major",
-              "url": "https://www.alfredmajor.com",
-              "description": "Majordome IA pour locations courte durée. Répond aux voyageurs 24h/24, en 30+ langues, avec alertes urgences sur Telegram.",
-              "applicationCategory": "BusinessApplication",
-              "operatingSystem": "Web, Android, iOS",
-              "offers": {
-                "@type": "Offer",
-                "price": "9.90",
-                "priceCurrency": "EUR",
-                "priceValidUntil": "2026-12-31",
-                "description": "Premier mois à 9,90€ puis 19,90€/mois par logement, sans engagement"
-              },
-              "aggregateRating": {
-                "@type": "AggregateRating",
-                "ratingValue": "5",
-                "reviewCount": "3"
-              },
-              "publisher": {
-                "@type": "Organization",
-                "name": "Alfred Major",
-                "url": "https://www.alfredmajor.com",
-                "logo": "https://www.alfredmajor.com/icon.png"
-              }
-            })
-          }}
-        />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "SoftwareApplication",
+          "name": "Alfred Major",
+          "url": "https://www.alfredmajor.com",
+          "description": t.meta.description,
+          "applicationCategory": "BusinessApplication",
+          "operatingSystem": "Web, Android, iOS",
+          "offers": { "@type": "Offer", "price": "9.90", "priceCurrency": "EUR", "priceValidUntil": "2026-12-31" },
+          "publisher": { "@type": "Organization", "name": "Alfred Major", "url": "https://www.alfredmajor.com" }
+        })}} />
       </Head>
 
       <style jsx>{`
@@ -88,6 +71,10 @@ export default function Home() {
         .nav-link:hover { color: #1a2a6c; }
         .nav-login { font-weight: 700; color: white; background: #1a2a6c; padding: 10px 24px; border-radius: 50px; font-size: 14px; transition: 0.3s; }
         .nav-login:hover { background: #d4af37; color: #1a2a6c; transform: translateY(-1px); }
+        .lang-switcher { display: flex; align-items: center; gap: 4px; }
+        .lang-btn { background: none; border: 1px solid transparent; padding: 5px 8px; border-radius: 8px; cursor: pointer; font-size: 16px; transition: 0.2s; color: #475569; }
+        .lang-btn:hover { background: #f1f5f9; border-color: #e2e8f0; }
+        .lang-btn.active { background: #eff6ff; border-color: #1a2a6c; }
 
         /* ══════════════════ HERO ══════════════════ */
         .hero {
@@ -334,36 +321,42 @@ export default function Home() {
           <a className="brand">Alfred<span className="gold">Major</span></a>
         </Link>
         <div className="nav-links">
-          <a href="#fonctionnement" className="nav-link">Fonctionnement</a>
-          <a href="#tarifs" className="nav-link">Tarifs</a>
-          <Link href="/login" passHref legacyBehavior><a className="nav-login">Espace Hôte</a></Link>
+          <a href="#fonctionnement" className="nav-link">{t.nav.features}</a>
+          <a href="#tarifs" className="nav-link">{t.nav.pricing}</a>
+          {/* Sélecteur de langue */}
+          <div className="lang-switcher">
+            <button className={`lang-btn${locale === 'fr' ? ' active' : ''}`} onClick={() => switchLocale('fr')}>🇫🇷</button>
+            <button className={`lang-btn${locale === 'en' ? ' active' : ''}`} onClick={() => switchLocale('en')}>🇬🇧</button>
+            <button className={`lang-btn${locale === 'es' ? ' active' : ''}`} onClick={() => switchLocale('es')}>🇪🇸</button>
+          </div>
+          <Link href="/login" passHref legacyBehavior><a className="nav-login">{t.nav.login}</a></Link>
         </div>
       </nav>
 
       {/* ── HERO ── */}
       <section className="hero">
         <div className="hero-content">
-          <div className="badge-hero">🎁 1er mois 100% offert — Sans engagement</div>
-          <h1>Dormez sur vos deux oreilles.<br/><em>Alfred</em> gère vos voyageurs.</h1>
-          <p className="subtitle">
-            Le premier majordome IA qui répond aux questions 24h/24, recommande les meilleurs restaurants locaux, et vous alerte uniquement en cas d'urgence.
-          </p>
+          <div className="badge-hero">{t.hero.badge}</div>
+          <h1 dangerouslySetInnerHTML={{ __html: t.hero.title }} />
+          <p className="subtitle">{t.hero.subtitle}</p>
           <Link href="/register" passHref legacyBehavior>
-            <a className="cta-main">Démarrer gratuitement <span>→</span></a>
+            <a className="cta-main">{t.hero.cta}</a>
           </Link>
           <div className="trust-row">
-            <span className="trust-item">✓ Sans engagement</span>
+            <span className="trust-item">✓ {t.hero.trust1}</span>
             <span className="trust-dot" />
-            <span className="trust-item">✓ Configuration en 5 min</span>
+            <span className="trust-item">✓ {t.hero.trust2}</span>
             <span className="trust-dot" />
-            <span className="trust-item">✓ 30+ langues</span>
+            <span className="trust-item">✓ {t.hero.trust3}</span>
           </div>
+        </div>
+      </section>
         </div>
       </section>
 
       {/* ── LOGOS ── */}
       <section className="logos-section">
-        <p className="logos-label">Compatible avec les voyageurs de toutes les plateformes</p>
+        <p className="logos-label">{t.logos.label}</p>
         <div className="logos-flex">
           <span className="logo-item">Airbnb</span>
           <span className="logo-item">Booking.com</span>
@@ -375,83 +368,66 @@ export default function Home() {
 
       {/* ── COMMENT ÇA MARCHE ── */}
       <section className="steps-section" id="fonctionnement">
-        <p className="section-label">Simple & Rapide</p>
-        <h2 className="section-title">Déployez Alfred en 5 minutes</h2>
-        <p className="section-sub">Pas de technique, pas de code. Votre majordome est opérationnel avant votre prochain check-in.</p>
+        <p className="section-label">{t.steps.label}</p>
+        <h2 className="section-title">{t.steps.title}</h2>
+        <p className="section-sub">{t.steps.sub}</p>
         <div className="steps-grid">
           <div className="step-card">
             <div className="step-icon-wrap s1">🏠</div>
-            <h3>Créez votre logement</h3>
-            <p>Remplissez le formulaire guidé avec les infos de votre bien — codes, WiFi, équipements, règles, bonnes adresses.</p>
+            <h3>{t.steps.s1title}</h3>
+            <p>{t.steps.s1desc}</p>
           </div>
           <div className="step-card">
             <div className="step-icon-wrap s2">🔗</div>
-            <h3>Partagez le lien</h3>
-            <p>Copiez le lien unique d'Alfred dans votre message d'accueil Airbnb ou Booking. Un QR code est aussi disponible.</p>
+            <h3>{t.steps.s2title}</h3>
+            <p>{t.steps.s2desc}</p>
           </div>
           <div className="step-card">
             <div className="step-icon-wrap s3">😴</div>
-            <h3>Soufflez</h3>
-            <p>Alfred répond à 95% des questions de vos voyageurs. Vous n'intervenez qu'en cas d'urgence réelle.</p>
+            <h3>{t.steps.s3title}</h3>
+            <p>{t.steps.s3desc}</p>
           </div>
         </div>
       </section>
 
-      {/* ── PAIN POINTS — CARDS AVEC PHOTOS ── */}
+      {/* ── PAIN POINTS ── */}
       <section className="pain-section">
-        <p className="section-label">Fini les nuits coupées</p>
-        <h2 className="section-title">La gestion locative réinventée</h2>
-        <p className="section-sub" style={{color: 'rgba(255,255,255,0.6)'}}>Alfred élimine les interruptions du quotidien pour vous laisser profiter de ce qui compte vraiment.</p>
+        <p className="section-label">{t.pain.label}</p>
+        <h2 className="section-title">{t.pain.title}</h2>
+        <p className="section-sub" style={{color: 'rgba(255,255,255,0.6)'}}>{t.pain.sub}</p>
         <div className="pain-grid">
-
-          {/* ✅ Card 1 — Personne réveillée la nuit */}
           <div className="pain-card">
             <div className="pain-card-photo">
-              <img
-                src="/pain-nuit.png"
-                alt="Personne réveillée la nuit regardant son téléphone"
-                loading="lazy"
-              />
+              <img src="/pain-nuit.png" alt="Personne réveillée la nuit regardant son téléphone" loading="lazy" />
               <div className="pain-card-photo-overlay" />
             </div>
             <div className="pain-card-body">
-              <h3>Le message à 23h30</h3>
-              <p>Le voyageur arrive tard et ne trouve pas le WiFi. Votre téléphone sonne pendant votre sommeil. Laissez Alfred s'en charger — il répond instantanément, en pleine nuit.</p>
+              <h3>{t.pain.c1title}</h3>
+              <p>{t.pain.c1desc}</p>
             </div>
           </div>
-
-          {/* ✅ Card 2 — Couple en voyage */}
           <div className="pain-card">
             <div className="pain-card-photo">
-              <img
-                src="/pain-langue.png"
-                alt="Couple de voyageurs internationaux"
-                loading="lazy"
-              />
+              <img src="/pain-langue.png" alt="Couple de voyageurs internationaux" loading="lazy" />
               <div className="pain-card-photo-overlay" />
             </div>
             <div className="pain-card-body">
-              <h3>La barrière de la langue</h3>
-              <p>Alfred parle couramment plus de 30 langues. Anglais, espagnol, allemand, japonais — vos touristes étrangers sont servis dans leur langue, sans effort de votre part.</p>
+              <h3>{t.pain.c2title}</h3>
+              <p>{t.pain.c2desc}</p>
             </div>
           </div>
 
-          {/* ✅ Card 3 — Majordome professionnel */}
+          {/* Card 3 */}
           <div className="pain-card">
             <div className="pain-card-photo">
-              <img
-                src="pain-questions.png"
-                alt="Service de conciergerie professionnel"
-                loading="lazy"
-              />
+              <img src="pain-questions.png" alt="Service de conciergerie professionnel" loading="lazy" />
               <div className="pain-card-photo-overlay" />
             </div>
             <div className="pain-card-body">
-              <h3>Les questions répétées</h3>
-              <p>Poubelles, départ, commerces... Alfred répond inlassablement avec une politesse irréprochable, chaque fois comme si c'était la première question.</p>
+              <h3>{t.pain.c3title}</h3>
+              <p>{t.pain.c3desc}</p>
             </div>
           </div>
-
         </div>
       </section>
 
@@ -554,38 +530,25 @@ export default function Home() {
 
       {/* ── BENEFITS ── */}
       <section className="benefits">
-        <p className="section-label">Pourquoi Alfred</p>
-        <h2 className="section-title">Ce que vivent nos hôtes au quotidien</h2>
+        <p className="section-label">{t.benefits.label}</p>
+        <h2 className="section-title">{t.benefits.title}</h2>
         <div className="benefits-layout">
           <div className="benefits-image">
-            <img
-              src="https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?auto=format&fit=crop&w=800&q=80"
-              alt="Hôte détendu avec son téléphone"
-              loading="lazy"
-            />
+            <img src="https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?auto=format&fit=crop&w=800&q=80" alt="Hôte détendu avec son téléphone" loading="lazy" />
             <div className="benefits-image-overlay" />
           </div>
           <div className="benefits-cards">
             <div className="benefit-card">
               <div className="benefit-icon-wrap bi1">😴</div>
-              <div>
-                <h4>Nuits complètes garanties</h4>
-                <p>Plus besoin de garder un œil sur votre téléphone. Alfred gère les questions WiFi, codes et équipements à votre place, 24h/24.</p>
-              </div>
+              <div><h4>{t.benefits.b1title}</h4><p>{t.benefits.b1desc}</p></div>
             </div>
             <div className="benefit-card">
               <div className="benefit-icon-wrap bi2">🛡️</div>
-              <div>
-                <h4>Zéro urgence ratée</h4>
-                <p>Avec les alertes Telegram instantanées, vous êtes toujours informé des vrais problèmes — sans être noyé dans les questions banales.</p>
-              </div>
+              <div><h4>{t.benefits.b2title}</h4><p>{t.benefits.b2desc}</p></div>
             </div>
             <div className="benefit-card">
               <div className="benefit-icon-wrap bi3">⭐</div>
-              <div>
-                <h4>Notes Airbnb améliorées</h4>
-                <p>Des voyageurs mieux accompagnés laissent de meilleures notes. Plusieurs hôtes ont vu leurs avis progresser après l'adoption d'Alfred.</p>
-              </div>
+              <div><h4>{t.benefits.b3title}</h4><p>{t.benefits.b3desc}</p></div>
             </div>
           </div>
         </div>
@@ -593,44 +556,35 @@ export default function Home() {
 
       {/* ── TÉMOIGNAGES ── */}
       <section className="testimonials">
-        <p className="section-label">Ils nous font confiance</p>
-        <h2 className="section-title">Ce que disent nos premiers hôtes</h2>
-        <p className="section-sub" style={{color: '#64748b', marginTop: '12px'}}>Ils ont adopté Alfred et ne reviendront plus en arrière.</p>
+        <p className="section-label">{t.testimonials.label}</p>
+        <h2 className="section-title">{t.testimonials.title}</h2>
+        <p className="section-sub" style={{color: '#64748b', marginTop: '12px'}}>{t.testimonials.sub}</p>
         <div className="testi-grid">
           <div className="testi-card">
-            <span className="testi-badge">✓ Hôte vérifié</span>
+            <span className="testi-badge">{t.testimonials.verified}</span>
             <div className="testi-stars">{'★★★★★'.split('').map((s,i) => <span key={i} className="star">{s}</span>)}</div>
-            <p className="testi-quote">Alfred répond à toutes les questions de mes voyageurs, même à 3h du matin. Je n'ai plus reçu un seul appel pour le code WiFi depuis que je l'ai installé. Un vrai soulagement.</p>
+            <p className="testi-quote">{t.testimonials.t1}</p>
             <div className="testi-author">
               <div className="testi-avatar av1">SL</div>
-              <div>
-                <p className="testi-name">Sophie L.</p>
-                <p className="testi-role">3 logements · Nice</p>
-              </div>
+              <div><p className="testi-name">{t.testimonials.t1name}</p><p className="testi-role">{t.testimonials.t1role}</p></div>
             </div>
           </div>
           <div className="testi-card">
-            <span className="testi-badge">✓ Hôte vérifié</span>
+            <span className="testi-badge">{t.testimonials.verified}</span>
             <div className="testi-stars">{'★★★★★'.split('').map((s,i) => <span key={i} className="star">{s}</span>)}</div>
-            <p className="testi-quote">J'avais des voyageurs étrangers qui ne parlaient pas français. Alfred leur a répondu en anglais, espagnol et même en allemand. Mes notes Airbnb ont augmenté depuis.</p>
+            <p className="testi-quote">{t.testimonials.t2}</p>
             <div className="testi-author">
               <div className="testi-avatar av2">TR</div>
-              <div>
-                <p className="testi-name">Thomas R.</p>
-                <p className="testi-role">2 logements · Bordeaux</p>
-              </div>
+              <div><p className="testi-name">{t.testimonials.t2name}</p><p className="testi-role">{t.testimonials.t2role}</p></div>
             </div>
           </div>
           <div className="testi-card">
-            <span className="testi-badge">✓ Hôte vérifié</span>
+            <span className="testi-badge">{t.testimonials.verified}</span>
             <div className="testi-stars">{'★★★★★'.split('').map((s,i) => <span key={i} className="star">{s}</span>)}</div>
-            <p className="testi-quote">L'alerte Telegram m'a sauvé la mise : un voyageur a signalé une fuite, j'ai reçu le message instantanément et j'ai pu envoyer un plombier avant que ça empire.</p>
+            <p className="testi-quote">{t.testimonials.t3}</p>
             <div className="testi-author">
               <div className="testi-avatar av3">MC</div>
-              <div>
-                <p className="testi-name">Marie C.</p>
-                <p className="testi-role">5 logements · Paris</p>
-              </div>
+              <div><p className="testi-name">{t.testimonials.t3name}</p><p className="testi-role">{t.testimonials.t3role}</p></div>
             </div>
           </div>
         </div>
@@ -638,24 +592,17 @@ export default function Home() {
 
       {/* ── PRICING ── */}
       <section className="pricing-section" id="tarifs">
-        <p className="section-label">Tarifs</p>
-        <h2 className="section-title">L'excellence accessible.</h2>
-        <p className="section-sub">Un majordome privé 24h/24 pour une fraction du coût d'une conciergerie traditionnelle.</p>
+        <p className="section-label">{t.pricing.label}</p>
+        <h2 className="section-title">{t.pricing.title}</h2>
+        <p className="section-sub">{t.pricing.sub}</p>
         <div className="price-card-home">
-          <div className="badge-promo">🎁 1er mois 100% OFFERT — Sans engagement</div>
-          <div className="plan-name">Licence par logement</div>
-          <div className="price-old">9,90€/mois</div>
-          <div className="price">0€<span>/1er mois</span></div>
-          <div className="price-note">puis 9,90€/mois — sans engagement, résiliable à tout moment</div>
+          <div className="badge-promo">{t.pricing.promo}</div>
+          <div className="plan-name">{t.pricing.planName}</div>
+          <div className="price-old">{t.pricing.priceOld}</div>
+          <div className="price">{t.pricing.price}<span>{t.pricing.pricePeriod}</span></div>
+          <div className="price-note">{t.pricing.priceNote}</div>
           <div className="features-list">
-            {[
-              'Majordome IA disponible 24h/24 et 7j/7',
-              'Traduction automatique (30+ langues)',
-              'Recherche locale Google Maps intégrée',
-              'Alerte urgence instantanée sur Telegram',
-              'Lien web & QR code personnalisés',
-              'Historique des conversations voyageurs',
-            ].map((f, i) => (
+            {t.pricing.features.map((f, i) => (
               <div key={i} className="feature">
                 <div className="check-icon">✓</div>
                 {f}
@@ -663,9 +610,9 @@ export default function Home() {
             ))}
           </div>
           <Link href="/register" passHref legacyBehavior>
-            <a className="cta-pricing">Commencer gratuitement — 1er mois offert</a>
+            <a className="cta-pricing">{t.pricing.cta}</a>
           </Link>
-          <div className="guarantee">🔒 Paiement 100% sécurisé via Stripe</div>
+          <div className="guarantee">{t.pricing.secure}</div>
         </div>
       </section>
 
@@ -674,32 +621,32 @@ export default function Home() {
         <div className="footer-content">
           <div className="footer-brand">
             <span className="brand">Alfred<span className="gold">Major</span></span>
-            <p>Le premier majordome IA qui simplifie la vie des hôtes de location courte durée. Disponible 24h/24, multilingue, et toujours discret.</p>
+            <p>{t.footer.tagline}</p>
           </div>
           <div className="footer-col">
-            <h4>Produit</h4>
+            <h4>{t.footer.product}</h4>
             <ul>
-              <li><Link href="/login" passHref legacyBehavior><a>Espace Hôte</a></Link></li>
-              <li><Link href="/register" passHref legacyBehavior><a>Créer un compte</a></Link></li>
+              <li><Link href="/login" passHref legacyBehavior><a>{t.footer.hostSpace}</a></Link></li>
+              <li><Link href="/register" passHref legacyBehavior><a>{t.footer.createAccount}</a></Link></li>
             </ul>
           </div>
           <div className="footer-col">
-            <h4>Légal</h4>
+            <h4>{t.footer.legal}</h4>
             <ul>
-              <li><Link href="/conditions-generales" passHref legacyBehavior><a>Conditions Générales</a></Link></li>
-              <li><Link href="/confidentialite" passHref legacyBehavior><a>Confidentialité (RGPD)</a></Link></li>
-              <li><Link href="/mentions-legales" passHref legacyBehavior><a>Mentions légales</a></Link></li>
+              <li><Link href="/conditions-generales" passHref legacyBehavior><a>{t.footer.cgv}</a></Link></li>
+              <li><Link href="/confidentialite" passHref legacyBehavior><a>{t.footer.privacy}</a></Link></li>
+              <li><Link href="/mentions-legales" passHref legacyBehavior><a>{t.footer.mentions}</a></Link></li>
             </ul>
           </div>
           <div className="footer-col">
-            <h4>Contact</h4>
+            <h4>{t.footer.contact}</h4>
             <ul>
               <li><a href="mailto:contact@alfredmajor.com">contact@alfredmajor.com</a></li>
             </ul>
           </div>
         </div>
         <div className="footer-bottom">
-          <p>© 2026 Alfred Major — Tous droits réservés · Dorian BISCARRAT · SIRET 531 965 044 00039</p>
+          <p>{t.footer.copyright}</p>
         </div>
       </footer>
     </div>
