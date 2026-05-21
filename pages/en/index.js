@@ -52,15 +52,15 @@ export default function Home() {
         nav { display: flex; justify-content: space-between; align-items: center; padding: 15px 5%; position: fixed; top: 0; left: 0; right: 0; background: rgba(255,255,255,0.92); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); z-index: 1000; box-shadow: 0 1px 0 rgba(0,0,0,0.06); box-sizing: border-box; }
         .brand { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 24px; font-weight: 900; color: #1a2a6c; letter-spacing: -0.5px; }
         .gold { color: #d4af37; }
-        .nav-links { display: flex; align-items: center; gap: 30px; }
+        .nav-links { display: flex; align-items: center; gap: 20px; }
         .nav-link { color: #475569; font-weight: 500; font-size: 15px; transition: 0.2s; }
         .nav-link:hover { color: #1a2a6c; }
-        .nav-login { font-weight: 700; color: white; background: #1a2a6c; padding: 10px 24px; border-radius: 50px; font-size: 14px; transition: 0.3s; }
+        .nav-login { font-weight: 700; color: white; background: #1a2a6c; padding: 10px 24px; border-radius: 50px; font-size: 14px; transition: 0.3s; white-space: nowrap; }
         .nav-login:hover { background: #d4af37; color: #1a2a6c; transform: translateY(-1px); }
-        .lang-switcher { display: flex; align-items: center; gap: 4px; }
-        .lang-btn { background: none; border: 1px solid transparent; padding: 5px 8px; border-radius: 8px; cursor: pointer; font-size: 16px; transition: 0.2s; font-family: inherit; }
-        .lang-btn:hover { background: #f1f5f9; border-color: #e2e8f0; }
-        .lang-btn.active { background: #eff6ff; border-color: #1a2a6c; }
+        .lang-switcher { display: flex; align-items: center; gap: 2px; background: #f1f5f9; border-radius: 50px; padding: 3px; }
+        .lang-btn { background: none; border: none; padding: 5px 10px; border-radius: 50px; cursor: pointer; font-size: 18px; transition: 0.2s; font-family: inherit; line-height: 1; }
+        .lang-btn:hover { background: white; }
+        .lang-btn.active { background: white; box-shadow: 0 1px 4px rgba(0,0,0,0.12); }
         .hero { position: relative; min-height: 92vh; display: flex; align-items: center; justify-content: center; text-align: center; padding: 140px 20px 100px; box-sizing: border-box; overflow: hidden; background: linear-gradient(165deg, rgba(10,15,40,0.88) 0%, rgba(26,42,108,0.75) 50%, rgba(10,15,40,0.92) 100%), url('https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?auto=format&fit=crop&w=1920&q=80') center/cover fixed; }
         .hero-content { max-width: 900px; z-index: 10; margin: 0 auto; display: flex; flex-direction: column; align-items: center; width: 100%; }
         .badge-hero { background: rgba(212,175,55,0.18); color: #fbbf24; padding: 10px 20px; border-radius: 50px; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; display: inline-flex; align-items: center; gap: 8px; margin-bottom: 30px; border: 1px solid rgba(212,175,55,0.35); backdrop-filter: blur(10px); }
@@ -211,9 +211,13 @@ export default function Home() {
           .steps-grid::before { display: none; }
         }
         @media (max-width: 768px) {
-          nav { padding: 14px 20px; }
+          nav { padding: 10px 16px; }
+          .brand { font-size: 20px; }
           .nav-link { display: none; }
-          .nav-login { padding: 8px 18px; font-size: 13px; }
+          .nav-links { gap: 8px; }
+          .nav-login { padding: 8px 14px; font-size: 12px; }
+          .lang-switcher { padding: 2px; }
+          .lang-btn { padding: 4px 7px; font-size: 16px; }
           .hero { padding: 120px 20px 70px; background-attachment: scroll; }
           h1 { letter-spacing: -1px; }
           .pain-section { background-attachment: scroll; }
@@ -228,8 +232,6 @@ export default function Home() {
           .footer-content { flex-direction: column; gap: 36px; }
           .footer-brand { max-width: 100%; }
           .pain-card-photo { height: 160px; }
-          .lang-switcher { gap: 2px; }
-          .lang-btn { padding: 4px 6px; font-size: 14px; }
         }
       `}</style>
 
