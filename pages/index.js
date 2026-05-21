@@ -10,6 +10,7 @@ export default function Home() {
   const switchLocale = (newLocale) => {
     router.push(router.pathname, router.asPath, { locale: newLocale });
   };
+
   return (
     <div className="container">
       <Head>
@@ -35,6 +36,7 @@ export default function Home() {
         <meta name="twitter:title" content={t.meta.ogTitle} />
         <meta name="twitter:description" content={t.meta.ogDescription} />
         <meta name="twitter:image" content="https://www.alfredmajor.com/og-image.jpg" />
+        <meta name="twitter:image:alt" content="Alfred Major — Majordome IA pour locations courte durée" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="theme-color" content="#1a2a6c" />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
@@ -42,11 +44,12 @@ export default function Home() {
           "@type": "SoftwareApplication",
           "name": "Alfred Major",
           "url": "https://www.alfredmajor.com",
-          "description": t.meta.description,
+          "description": "Majordome IA pour locations courte durée. Répond aux voyageurs 24h/24, en 30+ langues, avec alertes urgences sur Telegram.",
           "applicationCategory": "BusinessApplication",
           "operatingSystem": "Web, Android, iOS",
-          "offers": { "@type": "Offer", "price": "9.90", "priceCurrency": "EUR", "priceValidUntil": "2026-12-31" },
-          "publisher": { "@type": "Organization", "name": "Alfred Major", "url": "https://www.alfredmajor.com" }
+          "offers": { "@type": "Offer", "price": "9.90", "priceCurrency": "EUR", "priceValidUntil": "2026-12-31", "description": "Premier mois à 9,90€ puis 19,90€/mois par logement, sans engagement" },
+          "aggregateRating": { "@type": "AggregateRating", "ratingValue": "5", "reviewCount": "3" },
+          "publisher": { "@type": "Organization", "name": "Alfred Major", "url": "https://www.alfredmajor.com", "logo": "https://www.alfredmajor.com/icon.png" }
         })}} />
       </Head>
 
@@ -72,7 +75,7 @@ export default function Home() {
         .nav-login { font-weight: 700; color: white; background: #1a2a6c; padding: 10px 24px; border-radius: 50px; font-size: 14px; transition: 0.3s; }
         .nav-login:hover { background: #d4af37; color: #1a2a6c; transform: translateY(-1px); }
         .lang-switcher { display: flex; align-items: center; gap: 4px; }
-        .lang-btn { background: none; border: 1px solid transparent; padding: 5px 8px; border-radius: 8px; cursor: pointer; font-size: 16px; transition: 0.2s; color: #475569; }
+        .lang-btn { background: none; border: 1px solid transparent; padding: 5px 8px; border-radius: 8px; cursor: pointer; font-size: 16px; transition: 0.2s; font-family: inherit; }
         .lang-btn:hover { background: #f1f5f9; border-color: #e2e8f0; }
         .lang-btn.active { background: #eff6ff; border-color: #1a2a6c; }
 
@@ -122,18 +125,14 @@ export default function Home() {
         .steps-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; max-width: 1000px; margin: 60px auto 0; position: relative; }
         .steps-grid::before { content: ''; position: absolute; top: 40px; left: calc(16.66% + 20px); right: calc(16.66% + 20px); height: 2px; background: linear-gradient(90deg, #d4af37, #1a2a6c, #d4af37); z-index: 0; }
         .step-card { padding: 0 30px; text-align: center; position: relative; z-index: 1; }
-        .step-icon-wrap {
-          width: 80px; height: 80px; border-radius: 50%; margin: 0 auto 24px;
-          display: flex; align-items: center; justify-content: center; font-size: 32px;
-          position: relative; z-index: 2;
-        }
+        .step-icon-wrap { width: 80px; height: 80px; border-radius: 50%; margin: 0 auto 24px; display: flex; align-items: center; justify-content: center; font-size: 32px; position: relative; z-index: 2; }
         .step-icon-wrap.s1 { background: linear-gradient(135deg, #dbeafe, #bfdbfe); box-shadow: 0 8px 24px rgba(59,130,246,0.2); }
         .step-icon-wrap.s2 { background: linear-gradient(135deg, #fef3c7, #fde68a); box-shadow: 0 8px 24px rgba(212,175,55,0.3); }
         .step-icon-wrap.s3 { background: linear-gradient(135deg, #d1fae5, #a7f3d0); box-shadow: 0 8px 24px rgba(16,185,129,0.2); }
         .step-card h3 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 19px; color: #0f172a; margin-bottom: 12px; font-weight: 800; }
         .step-card p { color: #64748b; line-height: 1.65; font-size: 15px; margin: 0; }
 
-        /* ══════════════════ PAIN — SECTION PHOTO ══════════════════ */
+        /* ══════════════════ PAIN ══════════════════ */
         .pain-section {
           padding: 110px 5%; text-align: center; position: relative; overflow: hidden;
           background: linear-gradient(rgba(15,23,42,0.92), rgba(15,23,42,0.88)),
@@ -143,30 +142,12 @@ export default function Home() {
         .pain-section .section-sub { color: rgba(255,255,255,0.65); }
         .pain-section .section-label { color: #fbbf24; }
         .pain-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; max-width: 1100px; margin: 50px auto 0; }
-
-        /* ✅ PAIN CARD AVEC PHOTO */
-        .pain-card {
-          background: rgba(255,255,255,0.07); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-          border-radius: 24px; text-align: left; transition: 0.3s; overflow: hidden;
-          border: 1px solid rgba(255,255,255,0.12);
-        }
+        .pain-card { background: rgba(255,255,255,0.07); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-radius: 24px; text-align: left; transition: 0.3s; overflow: hidden; border: 1px solid rgba(255,255,255,0.12); }
         .pain-card:hover { transform: translateY(-6px); background: rgba(255,255,255,0.12); border-color: rgba(212,175,55,0.4); }
-
-        /* Photo en haut de la card */
-        .pain-card-photo {
-          width: 100%; height: 200px; overflow: hidden; position: relative;
-        }
-        .pain-card-photo img {
-          width: 100%; height: 100%; object-fit: cover; display: block;
-          transition: transform 0.5s ease;
-        }
+        .pain-card-photo { width: 100%; height: 200px; overflow: hidden; position: relative; }
+        .pain-card-photo img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.5s ease; }
         .pain-card:hover .pain-card-photo img { transform: scale(1.05); }
-        .pain-card-photo-overlay {
-          position: absolute; inset: 0;
-          background: linear-gradient(to bottom, transparent 40%, rgba(15,23,42,0.6) 100%);
-        }
-
-        /* Contenu sous la photo */
+        .pain-card-photo-overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, transparent 40%, rgba(15,23,42,0.6) 100%); }
         .pain-card-body { padding: 28px 28px 32px; }
         .pain-card h3 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 20px; color: white; margin: 0 0 12px; font-weight: 800; }
         .pain-card p { color: rgba(255,255,255,0.65); line-height: 1.7; font-size: 15px; margin: 0; }
@@ -199,11 +180,7 @@ export default function Home() {
         .feat-text p { color: rgba(255,255,255,0.6); line-height: 1.65; font-size: 15px; margin: 0; }
 
         /* ══════════════════ KILLER FEATURE ══════════════════ */
-        .killer-feature {
-          background: white; padding: 60px 50px; margin: 80px auto 0; max-width: 1000px;
-          border-radius: 28px; box-shadow: 0 30px 60px rgba(0,0,0,0.1);
-          display: flex; flex-wrap: wrap; align-items: center; gap: 50px; text-align: left;
-        }
+        .killer-feature { background: white; padding: 60px 50px; margin: 80px auto 0; max-width: 1000px; border-radius: 28px; box-shadow: 0 30px 60px rgba(0,0,0,0.1); display: flex; flex-wrap: wrap; align-items: center; gap: 50px; text-align: left; }
         .kf-text { flex: 1; min-width: 280px; }
         .kf-label { color: #ef4444; font-weight: 800; letter-spacing: 1.5px; font-size: 12px; text-transform: uppercase; display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
         .kf-dot { width: 8px; height: 8px; border-radius: 50%; background: #ef4444; animation: pulse 2s infinite; }
@@ -260,7 +237,7 @@ export default function Home() {
         .pricing-section .section-title { color: white; }
         .pricing-section .section-sub { color: rgba(255,255,255,0.6); }
         .pricing-section .section-label { color: #fbbf24; }
-        .price-card-home { background: white; padding: 52px 44px; border-radius: 28px; box-shadow: 0 40px 80px rgba(0,0,0,0.3); text-align: center; border: 2px solid transparent; position: relative; width: 100%; max-width: 460px; margin: 50px auto 0; display: flex; flex-direction: column; box-sizing: border-box; background-clip: padding-box; }
+        .price-card-home { background: white; padding: 52px 44px; border-radius: 28px; box-shadow: 0 40px 80px rgba(0,0,0,0.3); text-align: center; border: 2px solid transparent; position: relative; width: 100%; max-width: 460px; margin: 50px auto 0; display: flex; flex-direction: column; box-sizing: border-box; }
         .badge-promo { position: absolute; top: -18px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #d4af37, #f0cc5a); color: #1a2a6c; padding: 8px 28px; border-radius: 50px; font-weight: 800; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 8px 24px rgba(212,175,55,0.4); white-space: nowrap; }
         .plan-name { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 14px; color: #94a3b8; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 20px; }
         .price-old { font-size: 18px; color: #94a3b8; text-decoration: line-through; margin-bottom: 4px; }
@@ -312,6 +289,8 @@ export default function Home() {
           .footer-content { flex-direction: column; gap: 36px; }
           .footer-brand { max-width: 100%; }
           .pain-card-photo { height: 160px; }
+          .lang-switcher { gap: 2px; }
+          .lang-btn { padding: 4px 6px; font-size: 14px; }
         }
       `}</style>
 
@@ -321,40 +300,41 @@ export default function Home() {
           <a className="brand">Alfred<span className="gold">Major</span></a>
         </Link>
         <div className="nav-links">
-          <a href="#fonctionnement" className="nav-link">{t.nav.features}</a>
-          <a href="#tarifs" className="nav-link">{t.nav.pricing}</a>
-          {/* Sélecteur de langue */}
+          <a href="#fonctionnement" className="nav-link">Fonctionnement</a>
+          <a href="#tarifs" className="nav-link">Tarifs</a>
           <div className="lang-switcher">
             <button className={`lang-btn${locale === 'fr' ? ' active' : ''}`} onClick={() => switchLocale('fr')}>🇫🇷</button>
             <button className={`lang-btn${locale === 'en' ? ' active' : ''}`} onClick={() => switchLocale('en')}>🇬🇧</button>
             <button className={`lang-btn${locale === 'es' ? ' active' : ''}`} onClick={() => switchLocale('es')}>🇪🇸</button>
           </div>
-          <Link href="/login" passHref legacyBehavior><a className="nav-login">{t.nav.login}</a></Link>
+          <Link href="/login" passHref legacyBehavior><a className="nav-login">Espace Hôte</a></Link>
         </div>
       </nav>
 
       {/* ── HERO ── */}
       <section className="hero">
         <div className="hero-content">
-          <div className="badge-hero">{t.hero.badge}</div>
-          <h1 dangerouslySetInnerHTML={{ __html: t.hero.title }} />
-          <p className="subtitle">{t.hero.subtitle}</p>
+          <div className="badge-hero">🎁 1er mois 100% offert — Sans engagement</div>
+          <h1>Dormez sur vos deux oreilles.<br/><em>Alfred</em> gère vos voyageurs.</h1>
+          <p className="subtitle">
+            Le premier majordome IA qui répond aux questions 24h/24, recommande les meilleurs restaurants locaux, et vous alerte uniquement en cas d'urgence.
+          </p>
           <Link href="/register" passHref legacyBehavior>
-            <a className="cta-main">{t.hero.cta}</a>
+            <a className="cta-main">Démarrer gratuitement <span>→</span></a>
           </Link>
           <div className="trust-row">
-            <span className="trust-item">✓ {t.hero.trust1}</span>
+            <span className="trust-item">✓ Sans engagement</span>
             <span className="trust-dot" />
-            <span className="trust-item">✓ {t.hero.trust2}</span>
+            <span className="trust-item">✓ Configuration en 5 min</span>
             <span className="trust-dot" />
-            <span className="trust-item">✓ {t.hero.trust3}</span>
+            <span className="trust-item">✓ 30+ langues</span>
           </div>
         </div>
       </section>
 
       {/* ── LOGOS ── */}
       <section className="logos-section">
-        <p className="logos-label">{t.logos.label}</p>
+        <p className="logos-label">Compatible avec les voyageurs de toutes les plateformes</p>
         <div className="logos-flex">
           <span className="logo-item">Airbnb</span>
           <span className="logo-item">Booking.com</span>
@@ -366,33 +346,33 @@ export default function Home() {
 
       {/* ── COMMENT ÇA MARCHE ── */}
       <section className="steps-section" id="fonctionnement">
-        <p className="section-label">{t.steps.label}</p>
-        <h2 className="section-title">{t.steps.title}</h2>
-        <p className="section-sub">{t.steps.sub}</p>
+        <p className="section-label">Simple & Rapide</p>
+        <h2 className="section-title">Déployez Alfred en 5 minutes</h2>
+        <p className="section-sub">Pas de technique, pas de code. Votre majordome est opérationnel avant votre prochain check-in.</p>
         <div className="steps-grid">
           <div className="step-card">
             <div className="step-icon-wrap s1">🏠</div>
-            <h3>{t.steps.s1title}</h3>
-            <p>{t.steps.s1desc}</p>
+            <h3>Créez votre logement</h3>
+            <p>Remplissez le formulaire guidé avec les infos de votre bien — codes, WiFi, équipements, règles, bonnes adresses.</p>
           </div>
           <div className="step-card">
             <div className="step-icon-wrap s2">🔗</div>
-            <h3>{t.steps.s2title}</h3>
-            <p>{t.steps.s2desc}</p>
+            <h3>Partagez le lien</h3>
+            <p>Copiez le lien unique d'Alfred dans votre message d'accueil Airbnb ou Booking. Un QR code est aussi disponible.</p>
           </div>
           <div className="step-card">
             <div className="step-icon-wrap s3">😴</div>
-            <h3>{t.steps.s3title}</h3>
-            <p>{t.steps.s3desc}</p>
+            <h3>Soufflez</h3>
+            <p>Alfred répond à 95% des questions de vos voyageurs. Vous n'intervenez qu'en cas d'urgence réelle.</p>
           </div>
         </div>
       </section>
 
       {/* ── PAIN POINTS ── */}
       <section className="pain-section">
-        <p className="section-label">{t.pain.label}</p>
-        <h2 className="section-title">{t.pain.title}</h2>
-        <p className="section-sub" style={{color: 'rgba(255,255,255,0.6)'}}>{t.pain.sub}</p>
+        <p className="section-label">Fini les nuits coupées</p>
+        <h2 className="section-title">La gestion locative réinventée</h2>
+        <p className="section-sub" style={{color: 'rgba(255,255,255,0.6)'}}>Alfred élimine les interruptions du quotidien pour vous laisser profiter de ce qui compte vraiment.</p>
         <div className="pain-grid">
           <div className="pain-card">
             <div className="pain-card-photo">
@@ -400,8 +380,8 @@ export default function Home() {
               <div className="pain-card-photo-overlay" />
             </div>
             <div className="pain-card-body">
-              <h3>{t.pain.c1title}</h3>
-              <p>{t.pain.c1desc}</p>
+              <h3>Le message à 23h30</h3>
+              <p>Le voyageur arrive tard et ne trouve pas le WiFi. Votre téléphone sonne pendant votre sommeil. Laissez Alfred s'en charger — il répond instantanément, en pleine nuit.</p>
             </div>
           </div>
           <div className="pain-card">
@@ -410,20 +390,18 @@ export default function Home() {
               <div className="pain-card-photo-overlay" />
             </div>
             <div className="pain-card-body">
-              <h3>{t.pain.c2title}</h3>
-              <p>{t.pain.c2desc}</p>
+              <h3>La barrière de la langue</h3>
+              <p>Alfred parle couramment plus de 30 langues. Anglais, espagnol, allemand, japonais — vos touristes étrangers sont servis dans leur langue, sans effort de votre part.</p>
             </div>
           </div>
-
-          {/* Card 3 */}
           <div className="pain-card">
             <div className="pain-card-photo">
-              <img src="pain-questions.png" alt="Service de conciergerie professionnel" loading="lazy" />
+              <img src="/pain-questions.png" alt="Service de conciergerie professionnel" loading="lazy" />
               <div className="pain-card-photo-overlay" />
             </div>
             <div className="pain-card-body">
-              <h3>{t.pain.c3title}</h3>
-              <p>{t.pain.c3desc}</p>
+              <h3>Les questions répétées</h3>
+              <p>Poubelles, départ, commerces... Alfred répond inlassablement avec une politesse irréprochable, chaque fois comme si c'était la première question.</p>
             </div>
           </div>
         </div>
@@ -436,7 +414,6 @@ export default function Home() {
           <h2 className="section-title">L'illusion parfaite d'une conciergerie</h2>
           <p className="section-sub">Alfred comprend le contexte, cherche des recommandations locales et répond naturellement.</p>
         </div>
-
         <div className="demo-layout">
           <div className="phone-wrapper">
             <div className="phone-frame">
@@ -447,50 +424,18 @@ export default function Home() {
                   <div className="chat-sub">Assistant disponible 24h/24</div>
                 </div>
                 <div className="chat-body">
-                  <div className="msg msg-user">
-                    Hi! We just arrived. Where are the trash bins and do you have a restaurant recommendation?
-                    <span className="msg-time">19:42</span>
-                  </div>
-                  <div className="msg msg-alfred">
-                    Welcome to Villa Noam! 🎩<br/><br/>
-                    Bins are under the kitchen sink. For dinner, I recommend "Pizzeria Da Luigi" — just 5 min walk! 🍕
-                    <span className="msg-time">19:42</span>
-                  </div>
-                  <div className="msg msg-user">
-                    Perfect! And what's the WiFi password?
-                    <span className="msg-time">19:43</span>
-                  </div>
-                  <div className="msg msg-alfred">
-                    The network is <strong>VillaNomad_Guest</strong> and the password is <strong>Holiday2024</strong>. Enjoy! 🌐
-                    <span className="msg-time">19:43</span>
-                  </div>
+                  <div className="msg msg-user">Hi! We just arrived. Where are the trash bins and do you have a restaurant recommendation?<span className="msg-time">19:42</span></div>
+                  <div className="msg msg-alfred">Welcome to Villa Noam! 🎩<br/><br/>Bins are under the kitchen sink. For dinner, I recommend "Pizzeria Da Luigi" — just 5 min walk! 🍕<span className="msg-time">19:42</span></div>
+                  <div className="msg msg-user">Perfect! And what's the WiFi password?<span className="msg-time">19:43</span></div>
+                  <div className="msg msg-alfred">The network is <strong>VillaNomad_Guest</strong> and the password is <strong>Holiday2024</strong>. Enjoy! 🌐<span className="msg-time">19:43</span></div>
                 </div>
               </div>
             </div>
           </div>
-
           <div className="demo-features">
-            <div className="feat-row">
-              <div className="feat-icon fi1">⚡</div>
-              <div className="feat-text">
-                <h4>Réponses Instantanées</h4>
-                <p>Vos voyageurs n'attendent plus. Alfred répond en moins d'une seconde, en piochant dans votre base de données personnalisée.</p>
-              </div>
-            </div>
-            <div className="feat-row">
-              <div className="feat-icon fi2">🔍</div>
-              <div className="feat-text">
-                <h4>Recherche Locale en Temps Réel</h4>
-                <p>Alfred scanne les environs de votre logement pour faire des recommandations précises — restos, pharmacies, transports, activités.</p>
-              </div>
-            </div>
-            <div className="feat-row">
-              <div className="feat-icon fi3">🌐</div>
-              <div className="feat-text">
-                <h4>30+ Langues Automatiquement</h4>
-                <p>Alfred détecte la langue de votre voyageur et répond dans la sienne — anglais, espagnol, allemand, japonais et bien plus.</p>
-              </div>
-            </div>
+            <div className="feat-row"><div className="feat-icon fi1">⚡</div><div className="feat-text"><h4>Réponses Instantanées</h4><p>Vos voyageurs n'attendent plus. Alfred répond en moins d'une seconde, en piochant dans votre base de données personnalisée.</p></div></div>
+            <div className="feat-row"><div className="feat-icon fi2">🔍</div><div className="feat-text"><h4>Recherche Locale en Temps Réel</h4><p>Alfred scanne les environs de votre logement pour faire des recommandations précises — restos, pharmacies, transports, activités.</p></div></div>
+            <div className="feat-row"><div className="feat-icon fi3">🌐</div><div className="feat-text"><h4>30+ Langues Automatiquement</h4><p>Alfred détecte la langue de votre voyageur et répond dans la sienne — anglais, espagnol, allemand, japonais et bien plus.</p></div></div>
             <div style={{marginTop: '10px'}}>
               <Link href="/register" passHref legacyBehavior>
                 <a className="cta-main" style={{background: 'linear-gradient(135deg, #d4af37, #f0cc5a)', color: '#1a2a6c', fontSize: '15px', padding: '16px 36px'}}>
@@ -500,8 +445,6 @@ export default function Home() {
             </div>
           </div>
         </div>
-
-        {/* KILLER FEATURE */}
         <div className="killer-feature">
           <div className="kf-text">
             <div className="kf-label"><div className="kf-dot"></div> Alerte en temps réel</div>
@@ -528,8 +471,8 @@ export default function Home() {
 
       {/* ── BENEFITS ── */}
       <section className="benefits">
-        <p className="section-label">{t.benefits.label}</p>
-        <h2 className="section-title">{t.benefits.title}</h2>
+        <p className="section-label">Pourquoi Alfred</p>
+        <h2 className="section-title">Ce que vivent nos hôtes au quotidien</h2>
         <div className="benefits-layout">
           <div className="benefits-image">
             <img src="https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?auto=format&fit=crop&w=800&q=80" alt="Hôte détendu avec son téléphone" loading="lazy" />
@@ -538,15 +481,15 @@ export default function Home() {
           <div className="benefits-cards">
             <div className="benefit-card">
               <div className="benefit-icon-wrap bi1">😴</div>
-              <div><h4>{t.benefits.b1title}</h4><p>{t.benefits.b1desc}</p></div>
+              <div><h4>Nuits complètes garanties</h4><p>Plus besoin de garder un œil sur votre téléphone. Alfred gère les questions WiFi, codes et équipements à votre place, 24h/24.</p></div>
             </div>
             <div className="benefit-card">
               <div className="benefit-icon-wrap bi2">🛡️</div>
-              <div><h4>{t.benefits.b2title}</h4><p>{t.benefits.b2desc}</p></div>
+              <div><h4>Zéro urgence ratée</h4><p>Avec les alertes Telegram instantanées, vous êtes toujours informé des vrais problèmes — sans être noyé dans les questions banales.</p></div>
             </div>
             <div className="benefit-card">
               <div className="benefit-icon-wrap bi3">⭐</div>
-              <div><h4>{t.benefits.b3title}</h4><p>{t.benefits.b3desc}</p></div>
+              <div><h4>Notes Airbnb améliorées</h4><p>Des voyageurs mieux accompagnés laissent de meilleures notes. Plusieurs hôtes ont vu leurs avis progresser après l'adoption d'Alfred.</p></div>
             </div>
           </div>
         </div>
@@ -554,63 +497,51 @@ export default function Home() {
 
       {/* ── TÉMOIGNAGES ── */}
       <section className="testimonials">
-        <p className="section-label">{t.testimonials.label}</p>
-        <h2 className="section-title">{t.testimonials.title}</h2>
-        <p className="section-sub" style={{color: '#64748b', marginTop: '12px'}}>{t.testimonials.sub}</p>
+        <p className="section-label">Ils nous font confiance</p>
+        <h2 className="section-title">Ce que disent nos premiers hôtes</h2>
+        <p className="section-sub" style={{color: '#64748b', marginTop: '12px'}}>Ils ont adopté Alfred et ne reviendront plus en arrière.</p>
         <div className="testi-grid">
           <div className="testi-card">
-            <span className="testi-badge">{t.testimonials.verified}</span>
+            <span className="testi-badge">✓ Hôte vérifié</span>
             <div className="testi-stars">{'★★★★★'.split('').map((s,i) => <span key={i} className="star">{s}</span>)}</div>
-            <p className="testi-quote">{t.testimonials.t1}</p>
-            <div className="testi-author">
-              <div className="testi-avatar av1">SL</div>
-              <div><p className="testi-name">{t.testimonials.t1name}</p><p className="testi-role">{t.testimonials.t1role}</p></div>
-            </div>
+            <p className="testi-quote">Alfred répond à toutes les questions de mes voyageurs, même à 3h du matin. Je n'ai plus reçu un seul appel pour le code WiFi depuis que je l'ai installé. Un vrai soulagement.</p>
+            <div className="testi-author"><div className="testi-avatar av1">SL</div><div><p className="testi-name">Sophie L.</p><p className="testi-role">3 logements · Nice</p></div></div>
           </div>
           <div className="testi-card">
-            <span className="testi-badge">{t.testimonials.verified}</span>
+            <span className="testi-badge">✓ Hôte vérifié</span>
             <div className="testi-stars">{'★★★★★'.split('').map((s,i) => <span key={i} className="star">{s}</span>)}</div>
-            <p className="testi-quote">{t.testimonials.t2}</p>
-            <div className="testi-author">
-              <div className="testi-avatar av2">TR</div>
-              <div><p className="testi-name">{t.testimonials.t2name}</p><p className="testi-role">{t.testimonials.t2role}</p></div>
-            </div>
+            <p className="testi-quote">J'avais des voyageurs étrangers qui ne parlaient pas français. Alfred leur a répondu en anglais, espagnol et même en allemand. Mes notes Airbnb ont augmenté depuis.</p>
+            <div className="testi-author"><div className="testi-avatar av2">TR</div><div><p className="testi-name">Thomas R.</p><p className="testi-role">2 logements · Bordeaux</p></div></div>
           </div>
           <div className="testi-card">
-            <span className="testi-badge">{t.testimonials.verified}</span>
+            <span className="testi-badge">✓ Hôte vérifié</span>
             <div className="testi-stars">{'★★★★★'.split('').map((s,i) => <span key={i} className="star">{s}</span>)}</div>
-            <p className="testi-quote">{t.testimonials.t3}</p>
-            <div className="testi-author">
-              <div className="testi-avatar av3">MC</div>
-              <div><p className="testi-name">{t.testimonials.t3name}</p><p className="testi-role">{t.testimonials.t3role}</p></div>
-            </div>
+            <p className="testi-quote">L'alerte Telegram m'a sauvé la mise : un voyageur a signalé une fuite, j'ai reçu le message instantanément et j'ai pu envoyer un plombier avant que ça empire.</p>
+            <div className="testi-author"><div className="testi-avatar av3">MC</div><div><p className="testi-name">Marie C.</p><p className="testi-role">5 logements · Paris</p></div></div>
           </div>
         </div>
       </section>
 
       {/* ── PRICING ── */}
       <section className="pricing-section" id="tarifs">
-        <p className="section-label">{t.pricing.label}</p>
-        <h2 className="section-title">{t.pricing.title}</h2>
-        <p className="section-sub">{t.pricing.sub}</p>
+        <p className="section-label">Tarifs</p>
+        <h2 className="section-title">L'excellence accessible.</h2>
+        <p className="section-sub">Un majordome privé 24h/24 pour une fraction du coût d'une conciergerie traditionnelle.</p>
         <div className="price-card-home">
-          <div className="badge-promo">{t.pricing.promo}</div>
-          <div className="plan-name">{t.pricing.planName}</div>
-          <div className="price-old">{t.pricing.priceOld}</div>
-          <div className="price">{t.pricing.price}<span>{t.pricing.pricePeriod}</span></div>
-          <div className="price-note">{t.pricing.priceNote}</div>
+          <div className="badge-promo">🎁 1er mois 100% OFFERT — Sans engagement</div>
+          <div className="plan-name">Licence par logement</div>
+          <div className="price-old">9,90€/mois</div>
+          <div className="price">0€<span>/1er mois</span></div>
+          <div className="price-note">puis 9,90€/mois — sans engagement, résiliable à tout moment</div>
           <div className="features-list">
-            {t.pricing.features.map((f, i) => (
-              <div key={i} className="feature">
-                <div className="check-icon">✓</div>
-                {f}
-              </div>
+            {['Majordome IA disponible 24h/24 et 7j/7','Traduction automatique (30+ langues)','Recherche locale Google Maps intégrée','Alerte urgence instantanée sur Telegram','Lien web & QR code personnalisés','Historique des conversations voyageurs'].map((f, i) => (
+              <div key={i} className="feature"><div className="check-icon">✓</div>{f}</div>
             ))}
           </div>
           <Link href="/register" passHref legacyBehavior>
-            <a className="cta-pricing">{t.pricing.cta}</a>
+            <a className="cta-pricing">Commencer gratuitement — 1er mois offert</a>
           </Link>
-          <div className="guarantee">{t.pricing.secure}</div>
+          <div className="guarantee">🔒 Paiement 100% sécurisé via Stripe</div>
         </div>
       </section>
 
@@ -619,32 +550,30 @@ export default function Home() {
         <div className="footer-content">
           <div className="footer-brand">
             <span className="brand">Alfred<span className="gold">Major</span></span>
-            <p>{t.footer.tagline}</p>
+            <p>Le premier majordome IA qui simplifie la vie des hôtes de location courte durée. Disponible 24h/24, multilingue, et toujours discret.</p>
           </div>
           <div className="footer-col">
-            <h4>{t.footer.product}</h4>
+            <h4>Produit</h4>
             <ul>
-              <li><Link href="/login" passHref legacyBehavior><a>{t.footer.hostSpace}</a></Link></li>
-              <li><Link href="/register" passHref legacyBehavior><a>{t.footer.createAccount}</a></Link></li>
+              <li><Link href="/login" passHref legacyBehavior><a>Espace Hôte</a></Link></li>
+              <li><Link href="/register" passHref legacyBehavior><a>Créer un compte</a></Link></li>
             </ul>
           </div>
           <div className="footer-col">
-            <h4>{t.footer.legal}</h4>
+            <h4>Légal</h4>
             <ul>
-              <li><Link href="/conditions-generales" passHref legacyBehavior><a>{t.footer.cgv}</a></Link></li>
-              <li><Link href="/confidentialite" passHref legacyBehavior><a>{t.footer.privacy}</a></Link></li>
-              <li><Link href="/mentions-legales" passHref legacyBehavior><a>{t.footer.mentions}</a></Link></li>
+              <li><Link href="/conditions-generales" passHref legacyBehavior><a>Conditions Générales</a></Link></li>
+              <li><Link href="/confidentialite" passHref legacyBehavior><a>Confidentialité (RGPD)</a></Link></li>
+              <li><Link href="/mentions-legales" passHref legacyBehavior><a>Mentions légales</a></Link></li>
             </ul>
           </div>
           <div className="footer-col">
-            <h4>{t.footer.contact}</h4>
-            <ul>
-              <li><a href="mailto:contact@alfredmajor.com">contact@alfredmajor.com</a></li>
-            </ul>
+            <h4>Contact</h4>
+            <ul><li><a href="mailto:contact@alfredmajor.com">contact@alfredmajor.com</a></li></ul>
           </div>
         </div>
         <div className="footer-bottom">
-          <p>{t.footer.copyright}</p>
+          <p>© 2026 Alfred Major — Tous droits réservés · Dorian BISCARRAT · SIRET 531 965 044 00039</p>
         </div>
       </footer>
     </div>
