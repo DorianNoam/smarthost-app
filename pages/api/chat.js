@@ -184,23 +184,82 @@ function isEmergency(msg) {
 // ─────────────────────────────────────────────
 // HANDLER PRINCIPAL
 // ─────────────────────────────────────────────
+// ─────────────────────────────────────────────
+// RATE LIMITING (simple in-memory, remplacer par Upstash en prod multi-instance)
+// ─────────────────────────────────────────────
+const rateLimitMap = new Map();
+const RATE_LIMIT_MAX = 30;      // messages max
+const RATE_LIMIT_WINDOW = 60000; // par minute
+
+function isRateLimited(ip) {
+  const now = Date.now();
+  const entry = rateLimitMap.get(ip) || { count: 0, start: now };
+  if (now - entry.start > RATE_LIMIT_WINDOW) {
+    rateLimitMap.set(ip, { count: 1, start: now });
+    return false;
+  }
+  if (entry.count >= RATE_LIMIT_MAX) return true;
+  rateLimitMap.set(ip, { count: entry.count + 1, start: entry.start });
+  return false;
+}
+
+// Nettoyage périodique pour éviter les fuites mémoire
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, val] of rateLimitMap.entries()) {
+    if (now - val.start > RATE_LIMIT_WINDOW * 2) rateLimitMap.delete(key);
+  }
+}, 300000);
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).send('Méthode non autorisée');
 
-  const { messagesHistory, propertyData, userLanguage } = req.body;
+  // ── RATE LIMITING ──
+  const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket?.remoteAddress || 'unknown';
+  if (isRateLimited(ip)) {
+    return res.status(429).json({ answer: "Trop de messages. Merci de patienter quelques instants." });
+  }
 
-  if (!messagesHistory || !propertyData) {
+  // ── VALIDATION : on n'accepte QUE propertyId depuis le client, jamais propertyData ──
+  const { messagesHistory, propertyId, userLanguage } = req.body;
+
+  if (!messagesHistory || !Array.isArray(messagesHistory) || !propertyId) {
     return res.status(400).json({ answer: "Données manquantes." });
   }
 
-  // SÉCURITÉ IDENTIFIANT : Résolution explicite de l'ID du logement
-  const targetPropertyId = propertyData.id || propertyData.property_id;
+  // Validation UUID pour éviter les injections
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!uuidRegex.test(propertyId)) {
+    return res.status(400).json({ answer: "Identifiant invalide." });
+  }
+
+  // Limite la taille de l'historique pour éviter les abus
+  if (messagesHistory.length > 50) {
+    return res.status(400).json({ answer: "Historique trop long." });
+  }
+
+  const lastUserMsg = messagesHistory[messagesHistory.length - 1]?.text || "";
+  if (lastUserMsg.length > 2000) {
+    return res.status(400).json({ answer: "Message trop long." });
+  }
 
   const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
   const langCode = userLanguage ? userLanguage.split('-')[0] : 'fr';
-  const lastUserMsg = messagesHistory[messagesHistory.length - 1]?.text || "";
 
   try {
+    // ── CHARGEMENT SERVEUR : les données du logement ne viennent jamais du client ──
+    const { data: propertyData, error: propError } = await supabase
+      .from('properties')
+      .select('*')
+      .eq('id', propertyId)
+      .eq('is_active', true)
+      .single();
+
+    if (propError || !propertyData) {
+      return res.status(404).json({ answer: "Logement introuvable ou inactif." });
+    }
+
+    const targetPropertyId = propertyData.id;
     const city = propertyData.city || '';
     const fullAddress = `${propertyData.street_number || ''} ${propertyData.address || ''}, ${city}`.trim();
 
