@@ -1,53 +1,44 @@
 import Link from 'next/link';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import { useTranslation } from '../lib/useTranslation';
 
 export default function Home() {
   const router = useRouter();
-  const { t, locale } = useTranslation();
-
-  const switchLocale = (newLocale) => {
-    router.push(router.pathname, router.asPath, { locale: newLocale });
-  };
 
   return (
     <div className="container">
       <Head>
-        <title>{t.meta.title}</title>
-        <meta name="description" content={t.meta.description} />
+        <title>Alfred Major | Le Majordome IA pour vos locations Courte durée</title>
+        <meta name="description" content="Déléguez la gestion de vos voyageurs à Alfred, l'IA qui répond 24h/24, recommande des adresses locales et vous alerte uniquement en cas d'urgence. Premier mois offert, sans engagement." />
         <meta name="robots" content="index, follow" />
-        <link rel="canonical" href={`https://www.alfredmajor.com${locale === 'fr' ? '/' : `/${locale}/`}`} />
+        <link rel="canonical" href="https://www.alfredmajor.com/" />
         <link rel="alternate" hrefLang="fr" href="https://www.alfredmajor.com/" />
         <link rel="alternate" hrefLang="en" href="https://www.alfredmajor.com/en" />
         <link rel="alternate" hrefLang="es" href="https://www.alfredmajor.com/es" />
         <link rel="alternate" hrefLang="x-default" href="https://www.alfredmajor.com/" />
-        <meta property="og:title" content={t.meta.ogTitle} />
-        <meta property="og:description" content={t.meta.ogDescription} />
+        <meta property="og:title" content="Alfred Major — Le Majordome IA pour vos locations" />
+        <meta property="og:description" content="Alfred répond à vos voyageurs 24h/24, recommande les meilleures adresses locales et vous alerte en cas d'urgence. Premier mois offert, sans engagement." />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content={`https://www.alfredmajor.com${locale === 'fr' ? '/' : `/${locale}/`}`} />
+        <meta property="og:url" content="https://www.alfredmajor.com/" />
         <meta property="og:image" content="https://www.alfredmajor.com/og-image.jpg" />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
         <meta property="og:image:alt" content="Alfred Major — Majordome IA pour locations courte durée" />
-        <meta property="og:locale" content={t.meta.ogLocale} />
+        <meta property="og:locale" content="fr_FR" />
         <meta property="og:site_name" content="Alfred Major" />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={t.meta.ogTitle} />
-        <meta name="twitter:description" content={t.meta.ogDescription} />
+        <meta name="twitter:title" content="Alfred Major — Le Majordome IA pour vos locations" />
+        <meta name="twitter:description" content="Alfred répond à vos voyageurs 24h/24. Premier mois offert, sans engagement." />
         <meta name="twitter:image" content="https://www.alfredmajor.com/og-image.jpg" />
         <meta name="twitter:image:alt" content="Alfred Major — Majordome IA pour locations courte durée" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="theme-color" content="#1a2a6c" />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "SoftwareApplication",
-          "name": "Alfred Major",
-          "url": "https://www.alfredmajor.com",
+          "@context": "https://schema.org", "@type": "SoftwareApplication",
+          "name": "Alfred Major", "url": "https://www.alfredmajor.com",
           "description": "Majordome IA pour locations courte durée. Répond aux voyageurs 24h/24, en 30+ langues, avec alertes urgences sur Telegram.",
-          "applicationCategory": "BusinessApplication",
-          "operatingSystem": "Web, Android, iOS",
-          "offers": { "@type": "Offer", "price": "9.90", "priceCurrency": "EUR", "priceValidUntil": "2026-12-31", "description": "Premier mois à 9,90€ puis 19,90€/mois par logement, sans engagement" },
+          "applicationCategory": "BusinessApplication", "operatingSystem": "Web, Android, iOS",
+          "offers": { "@type": "Offer", "price": "9.90", "priceCurrency": "EUR", "priceValidUntil": "2026-12-31" },
           "aggregateRating": { "@type": "AggregateRating", "ratingValue": "5", "reviewCount": "3" },
           "publisher": { "@type": "Organization", "name": "Alfred Major", "url": "https://www.alfredmajor.com", "logo": "https://www.alfredmajor.com/icon.png" }
         })}} />
@@ -55,18 +46,10 @@ export default function Home() {
 
       <style jsx>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700;800;900&display=swap');
-
         :global(a) { text-decoration: none; color: inherit; }
         :global(html), :global(body) { margin: 0; padding: 0; overflow-x: hidden; width: 100%; background-color: #fafafa; scroll-behavior: smooth; }
         .container { font-family: 'Inter', sans-serif; color: #0f172a; width: 100%; }
-
-        /* ══════════════════ NAVBAR ══════════════════ */
-        nav {
-          display: flex; justify-content: space-between; align-items: center; padding: 15px 5%;
-          position: fixed; top: 0; left: 0; right: 0; background: rgba(255,255,255,0.92);
-          backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-          z-index: 1000; box-shadow: 0 1px 0 rgba(0,0,0,0.06); box-sizing: border-box;
-        }
+        nav { display: flex; justify-content: space-between; align-items: center; padding: 15px 5%; position: fixed; top: 0; left: 0; right: 0; background: rgba(255,255,255,0.92); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); z-index: 1000; box-shadow: 0 1px 0 rgba(0,0,0,0.06); box-sizing: border-box; }
         .brand { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 24px; font-weight: 900; color: #1a2a6c; letter-spacing: -0.5px; }
         .gold { color: #d4af37; }
         .nav-links { display: flex; align-items: center; gap: 30px; }
@@ -78,46 +61,22 @@ export default function Home() {
         .lang-btn { background: none; border: 1px solid transparent; padding: 5px 8px; border-radius: 8px; cursor: pointer; font-size: 16px; transition: 0.2s; font-family: inherit; }
         .lang-btn:hover { background: #f1f5f9; border-color: #e2e8f0; }
         .lang-btn.active { background: #eff6ff; border-color: #1a2a6c; }
-
-        /* ══════════════════ HERO ══════════════════ */
-        .hero {
-          position: relative; min-height: 92vh; display: flex; align-items: center; justify-content: center;
-          text-align: center; padding: 140px 20px 100px; box-sizing: border-box; overflow: hidden;
-          background: linear-gradient(165deg, rgba(10,15,40,0.88) 0%, rgba(26,42,108,0.75) 50%, rgba(10,15,40,0.92) 100%),
-                      url('https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?auto=format&fit=crop&w=1920&q=80') center/cover fixed;
-        }
+        .hero { position: relative; min-height: 92vh; display: flex; align-items: center; justify-content: center; text-align: center; padding: 140px 20px 100px; box-sizing: border-box; overflow: hidden; background: linear-gradient(165deg, rgba(10,15,40,0.88) 0%, rgba(26,42,108,0.75) 50%, rgba(10,15,40,0.92) 100%), url('https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?auto=format&fit=crop&w=1920&q=80') center/cover fixed; }
         .hero-content { max-width: 900px; z-index: 10; margin: 0 auto; display: flex; flex-direction: column; align-items: center; width: 100%; }
-        .badge-hero {
-          background: rgba(212,175,55,0.18); color: #fbbf24; padding: 10px 20px; border-radius: 50px;
-          font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px;
-          display: inline-flex; align-items: center; gap: 8px; margin-bottom: 30px;
-          border: 1px solid rgba(212,175,55,0.35); backdrop-filter: blur(10px);
-        }
-        h1 {
-          font-family: 'Plus Jakarta Sans', sans-serif; font-size: clamp(36px, 6vw, 68px);
-          color: white; margin-bottom: 24px; line-height: 1.08; font-weight: 900; letter-spacing: -2px;
-        }
+        .badge-hero { background: rgba(212,175,55,0.18); color: #fbbf24; padding: 10px 20px; border-radius: 50px; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; display: inline-flex; align-items: center; gap: 8px; margin-bottom: 30px; border: 1px solid rgba(212,175,55,0.35); backdrop-filter: blur(10px); }
+        h1 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: clamp(36px, 6vw, 68px); color: white; margin-bottom: 24px; line-height: 1.08; font-weight: 900; letter-spacing: -2px; }
         h1 em { font-style: normal; color: #d4af37; }
         .subtitle { font-size: clamp(16px, 2.5vw, 19px); margin-bottom: 44px; color: rgba(255,255,255,0.75); line-height: 1.7; font-weight: 400; max-width: 680px; }
-        .cta-main {
-          background: linear-gradient(135deg, #d4af37, #f0cc5a); color: #1a2a6c; padding: 20px 48px;
-          border-radius: 50px; font-weight: 800; font-size: 16px; letter-spacing: 0.3px;
-          box-shadow: 0 12px 40px rgba(212,175,55,0.4); display: inline-flex; align-items: center;
-          gap: 10px; transition: 0.3s; cursor: pointer;
-        }
+        .cta-main { background: linear-gradient(135deg, #d4af37, #f0cc5a); color: #1a2a6c; padding: 20px 48px; border-radius: 50px; font-weight: 800; font-size: 16px; letter-spacing: 0.3px; box-shadow: 0 12px 40px rgba(212,175,55,0.4); display: inline-flex; align-items: center; gap: 10px; transition: 0.3s; cursor: pointer; }
         .cta-main:hover { transform: translateY(-3px); box-shadow: 0 20px 50px rgba(212,175,55,0.5); }
         .trust-row { margin-top: 28px; display: flex; align-items: center; justify-content: center; gap: 24px; flex-wrap: wrap; }
         .trust-item { font-size: 13px; color: rgba(255,255,255,0.6); display: flex; align-items: center; gap: 6px; }
         .trust-dot { width: 4px; height: 4px; border-radius: 50%; background: rgba(255,255,255,0.3); }
-
-        /* ══════════════════ LOGOS ══════════════════ */
         .logos-section { background: white; padding: 28px 5%; border-bottom: 1px solid #f1f5f9; text-align: center; }
         .logos-label { font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 2px; font-weight: 700; margin-bottom: 18px; }
         .logos-flex { display: flex; justify-content: center; align-items: center; gap: 40px; flex-wrap: wrap; }
         .logo-item { font-weight: 800; font-size: 17px; font-family: 'Plus Jakarta Sans', sans-serif; color: #94a3b8; letter-spacing: -0.3px; transition: 0.2s; }
         .logo-item:hover { color: #475569; }
-
-        /* ══════════════════ STEPS ══════════════════ */
         .steps-section { padding: 110px 5%; background: #f8fafc; text-align: center; }
         .section-label { font-size: 12px; font-weight: 700; color: #d4af37; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 14px; }
         .section-title { font-family: 'Plus Jakarta Sans', sans-serif; font-size: clamp(28px, 5vw, 42px); color: #0f172a; margin: 0 0 12px; font-weight: 800; letter-spacing: -1px; }
@@ -131,13 +90,7 @@ export default function Home() {
         .step-icon-wrap.s3 { background: linear-gradient(135deg, #d1fae5, #a7f3d0); box-shadow: 0 8px 24px rgba(16,185,129,0.2); }
         .step-card h3 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 19px; color: #0f172a; margin-bottom: 12px; font-weight: 800; }
         .step-card p { color: #64748b; line-height: 1.65; font-size: 15px; margin: 0; }
-
-        /* ══════════════════ PAIN ══════════════════ */
-        .pain-section {
-          padding: 110px 5%; text-align: center; position: relative; overflow: hidden;
-          background: linear-gradient(rgba(15,23,42,0.92), rgba(15,23,42,0.88)),
-                      url('https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=1920&q=80') center/cover fixed;
-        }
+        .pain-section { padding: 110px 5%; text-align: center; position: relative; overflow: hidden; background: linear-gradient(rgba(15,23,42,0.92), rgba(15,23,42,0.88)), url('https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=1920&q=80') center/cover fixed; }
         .pain-section .section-title { color: white; }
         .pain-section .section-sub { color: rgba(255,255,255,0.65); }
         .pain-section .section-label { color: #fbbf24; }
@@ -151,8 +104,6 @@ export default function Home() {
         .pain-card-body { padding: 28px 28px 32px; }
         .pain-card h3 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 20px; color: white; margin: 0 0 12px; font-weight: 800; }
         .pain-card p { color: rgba(255,255,255,0.65); line-height: 1.7; font-size: 15px; margin: 0; }
-
-        /* ══════════════════ DEMO ══════════════════ */
         .demo-section { padding: 110px 5%; background: #0f172a; color: white; overflow: hidden; }
         .demo-header { text-align: center; margin-bottom: 70px; }
         .demo-header .section-title { color: white; }
@@ -178,8 +129,6 @@ export default function Home() {
         .feat-icon.fi3 { background: linear-gradient(135deg, rgba(16,185,129,0.2), rgba(16,185,129,0.05)); }
         .feat-text h4 { font-size: 19px; margin: 0 0 8px; color: white; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; }
         .feat-text p { color: rgba(255,255,255,0.6); line-height: 1.65; font-size: 15px; margin: 0; }
-
-        /* ══════════════════ KILLER FEATURE ══════════════════ */
         .killer-feature { background: white; padding: 60px 50px; margin: 80px auto 0; max-width: 1000px; border-radius: 28px; box-shadow: 0 30px 60px rgba(0,0,0,0.1); display: flex; flex-wrap: wrap; align-items: center; gap: 50px; text-align: left; }
         .kf-text { flex: 1; min-width: 280px; }
         .kf-label { color: #ef4444; font-weight: 800; letter-spacing: 1.5px; font-size: 12px; text-transform: uppercase; display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
@@ -196,8 +145,6 @@ export default function Home() {
         .notif-app-time { font-size: 11px; color: #94a3b8; margin-left: auto; }
         .notif-content { background: white; border-radius: 10px; padding: 14px; border-left: 3px solid #ef4444; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
         .notif-content p { font-size: 13px; margin: 0; color: #334155; line-height: 1.5; }
-
-        /* ══════════════════ BENEFITS ══════════════════ */
         .benefits { padding: 110px 5%; text-align: center; background: white; }
         .benefits-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; max-width: 1100px; margin: 60px auto 0; align-items: center; }
         .benefits-image { border-radius: 28px; overflow: hidden; position: relative; height: 500px; }
@@ -212,8 +159,6 @@ export default function Home() {
         .bi3 { background: linear-gradient(135deg, #d1fae5, #a7f3d0); }
         .benefit-card h4 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 17px; color: #0f172a; margin: 0 0 8px; font-weight: 800; }
         .benefit-card p { color: #64748b; font-size: 14px; line-height: 1.6; margin: 0; }
-
-        /* ══════════════════ TESTIMONIALS ══════════════════ */
         .testimonials { padding: 110px 5%; text-align: center; background: linear-gradient(180deg, #f8fafc 0%, white 100%); }
         .testi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; max-width: 1100px; margin: 50px auto 0; }
         .testi-card { background: white; border-radius: 24px; padding: 36px; text-align: left; border: 1px solid #e2e8f0; transition: 0.3s; position: relative; box-shadow: 0 4px 16px rgba(0,0,0,0.04); }
@@ -230,14 +175,12 @@ export default function Home() {
         .testi-name { font-weight: 800; color: #1e293b; font-size: 15px; margin: 0 0 3px; }
         .testi-role { color: #94a3b8; font-size: 13px; margin: 0; }
         .testi-badge { position: absolute; top: 20px; right: 20px; background: #ecfdf5; color: #059669; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 20px; border: 1px solid #a7f3d0; }
-
-        /* ══════════════════ PRICING ══════════════════ */
         .pricing-section { padding: 110px 5%; text-align: center; background: linear-gradient(135deg, #0f172a 0%, #1a2a6c 100%); position: relative; overflow: hidden; }
         .pricing-section::before { content: ''; position: absolute; top: -50%; right: -20%; width: 600px; height: 600px; border-radius: 50%; background: radial-gradient(circle, rgba(212,175,55,0.08) 0%, transparent 70%); }
         .pricing-section .section-title { color: white; }
         .pricing-section .section-sub { color: rgba(255,255,255,0.6); }
         .pricing-section .section-label { color: #fbbf24; }
-        .price-card-home { background: white; padding: 52px 44px; border-radius: 28px; box-shadow: 0 40px 80px rgba(0,0,0,0.3); text-align: center; border: 2px solid transparent; position: relative; width: 100%; max-width: 460px; margin: 50px auto 0; display: flex; flex-direction: column; box-sizing: border-box; }
+        .price-card-home { background: white; padding: 52px 44px; border-radius: 28px; box-shadow: 0 40px 80px rgba(0,0,0,0.3); text-align: center; position: relative; width: 100%; max-width: 460px; margin: 50px auto 0; display: flex; flex-direction: column; box-sizing: border-box; }
         .badge-promo { position: absolute; top: -18px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #d4af37, #f0cc5a); color: #1a2a6c; padding: 8px 28px; border-radius: 50px; font-weight: 800; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 8px 24px rgba(212,175,55,0.4); white-space: nowrap; }
         .plan-name { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 14px; color: #94a3b8; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 20px; }
         .price-old { font-size: 18px; color: #94a3b8; text-decoration: line-through; margin-bottom: 4px; }
@@ -250,8 +193,6 @@ export default function Home() {
         .cta-pricing { background: linear-gradient(135deg, #1a2a6c, #2a3f9f); color: white; padding: 18px; border-radius: 16px; font-weight: 800; font-size: 16px; transition: 0.3s; text-decoration: none; display: block; box-shadow: 0 8px 24px rgba(26,42,108,0.3); }
         .cta-pricing:hover { transform: translateY(-2px); box-shadow: 0 16px 40px rgba(26,42,108,0.4); }
         .guarantee { margin-top: 18px; font-size: 13px; color: #94a3b8; display: flex; align-items: center; justify-content: center; gap: 8px; }
-
-        /* ══════════════════ FOOTER ══════════════════ */
         footer { background: #060d1f; color: #64748b; padding: 70px 5% 30px; }
         .footer-content { max-width: 1100px; margin: 0 auto; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 50px; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 50px; margin-bottom: 30px; }
         .footer-brand { max-width: 260px; }
@@ -263,8 +204,6 @@ export default function Home() {
         .footer-col ul li a { font-size: 14px; color: #475569; transition: 0.2s; }
         .footer-col ul li a:hover { color: white; }
         .footer-bottom { text-align: center; font-size: 13px; color: #334155; }
-
-        /* ══════════════════ MOBILE ══════════════════ */
         @media (max-width: 1023px) {
           .benefits-layout { grid-template-columns: 1fr; }
           .benefits-image { height: 300px; }
@@ -296,16 +235,14 @@ export default function Home() {
 
       {/* ── NAVBAR ── */}
       <nav>
-        <Link href="/" passHref legacyBehavior>
-          <a className="brand">Alfred<span className="gold">Major</span></a>
-        </Link>
+        <Link href="/" passHref legacyBehavior><a className="brand">Alfred<span className="gold">Major</span></a></Link>
         <div className="nav-links">
           <a href="#fonctionnement" className="nav-link">Fonctionnement</a>
           <a href="#tarifs" className="nav-link">Tarifs</a>
           <div className="lang-switcher">
-            <button className={`lang-btn${locale === 'fr' ? ' active' : ''}`} onClick={() => switchLocale('fr')}>🇫🇷</button>
-            <button className={`lang-btn${locale === 'en' ? ' active' : ''}`} onClick={() => switchLocale('en')}>🇬🇧</button>
-            <button className={`lang-btn${locale === 'es' ? ' active' : ''}`} onClick={() => switchLocale('es')}>🇪🇸</button>
+            <button className="lang-btn active">🇫🇷</button>
+            <button className="lang-btn" onClick={() => router.push('/en')}>🇬🇧</button>
+            <button className="lang-btn" onClick={() => router.push('/es')}>🇪🇸</button>
           </div>
           <Link href="/login" passHref legacyBehavior><a className="nav-login">Espace Hôte</a></Link>
         </div>
@@ -316,12 +253,8 @@ export default function Home() {
         <div className="hero-content">
           <div className="badge-hero">🎁 1er mois 100% offert — Sans engagement</div>
           <h1>Dormez sur vos deux oreilles.<br/><em>Alfred</em> gère vos voyageurs.</h1>
-          <p className="subtitle">
-            Le premier majordome IA qui répond aux questions 24h/24, recommande les meilleurs restaurants locaux, et vous alerte uniquement en cas d'urgence.
-          </p>
-          <Link href="/register" passHref legacyBehavior>
-            <a className="cta-main">Démarrer gratuitement <span>→</span></a>
-          </Link>
+          <p className="subtitle">Le premier majordome IA qui répond aux questions 24h/24, recommande les meilleurs restaurants locaux, et vous alerte uniquement en cas d'urgence.</p>
+          <Link href="/register" passHref legacyBehavior><a className="cta-main">Démarrer gratuitement <span>→</span></a></Link>
           <div className="trust-row">
             <span className="trust-item">✓ Sans engagement</span>
             <span className="trust-dot" />
@@ -350,21 +283,9 @@ export default function Home() {
         <h2 className="section-title">Déployez Alfred en 5 minutes</h2>
         <p className="section-sub">Pas de technique, pas de code. Votre majordome est opérationnel avant votre prochain check-in.</p>
         <div className="steps-grid">
-          <div className="step-card">
-            <div className="step-icon-wrap s1">🏠</div>
-            <h3>Créez votre logement</h3>
-            <p>Remplissez le formulaire guidé avec les infos de votre bien — codes, WiFi, équipements, règles, bonnes adresses.</p>
-          </div>
-          <div className="step-card">
-            <div className="step-icon-wrap s2">🔗</div>
-            <h3>Partagez le lien</h3>
-            <p>Copiez le lien unique d'Alfred dans votre message d'accueil Airbnb ou Booking. Un QR code est aussi disponible.</p>
-          </div>
-          <div className="step-card">
-            <div className="step-icon-wrap s3">😴</div>
-            <h3>Soufflez</h3>
-            <p>Alfred répond à 95% des questions de vos voyageurs. Vous n'intervenez qu'en cas d'urgence réelle.</p>
-          </div>
+          <div className="step-card"><div className="step-icon-wrap s1">🏠</div><h3>Créez votre logement</h3><p>Remplissez le formulaire guidé avec les infos de votre bien — codes, WiFi, équipements, règles, bonnes adresses.</p></div>
+          <div className="step-card"><div className="step-icon-wrap s2">🔗</div><h3>Partagez le lien</h3><p>Copiez le lien unique d'Alfred dans votre message d'accueil Airbnb ou Booking. Un QR code est aussi disponible.</p></div>
+          <div className="step-card"><div className="step-icon-wrap s3">😴</div><h3>Soufflez</h3><p>Alfred répond à 95% des questions de vos voyageurs. Vous n'intervenez qu'en cas d'urgence réelle.</p></div>
         </div>
       </section>
 
@@ -374,36 +295,9 @@ export default function Home() {
         <h2 className="section-title">La gestion locative réinventée</h2>
         <p className="section-sub" style={{color: 'rgba(255,255,255,0.6)'}}>Alfred élimine les interruptions du quotidien pour vous laisser profiter de ce qui compte vraiment.</p>
         <div className="pain-grid">
-          <div className="pain-card">
-            <div className="pain-card-photo">
-              <img src="/pain-nuit.png" alt="Personne réveillée la nuit regardant son téléphone" loading="lazy" />
-              <div className="pain-card-photo-overlay" />
-            </div>
-            <div className="pain-card-body">
-              <h3>Le message à 23h30</h3>
-              <p>Le voyageur arrive tard et ne trouve pas le WiFi. Votre téléphone sonne pendant votre sommeil. Laissez Alfred s'en charger — il répond instantanément, en pleine nuit.</p>
-            </div>
-          </div>
-          <div className="pain-card">
-            <div className="pain-card-photo">
-              <img src="/pain-langue.png" alt="Couple de voyageurs internationaux" loading="lazy" />
-              <div className="pain-card-photo-overlay" />
-            </div>
-            <div className="pain-card-body">
-              <h3>La barrière de la langue</h3>
-              <p>Alfred parle couramment plus de 30 langues. Anglais, espagnol, allemand, japonais — vos touristes étrangers sont servis dans leur langue, sans effort de votre part.</p>
-            </div>
-          </div>
-          <div className="pain-card">
-            <div className="pain-card-photo">
-              <img src="/pain-questions.png" alt="Service de conciergerie professionnel" loading="lazy" />
-              <div className="pain-card-photo-overlay" />
-            </div>
-            <div className="pain-card-body">
-              <h3>Les questions répétées</h3>
-              <p>Poubelles, départ, commerces... Alfred répond inlassablement avec une politesse irréprochable, chaque fois comme si c'était la première question.</p>
-            </div>
-          </div>
+          <div className="pain-card"><div className="pain-card-photo"><img src="/pain-nuit.png" alt="Personne réveillée la nuit regardant son téléphone" loading="lazy" /><div className="pain-card-photo-overlay" /></div><div className="pain-card-body"><h3>Le message à 23h30</h3><p>Le voyageur arrive tard et ne trouve pas le WiFi. Votre téléphone sonne pendant votre sommeil. Laissez Alfred s'en charger — il répond instantanément, en pleine nuit.</p></div></div>
+          <div className="pain-card"><div className="pain-card-photo"><img src="/pain-langue.png" alt="Couple de voyageurs internationaux" loading="lazy" /><div className="pain-card-photo-overlay" /></div><div className="pain-card-body"><h3>La barrière de la langue</h3><p>Alfred parle couramment plus de 30 langues. Anglais, espagnol, allemand, japonais — vos touristes étrangers sont servis dans leur langue, sans effort de votre part.</p></div></div>
+          <div className="pain-card"><div className="pain-card-photo"><img src="/pain-questions.png" alt="Service de conciergerie professionnel" loading="lazy" /><div className="pain-card-photo-overlay" /></div><div className="pain-card-body"><h3>Les questions répétées</h3><p>Poubelles, départ, commerces... Alfred répond inlassablement avec une politesse irréprochable, chaque fois comme si c'était la première question.</p></div></div>
         </div>
       </section>
 
@@ -419,10 +313,7 @@ export default function Home() {
             <div className="phone-frame">
               <div className="phone-notch"></div>
               <div className="chat-app">
-                <div className="chat-header">
-                  🎩 Alfred — Villa Noam
-                  <div className="chat-sub">Assistant disponible 24h/24</div>
-                </div>
+                <div className="chat-header">🎩 Alfred — Villa Noam<div className="chat-sub">Assistant disponible 24h/24</div></div>
                 <div className="chat-body">
                   <div className="msg msg-user">Hi! We just arrived. Where are the trash bins and do you have a restaurant recommendation?<span className="msg-time">19:42</span></div>
                   <div className="msg msg-alfred">Welcome to Villa Noam! 🎩<br/><br/>Bins are under the kitchen sink. For dinner, I recommend "Pizzeria Da Luigi" — just 5 min walk! 🍕<span className="msg-time">19:42</span></div>
@@ -436,13 +327,7 @@ export default function Home() {
             <div className="feat-row"><div className="feat-icon fi1">⚡</div><div className="feat-text"><h4>Réponses Instantanées</h4><p>Vos voyageurs n'attendent plus. Alfred répond en moins d'une seconde, en piochant dans votre base de données personnalisée.</p></div></div>
             <div className="feat-row"><div className="feat-icon fi2">🔍</div><div className="feat-text"><h4>Recherche Locale en Temps Réel</h4><p>Alfred scanne les environs de votre logement pour faire des recommandations précises — restos, pharmacies, transports, activités.</p></div></div>
             <div className="feat-row"><div className="feat-icon fi3">🌐</div><div className="feat-text"><h4>30+ Langues Automatiquement</h4><p>Alfred détecte la langue de votre voyageur et répond dans la sienne — anglais, espagnol, allemand, japonais et bien plus.</p></div></div>
-            <div style={{marginTop: '10px'}}>
-              <Link href="/register" passHref legacyBehavior>
-                <a className="cta-main" style={{background: 'linear-gradient(135deg, #d4af37, #f0cc5a)', color: '#1a2a6c', fontSize: '15px', padding: '16px 36px'}}>
-                  Essayer Alfred gratuitement — 1er mois offert
-                </a>
-              </Link>
-            </div>
+            <div style={{marginTop: '10px'}}><Link href="/register" passHref legacyBehavior><a className="cta-main" style={{background: 'linear-gradient(135deg, #d4af37, #f0cc5a)', color: '#1a2a6c', fontSize: '15px', padding: '16px 36px'}}>Essayer Alfred gratuitement — 1er mois offert</a></Link></div>
           </div>
         </div>
         <div className="killer-feature">
@@ -453,18 +338,10 @@ export default function Home() {
             <p><strong>Résultat :</strong> Vous filtrez 95% du bruit quotidien et gardez le contrôle sur l'essentiel.</p>
           </div>
           <div className="notif-mockup">
-            <div className="notif-phone">
-              <div className="notif-screen">
-                <div className="notif-app">
-                  <div className="notif-app-icon">✈️</div>
-                  <span className="notif-app-name">Telegram</span>
-                  <span className="notif-app-time">maintenant</span>
-                </div>
-                <div className="notif-content">
-                  <p>🚨 <strong>ALERTE ALFRED MAJOR</strong><br/><br/>🏠 Logement : La Villa Noam<br/>💬 Client : "Il y a une énorme fuite sous l'évier !"</p>
-                </div>
-              </div>
-            </div>
+            <div className="notif-phone"><div className="notif-screen">
+              <div className="notif-app"><div className="notif-app-icon">✈️</div><span className="notif-app-name">Telegram</span><span className="notif-app-time">maintenant</span></div>
+              <div className="notif-content"><p>🚨 <strong>ALERTE ALFRED MAJOR</strong><br/><br/>🏠 Logement : La Villa Noam<br/>💬 Client : "Il y a une énorme fuite sous l'évier !"</p></div>
+            </div></div>
           </div>
         </div>
       </section>
@@ -474,23 +351,11 @@ export default function Home() {
         <p className="section-label">Pourquoi Alfred</p>
         <h2 className="section-title">Ce que vivent nos hôtes au quotidien</h2>
         <div className="benefits-layout">
-          <div className="benefits-image">
-            <img src="https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?auto=format&fit=crop&w=800&q=80" alt="Hôte détendu avec son téléphone" loading="lazy" />
-            <div className="benefits-image-overlay" />
-          </div>
+          <div className="benefits-image"><img src="https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?auto=format&fit=crop&w=800&q=80" alt="Hôte détendu avec son téléphone" loading="lazy" /><div className="benefits-image-overlay" /></div>
           <div className="benefits-cards">
-            <div className="benefit-card">
-              <div className="benefit-icon-wrap bi1">😴</div>
-              <div><h4>Nuits complètes garanties</h4><p>Plus besoin de garder un œil sur votre téléphone. Alfred gère les questions WiFi, codes et équipements à votre place, 24h/24.</p></div>
-            </div>
-            <div className="benefit-card">
-              <div className="benefit-icon-wrap bi2">🛡️</div>
-              <div><h4>Zéro urgence ratée</h4><p>Avec les alertes Telegram instantanées, vous êtes toujours informé des vrais problèmes — sans être noyé dans les questions banales.</p></div>
-            </div>
-            <div className="benefit-card">
-              <div className="benefit-icon-wrap bi3">⭐</div>
-              <div><h4>Notes Airbnb améliorées</h4><p>Des voyageurs mieux accompagnés laissent de meilleures notes. Plusieurs hôtes ont vu leurs avis progresser après l'adoption d'Alfred.</p></div>
-            </div>
+            <div className="benefit-card"><div className="benefit-icon-wrap bi1">😴</div><div><h4>Nuits complètes garanties</h4><p>Plus besoin de garder un œil sur votre téléphone. Alfred gère les questions WiFi, codes et équipements à votre place, 24h/24.</p></div></div>
+            <div className="benefit-card"><div className="benefit-icon-wrap bi2">🛡️</div><div><h4>Zéro urgence ratée</h4><p>Avec les alertes Telegram instantanées, vous êtes toujours informé des vrais problèmes — sans être noyé dans les questions banales.</p></div></div>
+            <div className="benefit-card"><div className="benefit-icon-wrap bi3">⭐</div><div><h4>Notes Airbnb améliorées</h4><p>Des voyageurs mieux accompagnés laissent de meilleures notes. Plusieurs hôtes ont vu leurs avis progresser après l'adoption d'Alfred.</p></div></div>
           </div>
         </div>
       </section>
@@ -501,24 +366,9 @@ export default function Home() {
         <h2 className="section-title">Ce que disent nos premiers hôtes</h2>
         <p className="section-sub" style={{color: '#64748b', marginTop: '12px'}}>Ils ont adopté Alfred et ne reviendront plus en arrière.</p>
         <div className="testi-grid">
-          <div className="testi-card">
-            <span className="testi-badge">✓ Hôte vérifié</span>
-            <div className="testi-stars">{'★★★★★'.split('').map((s,i) => <span key={i} className="star">{s}</span>)}</div>
-            <p className="testi-quote">Alfred répond à toutes les questions de mes voyageurs, même à 3h du matin. Je n'ai plus reçu un seul appel pour le code WiFi depuis que je l'ai installé. Un vrai soulagement.</p>
-            <div className="testi-author"><div className="testi-avatar av1">SL</div><div><p className="testi-name">Sophie L.</p><p className="testi-role">3 logements · Nice</p></div></div>
-          </div>
-          <div className="testi-card">
-            <span className="testi-badge">✓ Hôte vérifié</span>
-            <div className="testi-stars">{'★★★★★'.split('').map((s,i) => <span key={i} className="star">{s}</span>)}</div>
-            <p className="testi-quote">J'avais des voyageurs étrangers qui ne parlaient pas français. Alfred leur a répondu en anglais, espagnol et même en allemand. Mes notes Airbnb ont augmenté depuis.</p>
-            <div className="testi-author"><div className="testi-avatar av2">TR</div><div><p className="testi-name">Thomas R.</p><p className="testi-role">2 logements · Bordeaux</p></div></div>
-          </div>
-          <div className="testi-card">
-            <span className="testi-badge">✓ Hôte vérifié</span>
-            <div className="testi-stars">{'★★★★★'.split('').map((s,i) => <span key={i} className="star">{s}</span>)}</div>
-            <p className="testi-quote">L'alerte Telegram m'a sauvé la mise : un voyageur a signalé une fuite, j'ai reçu le message instantanément et j'ai pu envoyer un plombier avant que ça empire.</p>
-            <div className="testi-author"><div className="testi-avatar av3">MC</div><div><p className="testi-name">Marie C.</p><p className="testi-role">5 logements · Paris</p></div></div>
-          </div>
+          <div className="testi-card"><span className="testi-badge">✓ Hôte vérifié</span><div className="testi-stars">{'★★★★★'.split('').map((s,i) => <span key={i} className="star">{s}</span>)}</div><p className="testi-quote">Alfred répond à toutes les questions de mes voyageurs, même à 3h du matin. Je n'ai plus reçu un seul appel pour le code WiFi depuis que je l'ai installé. Un vrai soulagement.</p><div className="testi-author"><div className="testi-avatar av1">SL</div><div><p className="testi-name">Sophie L.</p><p className="testi-role">3 logements · Nice</p></div></div></div>
+          <div className="testi-card"><span className="testi-badge">✓ Hôte vérifié</span><div className="testi-stars">{'★★★★★'.split('').map((s,i) => <span key={i} className="star">{s}</span>)}</div><p className="testi-quote">J'avais des voyageurs étrangers qui ne parlaient pas français. Alfred leur a répondu en anglais, espagnol et même en allemand. Mes notes Airbnb ont augmenté depuis.</p><div className="testi-author"><div className="testi-avatar av2">TR</div><div><p className="testi-name">Thomas R.</p><p className="testi-role">2 logements · Bordeaux</p></div></div></div>
+          <div className="testi-card"><span className="testi-badge">✓ Hôte vérifié</span><div className="testi-stars">{'★★★★★'.split('').map((s,i) => <span key={i} className="star">{s}</span>)}</div><p className="testi-quote">L'alerte Telegram m'a sauvé la mise : un voyageur a signalé une fuite, j'ai reçu le message instantanément et j'ai pu envoyer un plombier avant que ça empire.</p><div className="testi-author"><div className="testi-avatar av3">MC</div><div><p className="testi-name">Marie C.</p><p className="testi-role">5 logements · Paris</p></div></div></div>
         </div>
       </section>
 
@@ -534,13 +384,11 @@ export default function Home() {
           <div className="price">0€<span>/1er mois</span></div>
           <div className="price-note">puis 9,90€/mois — sans engagement, résiliable à tout moment</div>
           <div className="features-list">
-            {['Majordome IA disponible 24h/24 et 7j/7','Traduction automatique (30+ langues)','Recherche locale Google Maps intégrée','Alerte urgence instantanée sur Telegram','Lien web & QR code personnalisés','Historique des conversations voyageurs'].map((f, i) => (
+            {['Majordome IA disponible 24h/24 et 7j/7','Traduction automatique (30+ langues)','Recherche locale Google Maps intégrée','Alerte urgence instantanée sur Telegram','Lien web & QR code personnalisés','Historique des conversations voyageurs'].map((f,i) => (
               <div key={i} className="feature"><div className="check-icon">✓</div>{f}</div>
             ))}
           </div>
-          <Link href="/register" passHref legacyBehavior>
-            <a className="cta-pricing">Commencer gratuitement — 1er mois offert</a>
-          </Link>
+          <Link href="/register" passHref legacyBehavior><a className="cta-pricing">Commencer gratuitement — 1er mois offert</a></Link>
           <div className="guarantee">🔒 Paiement 100% sécurisé via Stripe</div>
         </div>
       </section>
@@ -552,29 +400,11 @@ export default function Home() {
             <span className="brand">Alfred<span className="gold">Major</span></span>
             <p>Le premier majordome IA qui simplifie la vie des hôtes de location courte durée. Disponible 24h/24, multilingue, et toujours discret.</p>
           </div>
-          <div className="footer-col">
-            <h4>Produit</h4>
-            <ul>
-              <li><Link href="/login" passHref legacyBehavior><a>Espace Hôte</a></Link></li>
-              <li><Link href="/register" passHref legacyBehavior><a>Créer un compte</a></Link></li>
-            </ul>
-          </div>
-          <div className="footer-col">
-            <h4>Légal</h4>
-            <ul>
-              <li><Link href="/conditions-generales" passHref legacyBehavior><a>Conditions Générales</a></Link></li>
-              <li><Link href="/confidentialite" passHref legacyBehavior><a>Confidentialité (RGPD)</a></Link></li>
-              <li><Link href="/mentions-legales" passHref legacyBehavior><a>Mentions légales</a></Link></li>
-            </ul>
-          </div>
-          <div className="footer-col">
-            <h4>Contact</h4>
-            <ul><li><a href="mailto:contact@alfredmajor.com">contact@alfredmajor.com</a></li></ul>
-          </div>
+          <div className="footer-col"><h4>Produit</h4><ul><li><Link href="/login" passHref legacyBehavior><a>Espace Hôte</a></Link></li><li><Link href="/register" passHref legacyBehavior><a>Créer un compte</a></Link></li></ul></div>
+          <div className="footer-col"><h4>Légal</h4><ul><li><Link href="/conditions-generales" passHref legacyBehavior><a>Conditions Générales</a></Link></li><li><Link href="/confidentialite" passHref legacyBehavior><a>Confidentialité (RGPD)</a></Link></li><li><Link href="/mentions-legales" passHref legacyBehavior><a>Mentions légales</a></Link></li></ul></div>
+          <div className="footer-col"><h4>Contact</h4><ul><li><a href="mailto:contact@alfredmajor.com">contact@alfredmajor.com</a></li></ul></div>
         </div>
-        <div className="footer-bottom">
-          <p>© 2026 Alfred Major — Tous droits réservés · Dorian BISCARRAT · SIRET 531 965 044 00039</p>
-        </div>
+        <div className="footer-bottom"><p>© 2026 Alfred Major — Tous droits réservés · Dorian BISCARRAT · SIRET 531 965 044 00039</p></div>
       </footer>
     </div>
   );
