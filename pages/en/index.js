@@ -8,27 +8,27 @@ export default function Home() {
   return (
     <div className="container">
       <Head>
-        <title>Alfred Major | The AI Butler for Short-Term Rentals</title>
-        <meta name="description" content="Delegate guest management to Alfred, the AI that responds 24/7, recommends local spots, and alerts you only in real emergencies. First month free, no commitment." />
+        <title>Alfred Major | El Mayordomo IA para Alquileres de Corta Estancia</title>
+        <meta name="description" content="Delega la gestión de tus huéspedes a Alfred, la IA que responde 24/7, recomienda lugares locales y te alerta solo en emergencias reales. Primer mes gratis, sin compromiso." />
         <meta name="robots" content="index, follow" />
         <link rel="canonical" href="https://www.alfredmajor.com/" />
         <link rel="alternate" hrefLang="fr" href="https://www.alfredmajor.com/" />
         <link rel="alternate" hrefLang="en" href="https://www.alfredmajor.com/en" />
         <link rel="alternate" hrefLang="es" href="https://www.alfredmajor.com/es" />
         <link rel="alternate" hrefLang="x-default" href="https://www.alfredmajor.com/" />
-        <meta property="og:title" content="Alfred Major — The AI Butler for Your Rentals" />
-        <meta property="og:description" content="Alfred answers your guests 24/7, recommends the best local places, and alerts you in emergencies. First month free, no commitment." />
+        <meta property="og:title" content="Alfred Major — El Mayordomo IA para tus Alquileres" />
+        <meta property="og:description" content="Alfred responde a tus huéspedes 24/7, recomienda los mejores lugares locales y te alerta en emergencias. Primer mes gratis, sin compromiso." />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://www.alfredmajor.com/en" />
+        <meta property="og:url" content="https://www.alfredmajor.com/es" />
         <meta property="og:image" content="https://www.alfredmajor.com/og-image.jpg" />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
         <meta property="og:image:alt" content="Alfred Major — Majordome IA pour locations courte durée" />
-        <meta property="og:locale" content="en_US" />
+        <meta property="og:locale" content="es_ES" />
         <meta property="og:site_name" content="Alfred Major" />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Alfred Major — The AI Butler for Your Rentals" />
-        <meta name="twitter:description" content="Alfred answers your guests 24/7. First month free, no commitment." />
+        <meta name="twitter:title" content="Alfred Major — El Mayordomo IA para tus Alquileres" />
+        <meta name="twitter:description" content="Alfred responde a tus huéspedes 24/7. Primer mes gratis, sin compromiso." />
         <meta name="twitter:image" content="https://www.alfredmajor.com/og-image.jpg" />
         <meta name="twitter:image:alt" content="Alfred Major — Majordome IA pour locations courte durée" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -243,8 +243,8 @@ export default function Home() {
           <a href="#tarifs" className="nav-link">Tarifs</a>
           <div className="lang-switcher">
             <button className="lang-btn" onClick={() => router.push("/")}>🇫🇷</button>
-            <button className="lang-btn active">🇬🇧</button>
-            <button className="lang-btn" onClick={() => router.push("/es")}>🇪🇸</button>
+            <button className="lang-btn" onClick={() => router.push("/en")}>🇬🇧</button>
+            <button className="lang-btn active">🇪🇸</button>
           </div>
           <Link href="/login" passHref legacyBehavior><a className="nav-login">Espace Hôte</a></Link>
         </div>
@@ -253,23 +253,23 @@ export default function Home() {
       {/* ── HERO ── */}
       <section className="hero">
         <div className="hero-content">
-          <div className="badge-hero">🎁 1st month 100% FREE — No commitment</div>
-          <h1>Sleep soundly.<br/><em>Alfred</em> handles your guests.</h1>
-          <p className="subtitle">The first AI butler that answers guest questions 24/7, recommends the best local restaurants, and alerts you only in real emergencies.</p>
-          <Link href="/register" passHref legacyBehavior><a className="cta-main">Start for free <span>→</span></a></Link>
+          <div className="badge-hero">🎁 1er mes 100% GRATIS — Sin compromiso</div>
+          <h1>Duerme tranquilo.<br/><em>Alfred</em> gestiona a tus huéspedes.</h1>
+          <p className="subtitle">El primer mayordomo IA que responde preguntas 24/7, recomienda los mejores restaurantes locales y te alerta solo en emergencias reales.</p>
+          <Link href="/register" passHref legacyBehavior><a className="cta-main">Empieza gratis <span>→</span></a></Link>
           <div className="trust-row">
-            <span className="trust-item">✓ No commitment</span>
+            <span className="trust-item">✓ Sin compromiso</span>
             <span className="trust-dot" />
-            <span className="trust-item">✓ 5-min setup</span>
+            <span className="trust-item">✓ Configuración en 5 min</span>
             <span className="trust-dot" />
-            <span className="trust-item">✓ 30+ languages</span>
+            <span className="trust-item">✓ 30+ idiomas</span>
           </div>
         </div>
       </section>
 
       {/* ── LOGOS ── */}
       <section className="logos-section">
-        <p className="logos-label">Compatible with guests from all major platforms</p>
+        <p className="logos-label">Compatible con huéspedes de todas las plataformas</p>
         <div className="logos-flex">
           <span className="logo-item">Airbnb</span>
           <span className="logo-item">Booking.com</span>
@@ -281,34 +281,34 @@ export default function Home() {
 
       {/* ── COMMENT ÇA MARCHE ── */}
       <section className="steps-section" id="fonctionnement">
-        <p className="section-label">Simple & Fast</p>
-        <h2 className="section-title">Deploy Alfred in 5 minutes</h2>
-        <p className="section-sub">No tech skills, no code. Your butler is ready before your next check-in.</p>
+        <p className="section-label">Simple y rápido</p>
+        <h2 className="section-title">Despliega Alfred en 5 minutos</h2>
+        <p className="section-sub">Sin tecnicismos, sin código. Tu mayordomo estará listo antes de tu próximo check-in.</p>
         <div className="steps-grid">
-          <div className="step-card"><div className="step-icon-wrap s1">🏠</div><h3>Create your listing</h3><p>Fill out the guided form with your property details — codes, WiFi, equipment, rules, local recommendations.</p></div>
-          <div className="step-card"><div className="step-icon-wrap s2">🔗</div><h3>Share the link</h3><p>Copy Alfred's unique link into your Airbnb or Booking welcome message. A QR code is also available.</p></div>
-          <div className="step-card"><div className="step-icon-wrap s3">😴</div><h3>Relax</h3><p>Alfred handles 95% of guest questions. You only step in for real emergencies.</p></div>
+          <div className="step-card"><div className="step-icon-wrap s1">🏠</div><h3>Crea tu alojamiento</h3><p>Rellena el formulario guiado con los datos de tu propiedad — códigos, WiFi, equipamiento, normas, recomendaciones.</p></div>
+          <div className="step-card"><div className="step-icon-wrap s2">🔗</div><h3>Comparte el enlace</h3><p>Copia el enlace de Alfred en tu mensaje de bienvenida de Airbnb o Booking. También hay un código QR disponible.</p></div>
+          <div className="step-card"><div className="step-icon-wrap s3">😴</div><h3>Relájate</h3><p>Alfred gestiona el 95% de las preguntas de tus huéspedes. Tú solo intervienes en emergencias reales.</p></div>
         </div>
       </section>
 
       {/* ── PAIN POINTS ── */}
       <section className="pain-section">
-        <p className="section-label">No more interrupted nights</p>
-        <h2 className="section-title">Short-term rental management reinvented</h2>
-        <p className="section-sub" style={{color: 'rgba(255,255,255,0.6)'}}>Alfred eliminates daily interruptions so you can enjoy what really matters.</p>
+        <p className="section-label">Se acabaron las noches interrumpidas</p>
+        <h2 className="section-title">La gestión de alquileres reinventada</h2>
+        <p className="section-sub" style={{color: 'rgba(255,255,255,0.6)'}}>Alfred elimina las interrupciones del día a día para que puedas disfrutar de lo que realmente importa.</p>
         <div className="pain-grid">
-          <div className="pain-card"><div className="pain-card-photo"><img src="/pain-nuit.png" alt="Personne réveillée la nuit regardant son téléphone" loading="lazy" /><div className="pain-card-photo-overlay" /></div><div className="pain-card-body"><h3>The 11:30pm message</h3><p>The guest arrives late and can't find the WiFi. Your phone rings while you sleep. Let Alfred handle it — he responds instantly, in the middle of the night.</p></div></div>
-          <div className="pain-card"><div className="pain-card-photo"><img src="/pain-langue.png" alt="Couple de voyageurs internationaux" loading="lazy" /><div className="pain-card-photo-overlay" /></div><div className="pain-card-body"><h3>The language barrier</h3><p>Alfred speaks over 30 languages fluently. English, Spanish, German, Japanese — your foreign guests are served in their own language, effortlessly.</p></div></div>
-          <div className="pain-card"><div className="pain-card-photo"><img src="/pain-questions.png" alt="Service de conciergerie professionnel" loading="lazy" /><div className="pain-card-photo-overlay" /></div><div className="pain-card-body"><h3>The repeated questions</h3><p>Trash bins, checkout, shops... Alfred answers tirelessly with impeccable politeness, every time as if it were the first question.</p></div></div>
+          <div className="pain-card"><div className="pain-card-photo"><img src="/pain-nuit.png" alt="Personne réveillée la nuit regardant son téléphone" loading="lazy" /><div className="pain-card-photo-overlay" /></div><div className="pain-card-body"><h3>El mensaje a las 23:30</h3><p>El huésped llega tarde y no encuentra el WiFi. Tu teléfono suena mientras duermes. Deja que Alfred lo gestione — responde al instante, en plena noche.</p></div></div>
+          <div className="pain-card"><div className="pain-card-photo"><img src="/pain-langue.png" alt="Couple de voyageurs internationaux" loading="lazy" /><div className="pain-card-photo-overlay" /></div><div className="pain-card-body"><h3>La barrera del idioma</h3><p>Alfred habla con fluidez más de 30 idiomas. Inglés, alemán, japonés — tus huéspedes extranjeros son atendidos en su idioma, sin esfuerzo por tu parte.</p></div></div>
+          <div className="pain-card"><div className="pain-card-photo"><img src="/pain-questions.png" alt="Service de conciergerie professionnel" loading="lazy" /><div className="pain-card-photo-overlay" /></div><div className="pain-card-body"><h3>Las preguntas repetidas</h3><p>Basura, salida, comercios... Alfred responde incansablemente con una cortesía impecable, cada vez como si fuera la primera pregunta.</p></div></div>
         </div>
       </section>
 
       {/* ── DEMO ── */}
       <section id="demo" className="demo-section">
         <div className="demo-header">
-          <p className="section-label">In action</p>
-          <h2 className="section-title">The perfect illusion of a concierge</h2>
-          <p className="section-sub">Alfred understands context, searches for local recommendations, and responds naturally.</p>
+          <p className="section-label">En acción</p>
+          <h2 className="section-title">La ilusión perfecta de una conserjería</h2>
+          <p className="section-sub">Alfred comprende el contexto, busca recomendaciones locales y responde de forma natural.</p>
         </div>
         <div className="demo-layout">
           <div className="phone-wrapper">
@@ -326,18 +326,18 @@ export default function Home() {
             </div>
           </div>
           <div className="demo-features">
-            <div className="feat-row"><div className="feat-icon fi1">⚡</div><div className="feat-text"><h4>Instant Responses</h4><p>Your guests never wait. Alfred responds in under a second, drawing from your custom knowledge base.</p></div></div>
-            <div className="feat-row"><div className="feat-icon fi2">🔍</div><div className="feat-text"><h4>Real-Time Local Search</h4><p>Alfred scans your property's surroundings for precise recommendations — restaurants, pharmacies, transport, activities.</p></div></div>
-            <div className="feat-row"><div className="feat-icon fi3">🌐</div><div className="feat-text"><h4>30+ Languages Automatically</h4><p>Alfred detects your guest's language and responds in kind — English, Spanish, German, Japanese and many more.</p></div></div>
-            <div style={{marginTop: '10px'}}><Link href="/register" passHref legacyBehavior><a className="cta-main" style={{background: 'linear-gradient(135deg, #d4af37, #f0cc5a)', color: '#1a2a6c', fontSize: '15px', padding: '16px 36px'}}>Try Alfred for free — 1st month included</a></Link></div>
+            <div className="feat-row"><div className="feat-icon fi1">⚡</div><div className="feat-text"><h4>Respuestas Instantáneas</h4><p>Tus huéspedes ya no esperan. Alfred responde en menos de un segundo, utilizando tu base de datos personalizada.</p></div></div>
+            <div className="feat-row"><div className="feat-icon fi2">🔍</div><div className="feat-text"><h4>Búsqueda Local en Tiempo Real</h4><p>Alfred escanea los alrededores de tu alojamiento para hacer recomendaciones precisas — restaurantes, farmacias, transporte, actividades.</p></div></div>
+            <div className="feat-row"><div className="feat-icon fi3">🌐</div><div className="feat-text"><h4>30+ Idiomas Automáticamente</h4><p>Alfred detecta el idioma de tu huésped y responde en el suyo — inglés, francés, alemán, japonés y muchos más.</p></div></div>
+            <div style={{marginTop: '10px'}}><Link href="/register" passHref legacyBehavior><a className="cta-main" style={{background: 'linear-gradient(135deg, #d4af37, #f0cc5a)', color: '#1a2a6c', fontSize: '15px', padding: '16px 36px'}}>Probar Alfred gratis — 1er mes incluido</a></Link></div>
           </div>
         </div>
         <div className="killer-feature">
           <div className="kf-text">
-            <div className="kf-label"><div className="kf-dot"></div> Real-time alert</div>
-            <h3>You're only disturbed when it's truly urgent.</h3>
-            <p>If a guest reports an emergency (water leak, power outage), Alfred immediately forwards the information via Telegram — with automatic translation if needed.</p>
-            <p><strong>Result:</strong> You filter out 95% of daily noise and stay in control of what matters.</p>
+            <div className="kf-label"><div className="kf-dot"></div> Alerta en tiempo real</div>
+            <h3>Solo te molestamos cuando es verdaderamente urgente.</h3>
+            <p>Si un huésped reporta una emergencia (fuga de agua, corte eléctrico), Alfred te reenvía inmediatamente la información por Telegram — con traducción automática si es necesario.</p>
+            <p><strong>Resultado:</strong> Filtras el 95% del ruido diario y mantienes el control sobre lo esencial.</p>
           </div>
           <div className="notif-mockup">
             <div className="notif-phone"><div className="notif-screen">
@@ -350,48 +350,48 @@ export default function Home() {
 
       {/* ── BENEFITS ── */}
       <section className="benefits">
-        <p className="section-label">Why Alfred</p>
-        <h2 className="section-title">What our hosts experience every day</h2>
+        <p className="section-label">Por qué Alfred</p>
+        <h2 className="section-title">Lo que viven nuestros anfitriones cada día</h2>
         <div className="benefits-layout">
           <div className="benefits-image"><img src="https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?auto=format&fit=crop&w=800&q=80" alt="Hôte détendu avec son téléphone" loading="lazy" /><div className="benefits-image-overlay" /></div>
           <div className="benefits-cards">
-            <div className="benefit-card"><div className="benefit-icon-wrap bi1">😴</div><div><h4>Full nights guaranteed</h4><p>No more keeping an eye on your phone. Alfred handles WiFi, codes, and equipment questions for you, 24/7.</p></div></div>
-            <div className="benefit-card"><div className="benefit-icon-wrap bi2">🛡️</div><div><h4>Zero missed emergencies</h4><p>With instant Telegram alerts, you're always informed of real issues — without being buried in trivial questions.</p></div></div>
-            <div className="benefit-card"><div className="benefit-icon-wrap bi3">⭐</div><div><h4>Improved Airbnb ratings</h4><p>Better-served guests leave better reviews. Several hosts have seen their ratings improve after adopting Alfred.</p></div></div>
+            <div className="benefit-card"><div className="benefit-icon-wrap bi1">😴</div><div><h4>Noches completas garantizadas</h4><p>Ya no necesitas estar pendiente del teléfono. Alfred gestiona las preguntas de WiFi, códigos y equipamiento por ti, 24/7.</p></div></div>
+            <div className="benefit-card"><div className="benefit-icon-wrap bi2">🛡️</div><div><h4>Cero emergencias perdidas</h4><p>Con las alertas instantáneas de Telegram, siempre estás informado de los problemas reales — sin ahogarte en preguntas triviales.</p></div></div>
+            <div className="benefit-card"><div className="benefit-icon-wrap bi3">⭐</div><div><h4>Mejores valoraciones en Airbnb</h4><p>Los huéspedes mejor atendidos dejan mejores reseñas. Varios anfitriones han visto mejorar sus valoraciones tras adoptar Alfred.</p></div></div>
           </div>
         </div>
       </section>
 
       {/* ── TÉMOIGNAGES ── */}
       <section className="testimonials">
-        <p className="section-label">Trusted by hosts</p>
-        <h2 className="section-title">What our first hosts say</h2>
-        <p className="section-sub" style={{color: '#64748b', marginTop: '12px'}}>They adopted Alfred and will never go back.</p>
+        <p className="section-label">Nos avalan</p>
+        <h2 className="section-title">Lo que dicen nuestros primeros anfitriones</h2>
+        <p className="section-sub" style={{color: '#64748b', marginTop: '12px'}}>Adoptaron Alfred y ya no pueden imaginar volver atrás.</p>
         <div className="testi-grid">
-          <div className="testi-card"><span className="testi-badge">✓ Verified host</span><div className="testi-stars">{'★★★★★'.split('').map((s,i) => <span key={i} className="star">{s}</span>)}</div><p className="testi-quote">Alfred answers all my guests' questions, even at 3am. I haven't received a single call about the WiFi code since I set it up. A real relief.</p><div className="testi-author"><div className="testi-avatar av1">SL</div><div><p className="testi-name">Sophie L.</p><p className="testi-role">3 properties · Nice</p></div></div></div>
-          <div className="testi-card"><span className="testi-badge">✓ Verified host</span><div className="testi-stars">{'★★★★★'.split('').map((s,i) => <span key={i} className="star">{s}</span>)}</div><p className="testi-quote">I had foreign guests who didn't speak French. Alfred answered them in English, Spanish and even German. My Airbnb ratings have gone up since.</p><div className="testi-author"><div className="testi-avatar av2">TR</div><div><p className="testi-name">Thomas R.</p><p className="testi-role">2 properties · Bordeaux</p></div></div></div>
-          <div className="testi-card"><span className="testi-badge">✓ Verified host</span><div className="testi-stars">{'★★★★★'.split('').map((s,i) => <span key={i} className="star">{s}</span>)}</div><p className="testi-quote">The Telegram alert saved me: a guest reported a leak, I received the message instantly and was able to send a plumber before it got worse.</p><div className="testi-author"><div className="testi-avatar av3">MC</div><div><p className="testi-name">Marie C.</p><p className="testi-role">5 properties · Paris</p></div></div></div>
+          <div className="testi-card"><span className="testi-badge">✓ Anfitrión verificado</span><div className="testi-stars">{'★★★★★'.split('').map((s,i) => <span key={i} className="star">{s}</span>)}</div><p className="testi-quote">Alfred responde a todas las preguntas de mis huéspedes, incluso a las 3am. No he recibido ni una llamada sobre el código WiFi desde que lo instalé. Un verdadero alivio.</p><div className="testi-author"><div className="testi-avatar av1">SL</div><div><p className="testi-name">Sophie L.</p><p className="testi-role">3 alojamientos · Niza</p></div></div></div>
+          <div className="testi-card"><span className="testi-badge">✓ Anfitrión verificado</span><div className="testi-stars">{'★★★★★'.split('').map((s,i) => <span key={i} className="star">{s}</span>)}</div><p className="testi-quote">Tenía huéspedes extranjeros que no hablaban francés. Alfred les respondió en inglés, español e incluso alemán. Mis valoraciones en Airbnb han subido desde entonces.</p><div className="testi-author"><div className="testi-avatar av2">TR</div><div><p className="testi-name">Thomas R.</p><p className="testi-role">2 alojamientos · Burdeos</p></div></div></div>
+          <div className="testi-card"><span className="testi-badge">✓ Anfitrión verificado</span><div className="testi-stars">{'★★★★★'.split('').map((s,i) => <span key={i} className="star">{s}</span>)}</div><p className="testi-quote">La alerta de Telegram me salvó: un huésped reportó una fuga, recibí el mensaje al instante y pude enviar a un fontanero antes de que empeorara.</p><div className="testi-author"><div className="testi-avatar av3">MC</div><div><p className="testi-name">Marie C.</p><p className="testi-role">5 alojamientos · París</p></div></div></div>
         </div>
       </section>
 
       {/* ── PRICING ── */}
       <section className="pricing-section" id="tarifs">
         <p className="section-label">Tarifs</p>
-        <h2 className="section-title">Excellence made affordable.</h2>
-        <p className="section-sub">A private 24/7 butler at a fraction of the cost of a traditional concierge service.</p>
+        <h2 className="section-title">La excelencia, asequible.</h2>
+        <p className="section-sub">Un mayordomo privado 24/7 a una fracción del coste de una conserjería tradicional.</p>
         <div className="price-card-home">
-          <div className="badge-promo">🎁 1st month 100% FREE — No commitment</div>
-          <div className="plan-name">Per-property license</div>
-          <div className="price-old">€9.90/mo</div>
-          <div className="price">€0<span>/1st month</span></div>
-          <div className="price-note">puis €9.90/mo — sans engagement, résiliable à tout moment</div>
+          <div className="badge-promo">🎁 1er mes 100% GRATIS — Sin compromiso</div>
+          <div className="plan-name">Licencia por alojamiento</div>
+          <div className="price-old">9,90€/mes</div>
+          <div className="price">0€<span>/1er mes</span></div>
+          <div className="price-note">puis 9,90€/mes — sans engagement, résiliable à tout moment</div>
           <div className="features-list">
-            {['AI butler available 24/7','Auto-translation (30+ languages)','Integrated Google Maps local search','Instant emergency alert on Telegram','Personalized web link & QR code','Guest conversation history'].map((f,i) => (
+            {['Mayordomo IA disponible 24/7','Traducción automática (30+ idiomas)','Búsqueda local integrada con Google Maps','Alerta de emergencia instantánea en Telegram','Enlace web y código QR personalizados','Historial de conversaciones con huéspedes'].map((f,i) => (
               <div key={i} className="feature"><div className="check-icon">✓</div>{f}</div>
             ))}
           </div>
-          <Link href="/register" passHref legacyBehavior><a className="cta-pricing">Start for free — 1st month on us</a></Link>
-          <div className="guarantee">🔒 100% secure payment via Stripe</div>
+          <Link href="/register" passHref legacyBehavior><a className="cta-pricing">Empieza gratis — 1er mes incluido</a></Link>
+          <div className="guarantee">🔒 Pago 100% seguro con Stripe</div>
         </div>
       </section>
 
@@ -400,13 +400,13 @@ export default function Home() {
         <div className="footer-content">
           <div className="footer-brand">
             <span className="brand">Alfred<span className="gold">Major</span></span>
-            <p>The first AI butler that simplifies life for short-term rental hosts. Available 24/7, multilingual, and always discreet.</p>
+            <p>El primer mayordomo IA que simplifica la vida de los anfitriones de alquiler de corta estancia. Disponible 24/7, multilingüe y siempre discreto.</p>
           </div>
           <div className="footer-col"><h4>Produit</h4><ul><li><Link href="/login" passHref legacyBehavior><a>Espace Hôte</a></Link></li><li><Link href="/register" passHref legacyBehavior><a>Créer un compte</a></Link></li></ul></div>
           <div className="footer-col"><h4>Légal</h4><ul><li><Link href="/conditions-generales" passHref legacyBehavior><a>Conditions Générales</a></Link></li><li><Link href="/confidentialite" passHref legacyBehavior><a>Confidentialité (RGPD)</a></Link></li><li><Link href="/mentions-legales" passHref legacyBehavior><a>Mentions légales</a></Link></li></ul></div>
           <div className="footer-col"><h4>Contact</h4><ul><li><a href="mailto:contact@alfredmajor.com">contact@alfredmajor.com</a></li></ul></div>
         </div>
-        <div className="footer-bottom"><p>© 2026 Alfred Major — All rights reserved · Dorian BISCARRAT · SIRET 531 965 044 00039</p></div>
+        <div className="footer-bottom"><p>© 2026 Alfred Major — Todos los derechos reservados · Dorian BISCARRAT · SIRET 531 965 044 00039</p></div>
       </footer>
     </div>
   );
