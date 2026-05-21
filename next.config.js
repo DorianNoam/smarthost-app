@@ -6,7 +6,7 @@ const nextConfig = {
   i18n: {
     locales: ['fr', 'en', 'es'],
     defaultLocale: 'fr',
-    localeDetection: true, // Détection automatique via Accept-Language du navigateur
+    
   },
 
   async headers() {
