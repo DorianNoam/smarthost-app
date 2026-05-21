@@ -3,120 +3,100 @@ import { useRouter } from 'next/router';
 import { supabase } from '../lib/supabase';
 import Link from 'next/link';
 import Head from 'next/head';
+import { useTranslation } from '../lib/useTranslation';
 
 export default function Login() {
   const router = useRouter();
+  const { t, locale } = useTranslation();
+  const l = t.login;
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  const switchLocale = (loc) => router.push(router.pathname, router.asPath, { locale: loc });
+
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
-
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error) {
-      setError("Identifiants invalides ou compte non confirmé.");
-      setLoading(false);
-    } else {
-      router.push('/dashboard');
-    }
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) { setError(l.errorMsg); setLoading(false); }
+    else router.push('/dashboard');
   };
 
   return (
     <div className="container">
       <Head>
-        <title>Connexion — Alfred Major | Espace Hôte</title>
-        <meta name="description" content="Connectez-vous à votre espace hôte Alfred Major pour gérer vos logements, consulter les conversations voyageurs et configurer votre majordome IA." />
+        <title>{l.metaTitle}</title>
+        <meta name="description" content={l.metaDesc} />
         <meta name="robots" content="index, follow" />
-        <link rel="canonical" href="https://www.alfredmajor.com/login" />
-        <meta property="og:title" content="Connexion — Alfred Major | Espace Hôte" />
-        <meta property="og:description" content="Accédez à votre tableau de bord Alfred Major pour gérer vos logements et votre majordome IA." />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://www.alfredmajor.com/login" />
+        <link rel="canonical" href={`https://www.alfredmajor.com${locale === 'fr' ? '/login' : `/${locale}/login`}`} />
+        <link rel="alternate" hrefLang="fr" href="https://www.alfredmajor.com/login" />
+        <link rel="alternate" hrefLang="en" href="https://www.alfredmajor.com/en/login" />
+        <link rel="alternate" hrefLang="es" href="https://www.alfredmajor.com/es/login" />
+        <meta property="og:title" content={l.metaTitle} />
         <meta property="og:image" content="https://www.alfredmajor.com/og-image.jpg" />
-        <meta property="og:locale" content="fr_FR" />
-        <meta property="og:site_name" content="Alfred Major" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Connexion — Alfred Major" />
-        <meta name="twitter:image" content="https://www.alfredmajor.com/og-image.jpg" />
+        <meta property="og:locale" content={t.meta.ogLocale} />
       </Head>
-      <style jsx>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Montserrat:wght@300;400;600;700&display=swap');
-        :global(a) { text-decoration: none; color: inherit; }
-        .container { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #1a2a6c; font-family: 'Montserrat', sans-serif; padding: 20px; }
-        .login-box { background: white; width: 100%; max-width: 400px; padding: 50px 40px; border-radius: 30px; box-shadow: 0 25px 50px rgba(0,0,0,0.2); text-align: center; }
-        h1 { font-family: 'Playfair Display', serif; color: #1a2a6c; margin-bottom: 5px; font-size: 28px; cursor: pointer; }
-        .gold { color: #d4af37; }
-        form { display: flex; flex-direction: column; gap: 20px; margin-top: 30px; }
-        .input-group { text-align: left; position: relative; }
-        label { font-size: 12px; font-weight: 700; text-transform: uppercase; color: #999; margin-bottom: 8px; display: block; }
-        input { width: 100%; padding: 15px; border: 1px solid #eee; border-radius: 12px; background: #f9f9f9; font-size: 15px; outline: none; box-sizing: border-box; }
-        input:focus { border-color: #d4af37; background: white; }
-        
-        .forgot-link { 
-          display: block; text-align: right; font-size: 12px; color: #64748b; 
-          margin-top: 8px; font-weight: 500; transition: 0.2s;
-        }
-        .forgot-link:hover { color: #1a2a6c; text-decoration: underline; }
 
-        .btn-login { background-color: #d4af37; color: #1a2a6c; border: none; padding: 18px; border-radius: 50px; font-weight: 700; font-size: 16px; cursor: pointer; transition: 0.3s; margin-top: 10px; }
-        .btn-login:hover { background-color: #e5c158; transform: translateY(-2px); }
-        .btn-login:disabled { opacity: 0.5; cursor: not-allowed; }
-        .error-msg { background: #fee2e2; color: #b91c1c; padding: 10px; border-radius: 8px; font-size: 13px; margin-bottom: 15px; }
-        .footer-links { margin-top: 30px; font-size: 13px; color: #777; }
+      <style jsx>{`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@700;800;900&display=swap');
+        :global(*) { box-sizing: border-box; }
+        :global(body) { margin: 0; background: #0f172a; font-family: 'Inter', sans-serif; }
+        .container { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 20px; }
+        .lang-switcher { display: flex; gap: 6px; margin-bottom: 24px; }
+        .lang-btn { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: white; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 14px; font-family: inherit; transition: 0.2s; }
+        .lang-btn.active { background: rgba(212,175,55,0.2); border-color: #d4af37; }
+        .header { text-align: center; margin-bottom: 36px; }
+        .logo { font-size: 56px; display: block; margin-bottom: 14px; }
+        .brand { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 28px; font-weight: 900; color: white; letter-spacing: -0.5px; }
+        .gold { color: #d4af37; }
+        .card { background: white; border-radius: 24px; padding: 36px 32px; width: 100%; max-width: 420px; }
+        .card-title { font-size: 22px; font-weight: 800; color: #1a2a6c; margin-bottom: 6px; }
+        .card-sub { font-size: 14px; color: #64748b; margin-bottom: 28px; }
+        label { display: block; font-size: 13px; font-weight: 700; color: #475569; margin-bottom: 6px; }
+        input { width: 100%; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; font-size: 15px; color: #1e293b; margin-bottom: 18px; font-family: inherit; outline: none; transition: 0.2s; }
+        input:focus { border-color: #1a2a6c; box-shadow: 0 0 0 3px rgba(26,42,108,0.1); }
+        .forgot { display: block; text-align: right; font-size: 13px; color: #64748b; text-decoration: underline; margin-top: -12px; margin-bottom: 20px; cursor: pointer; }
+        .error { background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; padding: 12px; border-radius: 10px; font-size: 13px; margin-bottom: 16px; }
+        .btn { width: 100%; background: #1a2a6c; color: white; border: none; border-radius: 14px; padding: 16px; font-size: 16px; font-weight: 800; cursor: pointer; font-family: inherit; transition: 0.3s; }
+        .btn:hover:not(:disabled) { background: #1e3280; transform: translateY(-1px); }
+        .btn:disabled { background: #94a3b8; cursor: not-allowed; }
+        .footer-link { margin-top: 22px; text-align: center; font-size: 14px; color: #64748b; }
+        .footer-link a { color: #1a2a6c; font-weight: 700; text-decoration: none; }
       `}</style>
 
-      <div className="login-box">
-        <Link href="/">
-          <h1>Alfred<span className="gold">Major</span></h1>
-        </Link>
-        <p style={{color: '#666'}}>Ravi de vous revoir.</p>
+      <div className="lang-switcher">
+        <button className={`lang-btn${locale === 'fr' ? ' active' : ''}`} onClick={() => switchLocale('fr')}>🇫🇷 FR</button>
+        <button className={`lang-btn${locale === 'en' ? ' active' : ''}`} onClick={() => switchLocale('en')}>🇬🇧 EN</button>
+        <button className={`lang-btn${locale === 'es' ? ' active' : ''}`} onClick={() => switchLocale('es')}>🇪🇸 ES</button>
+      </div>
+
+      <div className="header">
+        <span className="logo">🎩</span>
+        <div className="brand">Alfred<span className="gold">Major</span></div>
+      </div>
+
+      <div className="card">
+        <div className="card-title">{l.title}</div>
+        <div className="card-sub">{l.subtitle}</div>
+
+        {error && <div className="error">{error}</div>}
 
         <form onSubmit={handleLogin}>
-          {error && <div className="error-msg">{error}</div>}
-          
-          <div className="input-group">
-            <label>Email</label>
-            <input 
-              type="email" 
-              placeholder="votre@email.com" 
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required 
-            />
-          </div>
-
-          <div className="input-group">
-            <label>Mot de passe</label>
-            <input 
-              type="password" 
-              placeholder="••••••••" 
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required 
-            />
-            <Link href="/forgot-password">
-              <span className="forgot-link">Mot de passe oublié ?</span>
-            </Link>
-          </div>
-
-          <button type="submit" className="btn-login" disabled={loading}>
-            {loading ? 'Connexion...' : 'Se connecter'}
+          <label>{l.labelEmail}</label>
+          <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder={l.placeholderEmail} autoCapitalize="none" />
+          <label>{l.labelPassword}</label>
+          <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder={l.placeholderPassword} />
+          <Link href="/forgot-password" locale={locale} className="forgot">{l.forgot}</Link>
+          <button type="submit" className="btn" disabled={loading}>
+            {loading ? l.loading : l.cta}
           </button>
         </form>
 
-        <div className="footer-links">
-          Pas encore de compte ? <br/><br/>
-          <Link href="/register" style={{color: '#1a2a6c', fontWeight: '700'}}>
-            Créer mon espace hôte
-          </Link>
+        <div className="footer-link">
+          {l.noAccount} <Link href="/register" locale={locale}>{l.register}</Link>
         </div>
       </div>
     </div>
