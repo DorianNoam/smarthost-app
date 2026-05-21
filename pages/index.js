@@ -6,20 +6,65 @@ export default function Home() {
     <div className="container">
       <Head>
         <title>Alfred Major | Le Majordome IA pour vos locations Courte durée</title>
-        <meta name="description" content="Déléguez la gestion de vos voyageurs à Alfred, l'IA qui répond 24h/24, recommande des adresses locales et vous alerte uniquement en cas d'urgence." />
+        <meta name="description" content="Déléguez la gestion de vos voyageurs à Alfred, l'IA qui répond 24h/24, recommande des adresses locales et vous alerte uniquement en cas d'urgence. Premier mois offert, sans engagement." />
+        <meta name="robots" content="index, follow" />
+        <link rel="canonical" href="https://www.alfredmajor.com/" />
+
+        {/* Open Graph */}
         <meta property="og:title" content="Alfred Major — Le Majordome IA pour vos locations" />
-        <meta property="og:description" content="Alfred répond à vos voyageurs 24h/24, recommande les meilleures adresses locales et vous alerte en cas d'urgence. 1er mois 100% offert, sans engagement." />
+        <meta property="og:description" content="Alfred répond à vos voyageurs 24h/24, recommande les meilleures adresses locales et vous alerte en cas d'urgence. Premier mois offert, sans engagement." />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://alfredmajor.com" />
-        <meta property="og:image" content="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1200&h=630&q=80" />
+        <meta property="og:url" content="https://www.alfredmajor.com/" />
+        <meta property="og:image" content="https://www.alfredmajor.com/og-image.jpg" />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
+        <meta property="og:image:alt" content="Alfred Major — Majordome IA pour locations courte durée" />
         <meta property="og:locale" content="fr_FR" />
+        <meta property="og:site_name" content="Alfred Major" />
+
+        {/* Twitter Card */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Alfred Major — Le Majordome IA pour vos locations" />
-        <meta name="twitter:description" content="Alfred répond à vos voyageurs 24h/24. 1er mois 100% offert, sans engagement." />
-        <meta name="twitter:image" content="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1200&h=630&q=80" />
+        <meta name="twitter:description" content="Alfred répond à vos voyageurs 24h/24. Premier mois offert, sans engagement." />
+        <meta name="twitter:image" content="https://www.alfredmajor.com/og-image.jpg" />
+        <meta name="twitter:image:alt" content="Alfred Major — Majordome IA pour locations courte durée" />
+
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="theme-color" content="#1a2a6c" />
+
+        {/* Schema.org — SoftwareApplication */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "SoftwareApplication",
+              "name": "Alfred Major",
+              "url": "https://www.alfredmajor.com",
+              "description": "Majordome IA pour locations courte durée. Répond aux voyageurs 24h/24, en 30+ langues, avec alertes urgences sur Telegram.",
+              "applicationCategory": "BusinessApplication",
+              "operatingSystem": "Web, Android, iOS",
+              "offers": {
+                "@type": "Offer",
+                "price": "9.90",
+                "priceCurrency": "EUR",
+                "priceValidUntil": "2026-12-31",
+                "description": "Premier mois à 9,90€ puis 19,90€/mois par logement, sans engagement"
+              },
+              "aggregateRating": {
+                "@type": "AggregateRating",
+                "ratingValue": "5",
+                "reviewCount": "3"
+              },
+              "publisher": {
+                "@type": "Organization",
+                "name": "Alfred Major",
+                "url": "https://www.alfredmajor.com",
+                "logo": "https://www.alfredmajor.com/icon.png"
+              }
+            })
+          }}
+        />
       </Head>
 
       <style jsx>{`
