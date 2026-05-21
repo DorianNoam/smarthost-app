@@ -49,8 +49,48 @@ export default function Pricing() {
   return (
     <div className="container">
       <Head>
-        <title>Tarifs | alfred major</title>
-        <meta name="description" content="Découvrez le tarif de alfred major, votre majordome IA pour location courte durée. Sans engagement, 1er mois offert." />
+        <title>Tarifs Alfred Major — Majordome IA pour locations courte durée | 9,90€/mois</title>
+        <meta name="description" content="Alfred Major à partir de 9,90€/mois par logement. Majordome IA disponible 24h/24, multilingue, alertes Telegram urgences. Sans engagement, résiliable à tout moment." />
+        <meta name="robots" content="index, follow" />
+        <link rel="canonical" href="https://www.alfredmajor.com/pricing" />
+        <meta property="og:title" content="Tarifs Alfred Major — Majordome IA pour locations courte durée" />
+        <meta property="og:description" content="Alfred Major à partir de 9,90€/mois par logement. Sans engagement, résiliable à tout moment. Essai premier mois offert." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://www.alfredmajor.com/pricing" />
+        <meta property="og:image" content="https://www.alfredmajor.com/og-image.jpg" />
+        <meta property="og:locale" content="fr_FR" />
+        <meta property="og:site_name" content="Alfred Major" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Tarifs Alfred Major — Majordome IA dès 9,90€/mois" />
+        <meta name="twitter:description" content="Sans engagement, résiliable à tout moment. Premier mois offert." />
+        <meta name="twitter:image" content="https://www.alfredmajor.com/og-image.jpg" />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Product",
+              "name": "Alfred Major — Licence par logement",
+              "description": "Majordome IA pour locations courte durée. Répond aux voyageurs 24h/24 en 30+ langues, avec alertes urgences sur Telegram.",
+              "url": "https://www.alfredmajor.com/pricing",
+              "brand": { "@type": "Brand", "name": "Alfred Major" },
+              "offers": {
+                "@type": "Offer",
+                "price": "9.90",
+                "priceCurrency": "EUR",
+                "priceValidUntil": "2026-12-31",
+                "availability": "https://schema.org/InStock",
+                "url": "https://www.alfredmajor.com/register",
+                "description": "Premier mois à 9,90€ puis 19,90€/mois par logement, sans engagement"
+              },
+              "aggregateRating": {
+                "@type": "AggregateRating",
+                "ratingValue": "5",
+                "reviewCount": "3"
+              }
+            })
+          }}
+        />
       </Head>
 
       <style jsx>{`
