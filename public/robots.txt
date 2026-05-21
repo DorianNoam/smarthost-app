@@ -1,0 +1,28 @@
+# Alfred Major — robots.txt
+User-agent: *
+
+# Pages publiques autorisées à l'indexation
+Allow: /$
+Allow: /register
+Allow: /login
+Allow: /pricing
+Allow: /conditions-generales
+Allow: /confidentialite
+Allow: /mentions-legales
+
+# Pages privées — ne pas indexer
+Disallow: /dashboard
+Disallow: /settings
+Disallow: /add-property
+Disallow: /edit-property
+Disallow: /tutorial
+Disallow: /m/
+Disallow: /property/
+Disallow: /history/
+Disallow: /admin/
+Disallow: /api/
+Disallow: /reset-password
+Disallow: /update-password
+Disallow: /forgot-password
+
+Sitemap: https://www.alfredmajor.com/sitemap.xml
