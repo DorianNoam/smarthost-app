@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import Link from 'next/link';
+import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { supabase } from '../lib/supabase'; 
 
@@ -47,6 +48,23 @@ export default function Register() {
 
   return (
     <div className="container">
+      <Head>
+        <title>Créer un compte — Alfred Major | Majordome IA pour locations</title>
+        <meta name="description" content="Créez votre compte Alfred Major gratuitement. Configurez votre majordome IA en 5 minutes et déléguez la gestion de vos voyageurs 24h/24." />
+        <meta name="robots" content="index, follow" />
+        <link rel="canonical" href="https://www.alfredmajor.com/register" />
+        <meta property="og:title" content="Créer un compte Alfred Major — Majordome IA pour locations" />
+        <meta property="og:description" content="Inscription gratuite. Configurez votre majordome IA en 5 minutes. Premier mois offert, sans engagement." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://www.alfredmajor.com/register" />
+        <meta property="og:image" content="https://www.alfredmajor.com/og-image.jpg" />
+        <meta property="og:locale" content="fr_FR" />
+        <meta property="og:site_name" content="Alfred Major" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Créer un compte Alfred Major" />
+        <meta name="twitter:description" content="Inscription gratuite. Premier mois offert, sans engagement." />
+        <meta name="twitter:image" content="https://www.alfredmajor.com/og-image.jpg" />
+      </Head>
       <style jsx>{`
         .container { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #1a2a6c; font-family: 'Montserrat', sans-serif; padding: 20px; }
         .register-box { background: white; width: 100%; max-width: 450px; padding: 50px 40px; border-radius: 30px; box-shadow: 0 25px 50px rgba(0,0,0,0.2); text-align: center; }
