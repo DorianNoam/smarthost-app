@@ -5,8 +5,15 @@ export default function MentionsLegales() {
   return (
     <div className="page">
       <Head>
-        <title>Mentions Légales | Alfred Major</title>
-        <meta name="description" content="Mentions légales d'Alfred Major" />
+        <title>Mentions Légales — Alfred Major | Majordome IA location courte durée</title>
+        <meta name="description" content="Mentions légales d'Alfred Major — Éditeur : Dorian Biscarrat, SIRET 531 965 044 00039. Solution SaaS de majordome IA pour hôtes Airbnb et locations courte durée." />
+        <meta name="robots" content="index, follow" />
+        <link rel="canonical" href="https://www.alfredmajor.com/mentions-legales" />
+        <meta property="og:title" content="Mentions Légales — Alfred Major" />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://www.alfredmajor.com/mentions-legales" />
+        <meta property="og:site_name" content="Alfred Major" />
+        <meta property="og:locale" content="fr_FR" />
       </Head>
 
       <style jsx>{`
