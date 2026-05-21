@@ -97,6 +97,20 @@ export default function Dashboard() {
     }
   };
 
+  // ── RÉSOLUTION DE CRISE ──
+  const resolveEmergency = async (prop) => {
+    if (!window.confirm(`Confirmer que l'urgence sur "${prop.name}" est réglée ?`)) return;
+    const { error } = await supabase
+      .from('properties')
+      .update({ has_emergency: false })
+      .eq('id', prop.id);
+    if (!error) {
+      setProperties(properties.map(p =>
+        p.id === prop.id ? { ...p, has_emergency: false } : p
+      ));
+    }
+  };
+
   const handleDeleteAccount = async () => {
     if (window.confirm("Supprimer votre compte ?") && window.prompt("Tapez 'SUPPRIMER' :") === "SUPPRIMER") {
       await supabase.from('profiles').delete().eq('id', profile.id);
@@ -167,6 +181,8 @@ export default function Dashboard() {
         .action-btn { padding: 11px; border-radius: 10px; font-weight: 700; font-size: 13px; text-align: center; border: none; cursor: pointer; display: block; width: 100%; }
         .btn-primary { background: #1a2a6c; color: white; }
         .btn-welcome { background: #ecfdf5; color: #059669; border: 1px solid #10b981; }
+        .btn-resolve { background: #f0fdf4; color: #15803d; border: 2px solid #22c55e; font-weight: 800; font-size: 13px; animation: pulse-green 2s ease-in-out infinite; }
+        @keyframes pulse-green { 0%, 100% { box-shadow: 0 0 0 0 rgba(34,197,94,0.4); } 50% { box-shadow: 0 0 0 6px rgba(34,197,94,0); } }
         .btn-history { background: #fdf2f8; color: #be185d; }
         .activation-zone { background: #fffbeb; padding: 14px; border-radius: 12px; border: 1px solid #fef3c7; text-align: center; margin-top: 10px; }
         .btn-activate { background: #fbbf24; border: none; padding: 12px; width: 100%; border-radius: 10px; font-weight: 800; color: #1a2a6c; cursor: pointer; font-size: 14px; }
@@ -275,6 +291,11 @@ export default function Dashboard() {
                   </div>
                 ) : (
                   <div className="btn-stack">
+                    {prop.has_emergency && (
+                      <button onClick={() => resolveEmergency(prop)} className="action-btn btn-resolve">
+                        ✅ Marquer comme résolu
+                      </button>
+                    )}
                     <Link href={`/property/${prop.id}`} legacyBehavior><a className="action-btn btn-primary">📊 Configurer le logement</a></Link>
                     <button onClick={() => copyWelcomeMessage(prop)} className="action-btn btn-welcome">✨ Lien Voyageur (Copier)</button>
                     <Link href={`/history/${prop.id}`} legacyBehavior><a className="action-btn btn-history">📜 Historique des échanges</a></Link>
