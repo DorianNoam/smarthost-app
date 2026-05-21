@@ -5,8 +5,16 @@ export default function Confidentialite() {
   return (
     <div className="page">
       <Head>
-        <title>Politique de Confidentialité | Alfred Major</title>
-        <meta name="description" content="Politique de confidentialité et protection des données personnelles d'Alfred Major" />
+        <title>Politique de Confidentialité & RGPD — Alfred Major</title>
+        <meta name="description" content="Politique de confidentialité d'Alfred Major : protection des données personnelles, conformité RGPD, hébergement européen via Supabase. Vos données restent privées et sécurisées." />
+        <meta name="robots" content="index, follow" />
+        <link rel="canonical" href="https://www.alfredmajor.com/confidentialite" />
+        <meta property="og:title" content="Politique de Confidentialité & RGPD — Alfred Major" />
+        <meta property="og:description" content="Protection des données personnelles et conformité RGPD. Hébergement européen, données sécurisées." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://www.alfredmajor.com/confidentialite" />
+        <meta property="og:site_name" content="Alfred Major" />
+        <meta property="og:locale" content="fr_FR" />
       </Head>
 
       <style jsx>{`
