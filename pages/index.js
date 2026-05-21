@@ -351,8 +351,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-        </div>
-      </section>
 
       {/* ── LOGOS ── */}
       <section className="logos-section">
