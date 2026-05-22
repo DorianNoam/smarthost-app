@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { supabase } from '../lib/supabase';
 import Link from 'next/link';
+import { COUNTRIES, getAddressFormat } from '../lib/countries';
 
 export default function AddPropertyWizard() {
   const router = useRouter();
@@ -9,11 +10,15 @@ export default function AddPropertyWizard() {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [propertyId, setPropertyId] = useState(null);
+  const [showCountryPicker, setShowCountryPicker] = useState(false);
+  const [selectedCountry, setSelectedCountry] = useState({ code: 'FR', flag: '🇫🇷', name: 'France' });
 
   const [formData, setFormData] = useState({
     name: '', 
-    slug: '', // ✅ Ajouté pour le lien simplifié
-    street_number: '', address: '', floor: '', building: '', address_complement: '', city: '',
+    slug: '',
+    country: 'FR',
+    street_number: '', address: '', floor: '', building: '', 
+    address_complement: '', city: '', postal_code: '', state: '',
     check_in_hour: '15:00', check_out_hour: '11:00', 
     self_checkin: false, 
     entrance_type: 'Boîte à clés', 
@@ -29,6 +34,14 @@ export default function AddPropertyWizard() {
     baby_equipment: '', noise_rules: '', pet_policy: 'Non', tourist_tax_info: ''
   });
 
+  const addressFormat = getAddressFormat(selectedCountry.code);
+
+  const selectCountry = (country) => {
+    setSelectedCountry(country);
+    setFormData(prev => ({ ...prev, country: country.code }));
+    setShowCountryPicker(false);
+  };
+
   useEffect(() => {
     if (id) {
       setPropertyId(id);
@@ -38,7 +51,13 @@ export default function AddPropertyWizard() {
 
   const fetchPropertyData = async (propId) => {
     const { data, error } = await supabase.from('properties').select('*').eq('id', propId).single();
-    if (!error && data) setFormData(data);
+    if (!error && data) {
+      setFormData(prev => ({ ...prev, ...data }));
+      if (data.country) {
+        const found = COUNTRIES.find(c => c.code === data.country);
+        if (found) setSelectedCountry(found);
+      }
+    }
   };
 
   // ✅ FONCTION POUR GÉNÉRER LE SLUG (Lien URL)
@@ -137,7 +156,18 @@ export default function AddPropertyWizard() {
         .checkbox-group { display: flex; align-items: center; gap: 12px; background: #fffbeb; padding: 18px; border-radius: 14px; border: 1px solid #fef3c7; }
         .checkbox-group input { width: auto; height: 20px; width: 20px; cursor: pointer; }
 
-        @media (max-width: 600px) {
+        .country-selector { padding: 12px; border: 1px solid #e2e8f0; border-radius: 12px; font-size: 15px; background: #f8fafc; width: 100%; box-sizing: border-box; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: 0.2s; }
+        .country-selector:hover { border-color: #fbbf24; background: white; }
+        .country-modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: flex-end; justify-content: center; }
+        .country-modal { background: white; border-radius: 24px 24px 0 0; width: 100%; max-width: 700px; max-height: 70vh; overflow-y: auto; padding-bottom: 20px; }
+        .country-modal-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; border-bottom: 1px solid #f1f5f9; position: sticky; top: 0; background: white; }
+        .country-modal-title { font-weight: 800; color: #1a2a6c; font-size: 16px; }
+        .country-modal-close { background: none; border: none; font-size: 20px; cursor: pointer; color: #94a3b8; }
+        .country-item { display: flex; justify-content: space-between; align-items: center; padding: 14px 24px; cursor: pointer; border-bottom: 1px solid #f8fafc; transition: 0.15s; }
+        .country-item:hover { background: #f8fafc; }
+        .country-item.selected { background: #eff6ff; }
+        .country-item-text { font-size: 15px; color: #1e293b; }
+        .country-item-check { color: #1a2a6c; font-weight: 800; }
           .grid { grid-template-columns: 1fr; }
           .full { grid-column: span 1; }
           .actions { flex-direction: column; }
@@ -154,20 +184,33 @@ export default function AddPropertyWizard() {
             <div className="grid">
               <div className="input-group full">
                 <label>Nom du projet (ex: Villa Noam)</label>
-                <input name="name" value={formData.name} onChange={handleChange} />
+                <input name="name" value={formData.name} onChange={handleChange} placeholder="ex: Villa Noam" />
               </div>
-              <div className="input-group">
-                <label>Numéro de rue</label>
-                <input name="street_number" value={formData.street_number} onChange={handleChange} inputMode="numeric" placeholder="ex: 12" />
+
+              {/* Sélecteur de pays */}
+              <div className="input-group full">
+                <label>Pays</label>
+                <button type="button" className="country-selector" onClick={() => setShowCountryPicker(true)}>
+                  <span>{selectedCountry.flag} {selectedCountry.name}</span>
+                  <span>▼</span>
+                </button>
               </div>
-              <div className="input-group">
-                <label>Nom de la voie</label>
-                <input name="address" value={formData.address} onChange={handleChange} placeholder="ex: Avenue Jean Jaurès" />
-              </div>
-              <div className="input-group"><label>Étage</label><input name="floor" value={formData.floor} onChange={handleChange} /></div>
-              <div className="input-group"><label>Bâtiment</label><input name="building" value={formData.building} onChange={handleChange} /></div>
-              <div className="input-group full"><label>Complément d'adresse</label><input name="address_complement" value={formData.address_complement} onChange={handleChange} /></div>
-              <div className="input-group full"><label>Ville</label><input name="city" value={formData.city} onChange={handleChange} /></div>
+
+              {/* Champs d'adresse dynamiques selon le pays */}
+              {addressFormat.fields.map(field => (
+                <div key={field} className={`input-group ${['address', 'address_complement'].includes(field) ? 'full' : ''}`}>
+                  <label>{addressFormat.labels[field]}</label>
+                  <input
+                    name={field}
+                    value={formData[field] || ''}
+                    onChange={handleChange}
+                    placeholder={addressFormat.placeholders[field]}
+                  />
+                </div>
+              ))}
+
+              <div className="input-group"><label>Étage</label><input name="floor" value={formData.floor} onChange={handleChange} placeholder="ex: 3ème étage" /></div>
+              <div className="input-group"><label>Bâtiment</label><input name="building" value={formData.building} onChange={handleChange} placeholder="ex: Bâtiment B" /></div>
             </div>
           </div>
         )}
@@ -319,6 +362,28 @@ export default function AddPropertyWizard() {
 
         <Link href="/dashboard" legacyBehavior><a className="btn-later">Enregistrer et terminer plus tard</a></Link>
       </div>
+
+      {/* ── MODAL SÉLECTEUR DE PAYS ── */}
+      {showCountryPicker && (
+        <div className="country-modal-overlay" onClick={() => setShowCountryPicker(false)}>
+          <div className="country-modal" onClick={e => e.stopPropagation()}>
+            <div className="country-modal-header">
+              <span className="country-modal-title">Choisir le pays</span>
+              <button className="country-modal-close" onClick={() => setShowCountryPicker(false)}>✕</button>
+            </div>
+            {COUNTRIES.map(country => (
+              <div
+                key={country.code}
+                className={`country-item${selectedCountry.code === country.code ? ' selected' : ''}`}
+                onClick={() => selectCountry(country)}
+              >
+                <span className="country-item-text">{country.flag} {country.name}</span>
+                {selectedCountry.code === country.code && <span className="country-item-check">✓</span>}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
