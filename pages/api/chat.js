@@ -2,9 +2,9 @@ import Groq from 'groq-sdk';
 import { supabase } from '../../lib/supabase';
 
 // ─────────────────────────────────────────────
-// 1. RECHERCHE GOOGLE MAPS (local à 600m)
+// 1. RECHERCHE GOOGLE MAPS (rayon adaptatif)
 // ─────────────────────────────────────────────
-async function getGoogleLocalData(category, fullAddress) {
+async function getGoogleLocalData(category, fullAddress, propertyType = 'apartment') {
   const apiKey = process.env.MAPS_API_KEY;
   if (!apiKey) return "";
 
@@ -14,6 +14,10 @@ async function getGoogleLocalData(category, fullAddress) {
     shopping: ["supermarket", "grocery_store", "convenience_store", "store"],
     health: ["pharmacy", "hospital", "doctor"],
   };
+
+  // ── Rayon adaptatif selon le type de logement ──
+  // Les gîtes sont souvent en zone rurale : rayon élargi
+  const radius = propertyType === 'gite' ? 5000.0 : 600.0;
 
   try {
     const geoRes = await fetch(
@@ -33,7 +37,7 @@ async function getGoogleLocalData(category, fullAddress) {
       body: JSON.stringify({
         includedTypes: typeMap[category] || ["point_of_interest"],
         locationRestriction: {
-          circle: { center: { latitude: lat, longitude: lng }, radius: 600.0 },
+          circle: { center: { latitude: lat, longitude: lng }, radius },
         },
         languageCode: 'fr',
         maxResultCount: 8,
@@ -54,93 +58,109 @@ async function getGoogleLocalData(category, fullAddress) {
 }
 
 // ─────────────────────────────────────────────
-// 2. ALERTE TELEGRAM
+// 2. ALERTES TELEGRAM — multi-destinataires
 // ─────────────────────────────────────────────
 async function sendTelegramAlert(originalMsg, translatedMsg, propertyData) {
   const token = process.env.TELEGRAM_BOT_TOKEN;
-  try {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('telegram_chat_id')
-      .eq('id', propertyData.owner_id)
-      .single();
+  if (!token) return;
 
-    if (!profile?.telegram_chat_id) return;
+  // Récupérer le propriétaire principal
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('telegram_chat_id')
+    .eq('id', propertyData.owner_id)
+    .single();
 
-    let text = `🚨 *ALERTE ALFRED MAJOR*\n\n🏠 *Logement :* ${propertyData.name}\n\n💬 *Message du client :*\n"${originalMsg}"`;
-    if (translatedMsg) {
-      text += `\n\n🇫🇷 *Traduction :*\n"${translatedMsg}"`;
+  // Récupérer les membres de l'équipe assignés à ce logement (actifs, avec Telegram)
+  const { data: teamMembers } = await supabase
+    .from('team_members')
+    .select('telegram_chat_id, role, property_ids')
+    .eq('account_owner_id', propertyData.owner_id)
+    .eq('status', 'active')
+    .not('telegram_chat_id', 'is', null);
+
+  // Construire la liste des destinataires Telegram
+  const recipients = new Set();
+  if (profile?.telegram_chat_id) recipients.add(profile.telegram_chat_id);
+
+  if (teamMembers) {
+    for (const member of teamMembers) {
+      // Null = accès à tous les logements
+      const hasAccess = !member.property_ids || member.property_ids.includes(propertyData.id);
+      if (hasAccess && member.telegram_chat_id) {
+        recipients.add(member.telegram_chat_id);
+      }
     }
-    text += `\n\n⚡ *Action recommandée :*\nMerci de contacter votre client dans les plus brefs délais pour gérer cette urgence.\n\n_Cordialement,_\n_L'équipe Alfred Major_ 🎩`;
+  }
 
-    await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+  if (recipients.size === 0) return;
+
+  let text = `🚨 *ALERTE ALFRED MAJOR*\n\n🏠 *Logement :* ${propertyData.name}`;
+  if (propertyData.room_name) text += ` — ${propertyData.room_name}`;
+  text += `\n\n💬 *Message du client :*\n"${originalMsg}"`;
+  if (translatedMsg) text += `\n\n🇫🇷 *Traduction :*\n"${translatedMsg}"`;
+  text += `\n\n⚡ *Action recommandée :*\nMerci de contacter votre client dans les plus brefs délais pour gérer cette urgence.\n\n_Cordialement,_\n_L'équipe Alfred Major_ 🎩`;
+
+  const sendPromises = [...recipients].map(chatId =>
+    fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        chat_id: profile.telegram_chat_id,
-        text,
-        parse_mode: 'Markdown',
-      }),
-    });
-  } catch (e) {
-    console.error("Erreur Telegram:", e);
-  }
+      body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'Markdown' }),
+    }).catch(e => console.error(`Erreur Telegram ${chatId}:`, e))
+  );
+
+  await Promise.allSettled(sendPromises);
 }
 
 // ─────────────────────────────────────────────
-// 2B. ALERTE PUSH DOUBLE CANAL (PWA WEB + EXPO MOBILE)
+// 2B. ALERTES PUSH — multi-destinataires
 // ─────────────────────────────────────────────
 async function sendPushAlert(originalMsg, translatedMsg, propertyData, targetPropertyId) {
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.alfredmajor.com';
+
   try {
+    // Propriétaire principal
     const { data: profile } = await supabase
       .from('profiles')
       .select('id, push_subscription, expo_push_token')
       .eq('id', propertyData.owner_id)
       .single();
 
-    if (!profile) return;
+    // Membres de l'équipe actifs avec push token
+    const { data: teamMembers } = await supabase
+      .from('team_members')
+      .select('expo_push_token, property_ids')
+      .eq('account_owner_id', propertyData.owner_id)
+      .eq('status', 'active')
+      .not('expo_push_token', 'is', null);
 
     const title = '🚨 Alfred Major — Urgence détectée';
-    const body = translatedMsg
+    const bodyText = translatedMsg
       ? `${propertyData.name} : "${translatedMsg}"`
       : `${propertyData.name} : "${originalMsg}"`;
 
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.alfredmajor.com';
     const promises = [];
 
-    // Envoi sur le Web (PWA) si l'abonnement existe
-    if (profile.push_subscription) {
+    // Push propriétaire (PWA Web + Expo)
+    if (profile?.push_subscription) {
       promises.push(
         fetch(`${siteUrl}/api/push-send`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            userId: profile.id,
-            title,
-            body,
-            url: '/dashboard',
-            urgent: true,
-            propertyName: propertyData.name,
+            userId: profile.id, title, body: bodyText,
+            url: '/dashboard', urgent: true, propertyName: propertyData.name,
           }),
         })
       );
     }
-
-    // Envoi direct sur l'Application Mobile (Expo) si le token existe
-    if (profile.expo_push_token) {
+    if (profile?.expo_push_token) {
       promises.push(
         fetch('https://exp.host/--/api/v2/push/send', {
           method: 'POST',
-          headers: {
-            'Accept': 'application/json',
-            'Accept-encoding': 'gzip, deflate',
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Accept': 'application/json', 'Accept-encoding': 'gzip, deflate', 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            to: profile.expo_push_token,
-            sound: 'default',
-            title,
-            body,
+            to: profile.expo_push_token, sound: 'default', title, body: bodyText,
             priority: 'high',
             data: { url: '/dashboard', propertyId: targetPropertyId, propertyName: propertyData.name },
           }),
@@ -148,17 +168,35 @@ async function sendPushAlert(originalMsg, translatedMsg, propertyData, targetPro
       );
     }
 
-    if (promises.length > 0) {
-      await Promise.allSettled(promises);
+    // Push membres de l'équipe (Expo uniquement)
+    if (teamMembers) {
+      for (const member of teamMembers) {
+        const hasAccess = !member.property_ids || member.property_ids.includes(propertyData.id);
+        if (hasAccess && member.expo_push_token) {
+          promises.push(
+            fetch('https://exp.host/--/api/v2/push/send', {
+              method: 'POST',
+              headers: { 'Accept': 'application/json', 'Accept-encoding': 'gzip, deflate', 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                to: member.expo_push_token, sound: 'default', title, body: bodyText,
+                priority: 'high',
+                data: { url: '/dashboard', propertyId: targetPropertyId, propertyName: propertyData.name },
+              }),
+            })
+          );
+        }
+      }
     }
 
+    if (promises.length > 0) await Promise.allSettled(promises);
+
   } catch (e) {
-    console.error("Erreur globale lors de l'envoi des alertes push:", e);
+    console.error("Erreur push:", e);
   }
 }
 
 // ─────────────────────────────────────────────
-// 3. DÉTECTION D'INTENTION LOCALE (côté code)
+// 3. DÉTECTION D'INTENTION LOCALE
 // ─────────────────────────────────────────────
 function detectLocalCategory(msg) {
   const m = msg.toLowerCase();
@@ -170,7 +208,7 @@ function detectLocalCategory(msg) {
 }
 
 // ─────────────────────────────────────────────
-// 4. DÉTECTION D'URGENCE (côté code)
+// 4. DÉTECTION D'URGENCE
 // ─────────────────────────────────────────────
 function isEmergency(msg) {
   const m = msg.toLowerCase();
@@ -182,14 +220,190 @@ function isEmergency(msg) {
 }
 
 // ─────────────────────────────────────────────
-// HANDLER PRINCIPAL
+// 5. CONSTRUCTION DES BLOCS CONDITIONNELS DU PROMPT
 // ─────────────────────────────────────────────
+function buildConditionalBlocks(p) {
+  const blocks = [];
+  const type = p.property_type || 'apartment';
+
+  // ── Identité de la chambre (riad, bnb, private_room) ──
+  if (['riad', 'bnb', 'private_room'].includes(type) && (p.room_name || p.room_bed_config)) {
+    blocks.push(`━━━ CHAMBRE DU VOYAGEUR ━━━
+- Nom : ${p.room_name || 'Non renseigné'}
+- Étage / Localisation : ${p.room_floor || 'Non renseigné'}
+- Configuration : ${p.room_bed_config || 'Non renseigné'}
+- Vue : ${p.room_view || 'Non renseigné'}`);
+  }
+
+  // ── Réception (riad, bnb) ──
+  if (['riad', 'bnb'].includes(type)) {
+    blocks.push(`━━━ RÉCEPTION & ÉQUIPE ━━━
+- Réception sur place : ${p.has_reception ? 'Oui' : 'Non'}
+${p.has_reception ? `- Horaires : ${p.reception_hours || 'Non renseigné'}` : ''}
+- Arrivée hors horaires : ${p.late_checkin_procedure || 'Appeler l\'hôte'}
+- Responsable : ${p.staff_name || 'Non renseigné'}
+- Langues parlées : ${p.staff_languages || 'Non renseigné'}`);
+  }
+
+  // ── Petit-déjeuner (riad, bnb, private_room) ──
+  if (['riad', 'bnb', 'private_room'].includes(type) && (p.breakfast_included || p.breakfast_hours)) {
+    blocks.push(`━━━ PETIT-DÉJEUNER ━━━
+- Inclus : ${p.breakfast_included ? 'Oui' : 'Non'}
+- Horaires : ${p.breakfast_hours || 'Non renseigné'}
+- Lieu : ${p.breakfast_location || 'Non renseigné'}
+- Composition : ${p.breakfast_details || 'Non renseigné'}
+- Réservation veille requise : ${p.breakfast_reservation_required ? 'Oui' : 'Non'}
+- Allergies / régimes : ${p.breakfast_dietary_info || 'Sur demande'}
+- En chambre : ${p.breakfast_in_room || 'Non disponible'}`);
+  }
+
+  // ── Restauration sur place (riad, bnb) ──
+  if (['riad', 'bnb'].includes(type) && p.dinner_available) {
+    blocks.push(`━━━ RESTAURATION SUR PLACE ━━━
+- Table d'hôtes : ${p.dinner_available ? 'Oui' : 'Non'}
+- Détails dîner : ${p.dinner_details || 'Non renseigné'}
+- Room service : ${p.room_service_available ? 'Oui' : 'Non'}
+- Alcool disponible : ${p.alcohol_available ? 'Oui' : 'Non'}
+- Options spéciales : ${p.dietary_options || 'Non renseigné'}`);
+  }
+
+  // ── Services inclus (riad, bnb) ──
+  if (['riad', 'bnb'].includes(type) && p.housekeeping_frequency) {
+    blocks.push(`━━━ SERVICES INCLUS ━━━
+- Ménage : ${p.housekeeping_frequency || 'Non renseigné'} ${p.housekeeping_time ? `(${p.housekeeping_time})` : ''}
+- Serviettes : ${p.towel_change_frequency || 'Non renseigné'}
+- Draps : ${p.linen_change_frequency || 'Non renseigné'}
+- Blanchisserie : ${p.laundry_service || 'Non disponible'}
+- Repassage : ${p.ironing_service || 'Non disponible'}`);
+  }
+
+  // ── Espaces communs (riad, bnb, gite) ──
+  const commonSpaces = [p.pool_info, p.hammam_info, p.spa_info, p.rooftop_info, p.patio_info, p.common_lounge_info].filter(Boolean);
+  if (['riad', 'bnb', 'gite'].includes(type) && commonSpaces.length > 0) {
+    let block = `━━━ ESPACES COMMUNS ━━━`;
+    if (p.pool_info)          block += `\n- Piscine : ${p.pool_info}`;
+    if (p.hammam_info)        block += `\n- Hammam : ${p.hammam_info}`;
+    if (p.spa_info)           block += `\n- Spa / Massages : ${p.spa_info}`;
+    if (p.rooftop_info)       block += `\n- Terrasse / Rooftop : ${p.rooftop_info}`;
+    if (p.patio_info)         block += `\n- Patio / Jardin intérieur : ${p.patio_info}`;
+    if (p.common_lounge_info) block += `\n- Salon commun : ${p.common_lounge_info}`;
+    if (p.jacuzzi_info)       block += `\n- Jacuzzi : ${p.jacuzzi_info}`;
+    if (p.gym_info)           block += `\n- Salle de sport : ${p.gym_info}`;
+    if (p.outdoor_games)      block += `\n- Jeux extérieurs : ${p.outdoor_games}`;
+    if (p.common_areas_rules) block += `\n- Règles espaces communs : ${p.common_areas_rules}`;
+    blocks.push(block);
+  }
+
+  // ── Services additionnels (riad, bnb, gite) ──
+  const extras = [p.airport_transfer, p.trusted_taxi, p.bike_rental, p.excursions_info].filter(Boolean);
+  if (['riad', 'bnb', 'gite'].includes(type) && extras.length > 0) {
+    let block = `━━━ SERVICES ADDITIONNELS ━━━`;
+    if (p.airport_transfer)  block += `\n- Transfert aéroport/gare : ${p.airport_transfer}`;
+    if (p.trusted_taxi)      block += `\n- Taxi de confiance : ${p.trusted_taxi}`;
+    if (p.bike_rental)       block += `\n- Location vélos / scooters : ${p.bike_rental}`;
+    if (p.bikes_info)        block += `\n- Vélos mis à disposition : ${p.bikes_info}`;
+    if (p.excursions_info)   block += `\n- Excursions : ${p.excursions_info}`;
+    if (p.local_guide_info)  block += `\n- Guide local : ${p.local_guide_info}`;
+    if (p.safe_info)         block += `\n- Coffre-fort : ${p.safe_info}`;
+    if (p.external_laundry)  block += `\n- Blanchisserie externe : ${p.external_laundry}`;
+    blocks.push(block);
+  }
+
+  // ── Cohabitation (private_room) ──
+  if (type === 'private_room') {
+    blocks.push(`━━━ COHABITATION ━━━
+- Hôte présent : ${p.host_on_site ? 'Oui' : 'Non'}
+${p.host_on_site ? `- Hôte sur place : ${p.host_name_onsite || 'Non renseigné'} — ${p.host_contact_onsite || 'Non renseigné'} — Disponible : ${p.host_availability_hours || 'Non renseigné'}` : ''}
+- Espaces partagés : ${p.shared_spaces || 'Non renseigné'}
+- Règles espaces partagés : ${p.shared_spaces_rules || 'Non renseigné'}
+- Cuisine partagée : ${p.shared_kitchen_rules || 'Non renseigné'}
+- Salle de bain : ${p.bathroom_type || 'Non renseigné'}
+- Serviettes : ${p.towels_provided || 'Non renseigné'}
+- Invités extérieurs : ${p.guests_policy || 'Non renseigné'}
+- Autres voyageurs simultanés : ${p.other_guests_info || 'Non renseigné'}`);
+  }
+
+  // ── Gîte rural (gite) ──
+  if (type === 'gite') {
+    let block = `━━━ SPÉCIFICITÉS DU GÎTE ━━━`;
+    if (p.gate_code)                  block += `\n- Code / télécommande portail : ${p.gate_code}`;
+    if (p.bbq_info)                   block += `\n- Barbecue : ${p.bbq_info}`;
+    if (p.garden_info)                block += `\n- Jardin / Terrain : ${p.garden_info}`;
+    if (p.septic_tank_rules)          block += `\n- Fosse septique (IMPORTANT) : ${p.septic_tank_rules}`;
+    if (p.shutters_info)              block += `\n- Volets : ${p.shutters_info}`;
+    if (p.nearest_bakery)             block += `\n- Boulangerie : ${p.nearest_bakery}`;
+    if (p.nearest_supermarket)        block += `\n- Supermarché : ${p.nearest_supermarket}`;
+    if (p.nearest_gas_station)        block += `\n- Station-service : ${p.nearest_gas_station}`;
+    if (p.local_market_info)          block += `\n- Marché local : ${p.local_market_info}`;
+    if (p.nature_activities)          block += `\n- Activités nature : ${p.nature_activities}`;
+    if (p.hiking_info)                block += `\n- Randonnées : ${p.hiking_info}`;
+    if (p.fire_rules)                 block += `\n- Règles feux : ${p.fire_rules}`;
+    if (p.neighbor_emergency_contact) block += `\n- Voisin de confiance : ${p.neighbor_emergency_contact}`;
+    blocks.push(block);
+  }
+
+  // ── Médina / Riad ──
+  if (type === 'riad') {
+    let block = `━━━ MÉDINA & CONTEXTE LOCAL ━━━`;
+    if (p.medina_directions)       block += `\n- Comment trouver le riad : ${p.medina_directions}`;
+    if (p.taxi_meeting_point)      block += `\n- Point de RDV taxis : ${p.taxi_meeting_point}`;
+    if (p.dress_code_info)         block += `\n- Tenue recommandée : ${p.dress_code_info}`;
+    if (p.souk_hours)              block += `\n- Horaires souks : ${p.souk_hours}`;
+    if (p.mosque_info)             block += `\n- Mosquée voisine : ${p.mosque_info}`;
+    if (p.safety_tips)             block += `\n- Conseils sécurité : ${p.safety_tips}`;
+    if (p.generator_info)          block += `\n- Générateur : ${p.generator_info}`;
+    if (p.water_reserve_info)      block += `\n- Réserve eau : ${p.water_reserve_info}`;
+    if (p.local_emergency_contacts) block += `\n- Urgences locales : ${p.local_emergency_contacts}`;
+    if (p.pharmacy_on_call)        block += `\n- Pharmacie de garde : ${p.pharmacy_on_call}`;
+    blocks.push(block);
+  }
+
+  return blocks.join('\n\n');
+}
+
 // ─────────────────────────────────────────────
-// RATE LIMITING (simple in-memory, remplacer par Upstash en prod multi-instance)
+// 6. INSTRUCTIONS URGENCE SELON LE TYPE
+// ─────────────────────────────────────────────
+function buildEmergencyInstructions(propertyType, hasReception) {
+  if (['riad', 'bnb'].includes(propertyType) && hasReception) {
+    return `   c) Mentionne que la réception a également été prévenue.
+   d) Termine OBLIGATOIREMENT et EXACTEMENT par : "Je préviens immédiatement votre hôte."`;
+  }
+  return `   c) Termine OBLIGATOIREMENT et EXACTEMENT par : "Je préviens immédiatement votre hôte."`;
+}
+
+// ─────────────────────────────────────────────
+// 7. VOCABULAIRE ADAPTÉ AU TYPE
+// ─────────────────────────────────────────────
+function buildTypePersonality(propertyType, propertyName, city) {
+  switch (propertyType) {
+    case 'riad':
+      return `Tu es Alfred, le majordome personnel du "${propertyName}" à ${city}.
+Tu gères un riad / une maison d'hôtes. Utilise le vocabulaire approprié : "votre chambre", "notre établissement", "la réception", "le patio", "nos équipes sur place". Ne dis jamais "votre appartement" ou "votre logement".`;
+
+    case 'bnb':
+      return `Tu es Alfred, le majordome personnel de "${propertyName}" à ${city}.
+Tu gères une chambre d'hôtes / B&B. Vocabulaire : "votre chambre", "notre maison", "votre hôte", "la salle du petit-déjeuner". Chaleureux et familial.`;
+
+    case 'private_room':
+      return `Tu es Alfred, le majordome personnel de "${propertyName}" à ${city}.
+Tu gères une chambre privée dans un logement partagé. Vocabulaire : "votre chambre", "les espaces partagés", "votre hôte". Respectueux des règles de cohabitation.`;
+
+    case 'gite':
+      return `Tu es Alfred, le majordome personnel de "${propertyName}" à ${city}.
+Tu gères un gîte / une villa. Vocabulaire : "votre gîte", "la propriété", "le terrain". Si le voyageur demande des commerces ou restaurants, précise les distances car la zone peut être rurale.`;
+
+    default: // apartment
+      return `Tu es Alfred, le majordome personnel de "${propertyName}" à ${city}.`;
+  }
+}
+
+// ─────────────────────────────────────────────
+// RATE LIMITING
 // ─────────────────────────────────────────────
 const rateLimitMap = new Map();
-const RATE_LIMIT_MAX = 30;      // messages max
-const RATE_LIMIT_WINDOW = 60000; // par minute
+const RATE_LIMIT_MAX = 30;
+const RATE_LIMIT_WINDOW = 60000;
 
 function isRateLimited(ip) {
   const now = Date.now();
@@ -203,7 +417,6 @@ function isRateLimited(ip) {
   return false;
 }
 
-// Nettoyage périodique pour éviter les fuites mémoire
 setInterval(() => {
   const now = Date.now();
   for (const [key, val] of rateLimitMap.entries()) {
@@ -211,6 +424,9 @@ setInterval(() => {
   }
 }, 300000);
 
+// ─────────────────────────────────────────────
+// HANDLER PRINCIPAL
+// ─────────────────────────────────────────────
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).send('Méthode non autorisée');
 
@@ -220,20 +436,18 @@ export default async function handler(req, res) {
     return res.status(429).json({ answer: "Trop de messages. Merci de patienter quelques instants." });
   }
 
-  // ── VALIDATION : on n'accepte QUE propertyId depuis le client, jamais propertyData ──
+  // ── VALIDATION ──
   const { messagesHistory, propertyId, userLanguage } = req.body;
 
   if (!messagesHistory || !Array.isArray(messagesHistory) || !propertyId) {
     return res.status(400).json({ answer: "Données manquantes." });
   }
 
-  // Validation UUID pour éviter les injections
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   if (!uuidRegex.test(propertyId)) {
     return res.status(400).json({ answer: "Identifiant invalide." });
   }
 
-  // Limite la taille de l'historique pour éviter les abus
   if (messagesHistory.length > 50) {
     return res.status(400).json({ answer: "Historique trop long." });
   }
@@ -247,7 +461,7 @@ export default async function handler(req, res) {
   const langCode = userLanguage ? userLanguage.split('-')[0] : 'fr';
 
   try {
-    // ── CHARGEMENT SERVEUR : les données du logement ne viennent jamais du client ──
+    // ── CHARGEMENT SERVEUR : données du logement jamais depuis le client ──
     const { data: propertyData, error: propError } = await supabase
       .from('properties')
       .select('*')
@@ -262,6 +476,7 @@ export default async function handler(req, res) {
     const targetPropertyId = propertyData.id;
     const city = propertyData.city || '';
     const fullAddress = `${propertyData.street_number || ''} ${propertyData.address || ''}, ${city}`.trim();
+    const propertyType = propertyData.property_type || 'apartment';
 
     // ── A. KNOWLEDGE BASE ──
     const { data: kb } = await supabase
@@ -270,7 +485,7 @@ export default async function handler(req, res) {
       .eq('property_id', targetPropertyId);
     const formattedKB = kb?.map(item => `[${item.category}] : ${item.content}`).join('\n') || "";
 
-    // ── B. RECHERCHE LOCALE ──
+    // ── B. RECHERCHE LOCALE (rayon adaptatif) ──
     const hostLocalInfo = [
       propertyData.transport_info,
       propertyData.local_shops,
@@ -280,17 +495,22 @@ export default async function handler(req, res) {
 
     const localCategory = detectLocalCategory(lastUserMsg);
     let googleData = "";
-
     if (localCategory) {
-      googleData = await getGoogleLocalData(localCategory, fullAddress);
+      googleData = await getGoogleLocalData(localCategory, fullAddress, propertyType);
     }
 
     const localSection = hostLocalInfo
       ? `${hostLocalInfo}${googleData ? `\n\nComplément Google Maps :\n${googleData}` : ''}`
       : googleData || "";
 
-    // ── C. PROMPT SYSTÈME COMPLET ──
-    const systemPrompt = `Tu es Alfred, le majordome personnel de "${propertyData.name}" à ${city}.
+    // ── C. BLOCS CONDITIONNELS ──
+    const conditionalBlocks = buildConditionalBlocks(propertyData);
+
+    // ── D. INSTRUCTIONS URGENCE ──
+    const emergencyInstructions = buildEmergencyInstructions(propertyType, propertyData.has_reception);
+
+    // ── E. PROMPT SYSTÈME COMPLET ──
+    const systemPrompt = `${buildTypePersonality(propertyType, propertyData.name, city)}
 
 IDENTITÉ — RÈGLE ABSOLUE :
 - Tu es un majordome humain, professionnel et polyglotte. Tu n'es PAS une IA.
@@ -302,38 +522,28 @@ LANGUE :
 - Réponds TOUJOURS dans la langue du voyageur, sans exception.
 
 STYLE — RÈGLES DE COMMUNICATION :
-- Ton chaleureux et raffiné, comme un majordome d'hôtel 5 étoiles : élégant sans être pompux, attentionné sans être obséquieux.
-- Personnalise tes réponses : utilise "votre logement", "votre séjour", "à deux pas de chez vous" plutôt que des formulations neutres.
-- Évite les phrases robotiques comme "Il y a plusieurs options près de votre logement". Préfère "Le quartier regorge de bonnes adresses" ou "Vous avez de très belles tables à proximité immédiate".
+- Ton chaleureux et raffiné, comme un majordome d'hôtel 5 étoiles : élégant sans être pompeux, attentionné sans être obséquieux.
+- Personnalise tes réponses : utilise "votre chambre", "votre séjour", "à deux pas de chez vous" plutôt que des formulations neutres.
+- Évite les phrases robotiques. Préfère "Le quartier regorge de bonnes adresses" ou "Vous avez de très belles tables à proximité immédiate".
 
 POUR LES RECOMMANDATIONS (restaurants, bars, sorties, commerces, transports) :
-- NE JAMAIS faire de liste sèche séparée par des virgules.
+${['riad', 'bnb'].includes(propertyType) && propertyData.dinner_available ? `- Si le voyageur demande un restaurant pour le soir, mentionne D'ABORD la table d'hôtes sur place avant de suggérer l'extérieur.\n` : ''}- NE JAMAIS faire de liste sèche séparée par des virgules.
 - Présente 3 à 5 lieux maximum sous forme de petites recommandations distinctes.
 - UN lieu par bloc, avec une LIGNE VIDE entre chaque recommandation pour aérer.
 - Pour chaque lieu, utilise EXACTEMENT ce format sur deux lignes :
   [emoji] **[Nom du lieu]** — [Courte description : ambiance, type, distance]
   📍 [Adresse complète du lieu]
-
-- Exemple exact à imiter :
-  🥐 **Le Fournil de l'Univers** — Boulangerie artisanale, parfait pour le petit-déjeuner
-  📍 12 Rue de la République, 33270 Floirac
-
-  🍕 **La Tortue Pizza** — Pizzeria conviviale, idéale en famille
-  📍 5 Avenue Jean Jaurès, 33270 Floirac
-
 - IMPORTANT : Le nom du lieu doit toujours être entouré de DOUBLE astérisques **comme ceci**.
 - IMPORTANT : L'adresse doit toujours être précédée d'un emoji 📍 sur sa propre ligne.
 - Si une adresse n'est PAS disponible dans tes données, NE METS PAS la ligne 📍. Ne JAMAIS inventer d'adresse.
-- Termine si pertinent par une touche personnalisée : "Si vous me dites ce qui vous tente — italien, asiatique, bistrot français — je peux affiner mes suggestions selon vos envies."
-- Si tu au la note ⭐ ou le type entre crochets [restaurant] dans tes données, sers-toi en pour mieux décrire, mais ne montre JAMAIS les crochets ou la note brute au voyageur.
-
+- Termine si pertinent par une touche personnalisée.
+${propertyType === 'gite' ? '- Pour les commerces, précise toujours la distance approximative car le logement est en zone rurale.\n' : ''}
 POUR LES QUESTIONS TECHNIQUES (wifi, code, parking, check-in) :
 - Reste CONCIS : 2-3 phrases maximum, droit au but.
 - Ton chaleureux mais efficace.
 
 POUR UNE SALUTATION SIMPLE ("bonjour", "hi", "hello") :
 - Réponds poliment et demande comment aider. RIEN DE PLUS.
-- Ex : "Bonjour, ravi de vous accueillir ! En quoi puis-je vous être utile durant votre séjour ?"
 
 FORMAT GÉNÉRAL :
 - N'utilise PAS de titres markdown avec #.
@@ -388,6 +598,7 @@ Départ :
 - Retour clés : ${propertyData.key_return_details || "Non renseigné"}
 - Lien avis : ${propertyData.review_link || "Non renseigné"}
 
+${conditionalBlocks ? conditionalBlocks + '\n' : ''}
 ━━━ CONSIGNES SPÉCIALES DE L'HÔTE ━━━
 ${formattedKB || "Aucune consigne particulière."}
 
@@ -406,10 +617,10 @@ ${localSection || "Aucune information disponible pour le moment."}
 Si le voyageur signale une urgence réelle (fuite d'eau, panne électrique, incendie, gaz, porte bloquée, accident) :
    a) Rassure-le en 1 phrase.
    b) Donne l'info technique si disponible (vanne, disjoncteur...).
-   c) Termine ta réponse OBLIGATOIREMENT et EXACTEMENT par cette phrase : "Je préviens immédiatement votre hôte."
+${emergencyInstructions}
    IMPORTANT : This phrase must appear EXACTLY as is to trigger alerts. Do not reformulate.`;
 
-    // ── D. APPEL IA ──
+    // ── F. APPEL IA ──
     const chatResponse = await groq.chat.completions.create({
       model: "llama-3.3-70b-versatile",
       messages: [
@@ -425,7 +636,7 @@ Si le voyageur signale une urgence réelle (fuite d'eau, panne électrique, ince
 
     const responseText = chatResponse.choices[0].message.content;
 
-    // ── E. SAUVEGARDE ──
+    // ── G. SAUVEGARDE ──
     const newHistory = [
       ...messagesHistory,
       { role: 'marc', text: responseText, timestamp: new Date().toISOString() },
@@ -437,13 +648,12 @@ Si le voyageur signale une urgence réelle (fuite d'eau, panne électrique, ince
         { onConflict: 'property_id' }
       );
 
-    // ── F. ALERTES URGENCES (Telegram + Push + Expo Mobile) ──
+    // ── H. ALERTES URGENCES ──
     const triggerPhrase = "je préviens immédiatement votre hôte";
     const shouldAlert = responseText.toLowerCase().includes(triggerPhrase) || isEmergency(lastUserMsg);
 
     if (shouldAlert) {
       if (targetPropertyId) {
-        // Enregistre l'état d'urgence dans la base de données
         await supabase
           .from('properties')
           .update({ has_emergency: true })
@@ -465,7 +675,7 @@ Si le voyageur signale une urgence réelle (fuite d'eau, panne électrique, ince
         } catch (_) {}
       }
 
-      // Envoi simultané des notifications (Telegram, PWA Web et Application Expo)
+      // Envoi multi-destinataires (propriétaire + membres d'équipe)
       await Promise.allSettled([
         sendTelegramAlert(lastUserMsg, translatedMsg, propertyData),
         sendPushAlert(lastUserMsg, translatedMsg, propertyData, targetPropertyId),
@@ -479,7 +689,7 @@ Si le voyageur signale une urgence réelle (fuite d'eau, panne électrique, ince
     const errorMessages = {
       fr: "Je rencontre un problème technique momentané. Veuillez réessayer dans quelques instants.",
       en: "I'm experiencing a brief technical issue. Please try again in a moment.",
-      es: "Estoy experimentando un problème técnico. Por favor, inténtelo de nouveau.",
+      es: "Estoy experimentando un problema técnico. Por favor, inténtelo de nuevo.",
       de: "Ich habe gerade ein technisches Problem. Bitte versuchen Sie es erneut.",
       it: "Sto riscontrando un problema tecnico. Si prega di riprovare.",
     };
