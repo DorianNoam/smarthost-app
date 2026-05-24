@@ -26,7 +26,10 @@ export default function Login() {
     }
   }, [router.isReady, router.query]);
 
-  const switchLocale = (loc) => router.push(router.pathname, router.asPath, { locale: loc });
+  const switchLocale = (loc) => {
+    if (loc === "fr") router.push("/login");
+    else router.push(`/${loc}/login`);
+  };
 
   const handleLogin = async (e) => {
     e.preventDefault();
