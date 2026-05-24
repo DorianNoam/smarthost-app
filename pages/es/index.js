@@ -237,14 +237,14 @@ export default function Home() {
       <nav>
         <Link href="/" passHref legacyBehavior><a className="brand">Alfred<span className="gold">Major</span></a></Link>
         <div className="nav-links">
-          <a href="#fonctionnement" className="nav-link">Fonctionnement</a>
-          <a href="#tarifs" className="nav-link">Tarifs</a>
+          <a href="#fonctionnement" className="nav-link">Funciones</a>
+          <a href="#tarifs" className="nav-link">Precios</a>
           <div className="lang-switcher">
             <button className="lang-btn" onClick={() => router.push("/")}>🇫🇷</button>
             <button className="lang-btn" onClick={() => router.push("/en")}>🇬🇧</button>
             <button className="lang-btn active">🇪🇸</button>
           </div>
-          <Link href="/login" passHref legacyBehavior><a className="nav-login">Espace Hôte</a></Link>
+          <Link href="/login" passHref legacyBehavior><a className="nav-login">>Iniciar sesión</a></Link>
         </div>
       </nav>
 
