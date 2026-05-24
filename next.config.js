@@ -1,6 +1,13 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+
+  // ── Internationalisation ──────────────────────────────────
+  i18n: {
+    locales: ['fr', 'en', 'es'],
+    defaultLocale: 'fr',
+  },
+
   async headers() {
     return [
       {
