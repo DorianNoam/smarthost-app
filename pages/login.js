@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { supabase } from '../lib/supabase';
 import Link from 'next/link';
@@ -14,15 +14,47 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  // ── Gestion de l'invitation ──────────────────────────────
+  const [inviteId, setInviteId] = useState(null);
+
+  useEffect(() => {
+    if (!router.isReady) return;
+    const { invite, email: inviteEmail } = router.query;
+    if (invite) {
+      setInviteId(invite);
+      if (inviteEmail) setEmail(decodeURIComponent(inviteEmail));
+    }
+  }, [router.isReady, router.query]);
+
   const switchLocale = (loc) => router.push(router.pathname, router.asPath, { locale: loc });
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) { setError(l.errorMsg); setLoading(false); }
-    else router.push('/dashboard');
+
+    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({ email, password });
+
+    if (authError) {
+      setError(l.errorMsg);
+      setLoading(false);
+      return;
+    }
+
+    // ── Si invitation : lier le compte existant à l'équipe ──
+    if (inviteId && authData.user) {
+      await supabase
+        .from('team_members')
+        .update({
+          member_user_id: authData.user.id,
+          status: 'active',
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', inviteId)
+        .eq('invited_email', email.toLowerCase());
+    }
+
+    router.push('/dashboard');
   };
 
   return (
@@ -58,6 +90,7 @@ export default function Login() {
         label { display: block; font-size: 13px; font-weight: 700; color: #475569; margin-bottom: 6px; }
         input { width: 100%; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; font-size: 15px; color: #1e293b; margin-bottom: 18px; font-family: inherit; outline: none; transition: 0.2s; }
         input:focus { border-color: #1a2a6c; box-shadow: 0 0 0 3px rgba(26,42,108,0.1); }
+        input[readonly] { opacity: 0.7; cursor: not-allowed; }
         .forgot { display: block; text-align: right; font-size: 13px; color: #64748b; text-decoration: underline; margin-top: -12px; margin-bottom: 20px; cursor: pointer; }
         .error { background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; padding: 12px; border-radius: 10px; font-size: 13px; margin-bottom: 16px; }
         .btn { width: 100%; background: #1a2a6c; color: white; border: none; border-radius: 14px; padding: 16px; font-size: 16px; font-weight: 800; cursor: pointer; font-family: inherit; transition: 0.3s; }
@@ -65,6 +98,11 @@ export default function Login() {
         .btn:disabled { background: #94a3b8; cursor: not-allowed; }
         .footer-link { margin-top: 22px; text-align: center; font-size: 14px; color: #64748b; }
         .footer-link a { color: #1a2a6c; font-weight: 700; text-decoration: none; }
+
+        /* Bandeau invitation */
+        .invite-banner { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 12px; padding: 12px 16px; margin-bottom: 20px; text-align: left; }
+        .invite-banner-title { font-size: 13px; font-weight: 800; color: #1e40af; margin-bottom: 3px; }
+        .invite-banner-sub { font-size: 12px; color: #3b82f6; }
       `}</style>
 
       <div className="lang-switcher">
@@ -79,24 +117,48 @@ export default function Login() {
       </div>
 
       <div className="card">
-        <div className="card-title">{l.title}</div>
-        <div className="card-sub">{l.subtitle}</div>
+        <div className="card-title">
+          {inviteId ? 'Rejoindre l\'équipe' : l.title}
+        </div>
+        <div className="card-sub">
+          {inviteId ? 'Connectez-vous pour accepter l\'invitation.' : l.subtitle}
+        </div>
+
+        {/* Bandeau invitation */}
+        {inviteId && (
+          <div className="invite-banner">
+            <div className="invite-banner-title">✉️ Invitation en attente</div>
+            <div className="invite-banner-sub">Connectez-vous pour accéder au dashboard de votre équipe.</div>
+          </div>
+        )}
 
         {error && <div className="error">{error}</div>}
 
         <form onSubmit={handleLogin}>
           <label>{l.labelEmail}</label>
-          <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder={l.placeholderEmail} autoCapitalize="none" />
+          <input
+            type="email"
+            value={email}
+            onChange={e => !inviteId && setEmail(e.target.value)}
+            placeholder={l.placeholderEmail}
+            autoCapitalize="none"
+            readOnly={!!inviteId}
+          />
           <label>{l.labelPassword}</label>
-          <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder={l.placeholderPassword} />
+          <input
+            type="password"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            placeholder={l.placeholderPassword}
+          />
           <Link href="/forgot-password" locale={locale} className="forgot">{l.forgot}</Link>
           <button type="submit" className="btn" disabled={loading}>
-            {loading ? l.loading : l.cta}
+            {loading ? l.loading : inviteId ? '✅ Se connecter & Rejoindre' : l.cta}
           </button>
         </form>
 
         <div className="footer-link">
-          {l.noAccount} <Link href="/register" locale={locale}>{l.register}</Link>
+          {l.noAccount} <Link href={inviteId ? `/register?invite=${inviteId}&email=${encodeURIComponent(email)}` : '/register'} locale={locale}>{l.register}</Link>
         </div>
       </div>
     </div>
