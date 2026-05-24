@@ -4,9 +4,9 @@ import { useRouter } from 'next/router';
 
 export default function Home() {
   const router = useRouter();
-  const locale = router.locale || 'fr';
+  
 
-  const switchLocale = (l) => router.push('/', '/', { locale: l });
+  
 
   return (
     <div className="container">
@@ -245,9 +245,9 @@ export default function Home() {
           <a href="#fonctionnement" className="nav-link">Fonctionnement</a>
           <a href="#tarifs" className="nav-link">Tarifs</a>
           <div className="lang-switcher">
-            <button className={`lang-btn${locale === 'fr' ? ' active' : ''}`} onClick={() => switchLocale('fr')}>🇫🇷</button>
-            <button className={`lang-btn${locale === 'en' ? ' active' : ''}`} onClick={() => switchLocale('en')}>🇬🇧</button>
-            <button className={`lang-btn${locale === 'es' ? ' active' : ''}`} onClick={() => switchLocale('es')}>🇪🇸</button>
+            <button className="lang-btn active">🇫🇷</button>
+            <button className="lang-btn" onClick={() => router.push('/en')}>🇬🇧</button>
+            <button className="lang-btn" onClick={() => router.push('/es')}>🇪🇸</button>
           </div>
           <Link href="/login" passHref legacyBehavior><a className="nav-login">Espace Hôte</a></Link>
         </div>
