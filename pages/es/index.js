@@ -244,7 +244,7 @@ export default function Home() {
             <button className="lang-btn" onClick={() => router.push("/en")}>🇬🇧</button>
             <button className="lang-btn active">🇪🇸</button>
           </div>
-          <Link href="/login" passHref legacyBehavior><a className="nav-login">>Iniciar sesión</a></Link>
+          <Link href="/login" passHref legacyBehavior><a className="nav-login">Iniciar sesión</a></Link>
         </div>
       </nav>
 
