@@ -25,8 +25,46 @@ export default function Dashboard() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { router.push('/login'); return; }
-      const { data: props } = await supabase.from('properties').select('*').eq('owner_id', user.id).order('created_at', { ascending: false });
+
+      // 1. On charge d'abord les logements en considérant que l'user est le Propriétaire
+      let { data: props } = await supabase
+        .from('properties')
+        .select('*')
+        .eq('owner_id', user.id)
+        .order('created_at', { ascending: false });
+
+      // 2. Si aucun logement n'est retourné, l'utilisateur est peut-être un membre d'équipe invité
+      if (!props || props.length === 0) {
+        const { data: teamEntry } = await supabase
+          .from('team_members')
+          .select('property_ids, account_owner_id')
+          .eq('invited_email', user.email.toLowerCase())
+          .eq('status', 'active')
+          .maybeSingle();
+
+        if (teamEntry) {
+          if (teamEntry.property_ids === null) {
+            // Accès total aux logements du propriétaire
+            const { data: allProps } = await supabase
+              .from('properties')
+              .select('*')
+              .eq('owner_id', teamEntry.account_owner_id)
+              .order('created_at', { ascending: false });
+            props = allProps;
+          } else {
+            // Accès filtré uniquement aux IDs spécifiés par le propriétaire
+            const { data: restrictedProps } = await supabase
+              .from('properties')
+              .select('*')
+              .in('id', teamEntry.property_ids)
+              .order('created_at', { ascending: false });
+            props = restrictedProps;
+          }
+        }
+      }
+
       const { data: prof } = await supabase.from('profiles').select('*, telegram_chat_id').eq('id', user.id).single();
+      
       if (props) setProperties(props);
       if (prof) setProfile(prof);
     } catch (err) {
@@ -324,7 +362,7 @@ export default function Dashboard() {
       {showLimitModal && (
         <div className="modal-overlay" onClick={() => setShowLimitModal(false)}>
           <div className="modal-card" onClick={e => e.stopPropagation()}>
-            <span style={{ fontSize: '46px', marginBottom: '14px', display: 'block' }}>🎩</span>
+            <span style={{ fontSize: '46px', margin: '0 0 14px', display: 'block' }}>🎩</span>
             <h2 style={{ color: '#1a2a6c', fontWeight: 800, margin: '0 0 8px' }}>Activation requise</h2>
             <p style={{ color: '#64748b', margin: 0 }}>Veuillez activer votre logement actuel avant d'en ajouter un nouveau.</p>
             <button className="btn-close-modal" onClick={() => setShowLimitModal(false)}>D'accord</button>
@@ -335,7 +373,7 @@ export default function Dashboard() {
       {showDeleteModal && (
         <div className="modal-overlay" onClick={() => setShowDeleteModal(false)}>
           <div className="modal-card" onClick={e => e.stopPropagation()}>
-            <span style={{ fontSize: '42px', marginBottom: '12px', display: 'block' }}>⚠️</span>
+            <span style={{ fontSize: '42px', margin: '0 0 12px', display: 'block' }}>⚠️</span>
             <h2 style={{ color: '#1a2a6c', fontWeight: 800, margin: '0 0 8px' }}>Supprimer {propertyToDelete?.name} ?</h2>
             <p style={{ color: '#64748b', margin: '0 0 16px' }}>Êtes-vous sûr ? Toute la configuration sera effacée.</p>
             <div className="info-box"><strong>📌 Note :</strong> Votre licence reste active jusqu'à la fin du mois.</div>
