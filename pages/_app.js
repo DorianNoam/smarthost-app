@@ -1,6 +1,7 @@
 import Script from 'next/script';
 import Head from 'next/head';
 import CookieBanner from '../components/CookieBanner';
+import { GoogleTagManager } from '@next/third-parties/google';
 
 export default function App({ Component, pageProps }) {
   return (
@@ -12,29 +13,12 @@ export default function App({ Component, pageProps }) {
         <meta name="theme-color" content="#1a2a6c" />
       </Head>
 
-      {/*
-        ✅ RGPD : Google Analytics chargé UNIQUEMENT si le consentement est accordé.
-        La stratégie "lazyOnload" + la vérification du consentement en JS
-        garantissent qu'aucun cookie tiers n'est déposé sans accord.
+      {/* 
+        ✅ Intégration officielle de Google Tag Manager.
+        La gestion du consentement (RGPD) se fera désormais directement 
+        depuis l'interface GTM pour une meilleure conformité.
       */}
-      <Script
-        src="https://www.googletagmanager.com/gtag/js?id=G-Z2KKW1DB52"
-        strategy="lazyOnload"
-      />
-      <Script id="google-analytics" strategy="lazyOnload">
-        {`
-          // N'active GA que si le consentement a été accordé
-          const consent = typeof window !== 'undefined'
-            ? localStorage.getItem('alfred_cookie_consent')
-            : null;
-          if (consent === 'accepted') {
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', 'G-Z2KKW1DB52', { anonymize_ip: true });
-          }
-        `}
-      </Script>
+      <GoogleTagManager gtmId="GTM-P7ZWRDD4" />
 
       <Component {...pageProps} />
 
