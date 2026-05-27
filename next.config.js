@@ -10,11 +10,12 @@ const nextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' https://js.stripe.com https://www.googletagmanager.com",
+              // Ajout des domaines Google et de 'unsafe-eval' pour GTM
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://www.googletagmanager.com https://www.google-analytics.com https://www.google.com https://www.gstatic.com",
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com",
               "img-src 'self' data: https: blob:",
-              "connect-src 'self' https://*.supabase.co https://api.groq.com https://places.googleapis.com https://maps.googleapis.com https://exp.host https://api.telegram.org https://region1.google-analytics.com https://www.google-analytics.com",
+              "connect-src 'self' https://*.supabase.co https://api.groq.com https://places.googleapis.com https://maps.googleapis.com https://exp.host https://api.telegram.org https://region1.google-analytics.com https://www.google-analytics.com https://www.google-analytics.com https://stats.g.doubleclick.net https://www.google.com",
               "frame-src https://js.stripe.com https://hooks.stripe.com",
               "object-src 'none'",
               "base-uri 'self'",
@@ -29,6 +30,7 @@ const nextConfig = {
           { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains; preload' },
         ],
       },
+      // ... (le reste de ton code reste inchangé)
       {
         source: '/sw.js',
         headers: [
