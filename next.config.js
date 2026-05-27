@@ -10,7 +10,7 @@ const nextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              // Ajout des domaines Google et de 'unsafe-eval' pour GTM
+              // Ajout de 'unsafe-eval' et des domaines Google pour GTM et GA4
               "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://www.googletagmanager.com https://www.google-analytics.com https://www.google.com https://www.gstatic.com",
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com",
@@ -30,7 +30,6 @@ const nextConfig = {
           { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains; preload' },
         ],
       },
-      // ... (le reste de ton code reste inchangé)
       {
         source: '/sw.js',
         headers: [
