@@ -1,6 +1,5 @@
 // pages/api/push-send.js
 // Envoie une notification push à un hôte (Web Push + Expo Mobile)
-
 import { createClient } from '@supabase/supabase-js';
 import webpush from 'web-push';
 
@@ -16,12 +15,29 @@ webpush.setVapidDetails(
   process.env.VAPID_PRIVATE_KEY
 );
 
+// ─────────────────────────────────────────────
+// TITRES PUSH LOCALISÉS
+// ─────────────────────────────────────────────
+function getPushTitle(lang) {
+  const titles = {
+    fr: '🚨 Alfred Major — Urgence détectée',
+    it: '🚨 Alfred Major — Emergenza rilevata',
+    en: '🚨 Alfred Major — Emergency detected',
+    es: '🚨 Alfred Major — Emergencia detectada',
+    de: '🚨 Alfred Major — Notfall erkannt',
+    pt: '🚨 Alfred Major — Emergência detectada',
+    nl: '🚨 Alfred Major — Noodgeval gedetecteerd',
+    ar: '🚨 ألفريد ماجور — تم الكشف عن حالة طوارئ',
+  };
+  return titles[lang] || titles['en'];
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Méthode non autorisée' });
   }
 
-  const { userId, title, body, url, urgent, propertyName } = req.body;
+  const { userId, title, body, url, urgent, propertyName, lang } = req.body;
 
   if (!userId || !body) {
     return res.status(400).json({ error: 'userId et body requis' });
@@ -38,7 +54,9 @@ export default async function handler(req, res) {
     return res.status(504).json({ error: 'Erreur lors de la récupération du profil' });
   }
 
-  const finalTitle = title || '🎩 Alfred Major — Urgence détectée';
+  // Titre localisé : priorité au title passé en paramètre, sinon on génère depuis lang
+  const finalTitle = title || getPushTitle(lang || 'fr');
+
   let webPushSuccess = false;
   let expoPushSuccess = false;
 
@@ -96,13 +114,12 @@ export default async function handler(req, res) {
     }
   }
 
-  // Si aucun des deux canaux n'est configuré pour cet utilisateur
   if (!profile?.push_subscription && !profile?.expo_push_token) {
     return res.status(444).json({ error: 'Aucun canal de notification push actif trouvé' });
   }
 
-  return res.status(200).json({ 
-    success: true, 
-    channels: { webPush: webPushSuccess, expoPush: expoPushSuccess } 
+  return res.status(200).json({
+    success: true,
+    channels: { webPush: webPushSuccess, expoPush: expoPushSuccess },
   });
 }
