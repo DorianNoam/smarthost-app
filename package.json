@@ -20,6 +20,7 @@
     "web-push": "^3.6.7",
     "pdf-parse": "^1.1.1",
     "formidable": "^3.5.1",
-    "mammoth": "^1.8.0"
+    "mammoth": "^1.8.0",
+    "@next/third-parties": "latest"
   }
 }
