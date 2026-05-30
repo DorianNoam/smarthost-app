@@ -9,7 +9,6 @@ const supabaseAdmin = createClient(
 
 // ─────────────────────────────────────────────
 // MESSAGES DE LIAISON LOCALISÉS
-// Telegram connaît la langue de l'utilisateur via message.from.language_code
 // ─────────────────────────────────────────────
 function getLinkMessages(lang) {
   const messages = {
@@ -62,6 +61,13 @@ function getLinkMessages(lang) {
       notFound: "❌ Account niet gevonden. Bent u ingelogd op alfredmajor.com?",
       instructions: "👋 Hallo! Om uw account te koppelen, gaat u terug naar *alfredmajor.com → Instellingen* en klikt u op *'Mijn Telegram-account koppelen'*.",
     },
+    ar: {
+      success: "✅ *تم توصيل ألفريد ماجور!*\n\nتم ربط حسابك الآن. ستتلقى جميع التنبيهات العاجلة هنا.",
+      invalidLink: "❌ رابط غير صالح. عد إلى Alfred Major وانقر مرة أخرى على 'ربط حساب Telegram الخاص بي'.",
+      dbError: "❌ خطأ في الربط. يرجى المحاولة مرة أخرى من Alfred Major.",
+      notFound: "❌ الحساب غير موجود. هل أنت متصل على alfredmajor.com؟",
+      instructions: "👋 مرحباً! لربط حسابك، عد إلى *alfredmajor.com → الإعدادات* وانقر على *'ربط حساب Telegram الخاص بي'*.",
+    },
   };
   return messages[lang] || messages['en'];
 }
@@ -80,7 +86,7 @@ export default async function handler(req, res) {
       const chatId = message.chat.id;
       const text = message.text.trim();
 
-      // Détection de la langue de l'utilisateur Telegram (ex: "it", "fr", "en")
+      // Détection de la langue de l'hôte via son Telegram
       const userLang = message.from?.language_code?.split('-')[0] || 'fr';
       const m = getLinkMessages(userLang);
 
@@ -95,9 +101,13 @@ export default async function handler(req, res) {
           return res.status(200).send('OK');
         }
 
+        // ── Sauvegarde du telegram_chat_id ET de la langue préférée de l'hôte ──
         const { data, error } = await supabaseAdmin
           .from('profiles')
-          .update({ telegram_chat_id: chatId.toString() })
+          .update({
+            telegram_chat_id: chatId.toString(),
+            preferred_language: userLang,  // ← on stocke la langue de l'hôte
+          })
           .eq('id', userId)
           .select();
 
