@@ -10,81 +10,89 @@ function getAlertTexts(lang) {
       header: '🚨 *ALERTE ALFRED MAJOR*',
       property: 'Logement',
       message: 'Message du client',
-      translation: 'Traduction 🇫🇷',
+      translation: 'Traduction',
       action: 'Merci de contacter votre client dans les plus brefs délais pour gérer cette urgence.',
       regards: 'Cordialement,',
       signature: "L'équipe Alfred Major",
       pushTitle: '🚨 Alfred Major — Urgence détectée',
+      translateTo: 'français',
     },
     it: {
       header: '🚨 *ALLERTA ALFRED MAJOR*',
       property: 'Alloggio',
       message: 'Messaggio del cliente',
-      translation: 'Traduzione 🇫🇷',
+      translation: 'Traduzione',
       action: 'Si prega di contattare il cliente il prima possibile per gestire questa emergenza.',
       regards: 'Cordiali saluti,',
       signature: 'Il team Alfred Major',
       pushTitle: '🚨 Alfred Major — Emergenza rilevata',
+      translateTo: 'italiano',
     },
     en: {
       header: '🚨 *ALFRED MAJOR ALERT*',
       property: 'Property',
       message: 'Guest message',
-      translation: 'Translation 🇫🇷',
+      translation: 'Translation',
       action: 'Please contact your guest as soon as possible to handle this emergency.',
       regards: 'Kind regards,',
       signature: 'The Alfred Major team',
       pushTitle: '🚨 Alfred Major — Emergency detected',
+      translateTo: 'English',
     },
     es: {
       header: '🚨 *ALERTA ALFRED MAJOR*',
       property: 'Alojamiento',
       message: 'Mensaje del cliente',
-      translation: 'Traducción 🇫🇷',
+      translation: 'Traducción',
       action: 'Por favor contacte a su cliente lo antes posible para gestionar esta emergencia.',
       regards: 'Atentamente,',
       signature: 'El equipo Alfred Major',
       pushTitle: '🚨 Alfred Major — Emergencia detectada',
+      translateTo: 'español',
     },
     de: {
       header: '🚨 *ALFRED MAJOR ALARM*',
       property: 'Unterkunft',
       message: 'Nachricht des Gastes',
-      translation: 'Übersetzung 🇫🇷',
+      translation: 'Übersetzung',
       action: 'Bitte kontaktieren Sie Ihren Gast so schnell wie möglich.',
       regards: 'Mit freundlichen Grüßen,',
       signature: 'Das Alfred Major Team',
       pushTitle: '🚨 Alfred Major — Notfall erkannt',
+      translateTo: 'Deutsch',
     },
     pt: {
       header: '🚨 *ALERTA ALFRED MAJOR*',
       property: 'Alojamento',
       message: 'Mensagem do cliente',
-      translation: 'Tradução 🇫🇷',
+      translation: 'Tradução',
       action: 'Por favor contacte o seu cliente o mais rapidamente possível.',
       regards: 'Atenciosamente,',
       signature: 'A equipa Alfred Major',
       pushTitle: '🚨 Alfred Major — Emergência detectada',
+      translateTo: 'português',
     },
     nl: {
       header: '🚨 *ALFRED MAJOR WAARSCHUWING*',
       property: 'Accommodatie',
       message: 'Bericht van gast',
-      translation: 'Vertaling 🇫🇷',
+      translation: 'Vertaling',
       action: 'Neem zo snel mogelijk contact op met uw gast.',
       regards: 'Met vriendelijke groet,',
       signature: 'Het Alfred Major team',
       pushTitle: '🚨 Alfred Major — Noodgeval gedetecteerd',
+      translateTo: 'Nederlands',
     },
     ar: {
       header: '🚨 *تنبيه ألفريد ماجور*',
       property: 'العقار',
       message: 'رسالة الضيف',
-      translation: 'الترجمة 🇫🇷',
+      translation: 'ترجمة',
       action: 'يرجى التواصل مع ضيفك في أقرب وقت ممكن.',
       regards: 'مع التحية،',
       signature: 'فريق ألفريد ماجور',
       pushTitle: '🚨 ألفريد ماجور — تم الكشف عن حالة طوارئ',
+      translateTo: 'العربية',
     },
   };
   return texts[lang] || texts['en'];
@@ -158,7 +166,7 @@ async function sendTelegramAlert(originalMsg, translatedMsg, propertyData) {
     .eq('id', propertyData.owner_id)
     .single();
 
-  // Récupérer les membres de l'équipe assignés à ce logement (actifs, avec Telegram)
+  // Récupérer les membres de l'équipe avec leur propre langue
   const { data: teamMembers } = await supabase
     .from('team_members')
     .select('telegram_chat_id, role, property_ids, preferred_language')
@@ -168,13 +176,13 @@ async function sendTelegramAlert(originalMsg, translatedMsg, propertyData) {
 
   if (!profile?.telegram_chat_id && (!teamMembers || teamMembers.length === 0)) return;
 
-  // Fonction d'envoi pour un destinataire avec SA langue
+  // Envoi individualisé : chaque destinataire reçoit dans SA langue
   const sendToRecipient = async (chatId, lang) => {
     const t = getAlertTexts(lang || 'fr');
     let text = `${t.header}\n\n🏠 *${t.property} :* ${propertyData.name}`;
     if (propertyData.room_name) text += ` — ${propertyData.room_name}`;
     text += `\n\n💬 *${t.message} :*\n"${originalMsg}"`;
-    if (translatedMsg) text += `\n\n${t.translation} :\n"${translatedMsg}"`;
+    if (translatedMsg) text += `\n\n🔄 *${t.translation} :*\n"${translatedMsg}"`;
     text += `\n\n⚡ *Action :*\n${t.action}\n\n_${t.regards}_\n_${t.signature}_ 🎩`;
 
     return fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
@@ -186,12 +194,10 @@ async function sendTelegramAlert(originalMsg, translatedMsg, propertyData) {
 
   const sendPromises = [];
 
-  // Propriétaire avec sa langue
   if (profile?.telegram_chat_id) {
     sendPromises.push(sendToRecipient(profile.telegram_chat_id, profile.preferred_language));
   }
 
-  // Membres d'équipe chacun avec leur propre langue
   if (teamMembers) {
     for (const member of teamMembers) {
       const hasAccess = !member.property_ids || member.property_ids.includes(propertyData.id);
@@ -211,14 +217,12 @@ async function sendPushAlert(originalMsg, translatedMsg, propertyData, targetPro
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.alfredmajor.com';
 
   try {
-    // Récupérer propriétaire avec sa langue préférée
     const { data: profile } = await supabase
       .from('profiles')
       .select('id, push_subscription, expo_push_token, preferred_language')
       .eq('id', propertyData.owner_id)
       .single();
 
-    // Membres de l'équipe actifs avec push token et leur langue
     const { data: teamMembers } = await supabase
       .from('team_members')
       .select('expo_push_token, property_ids, preferred_language')
@@ -226,14 +230,13 @@ async function sendPushAlert(originalMsg, translatedMsg, propertyData, targetPro
       .eq('status', 'active')
       .not('expo_push_token', 'is', null);
 
-    const promises = [];
-
-    // Corps du message : toujours le message traduit en français si dispo, sinon original
+    // Corps du message : message traduit dans la langue de l'hôte si dispo, sinon original
     const bodyText = translatedMsg
       ? `${propertyData.name} : "${translatedMsg}"`
       : `${propertyData.name} : "${originalMsg}"`;
 
-    // Push propriétaire avec SA langue
+    const promises = [];
+
     if (profile) {
       const t = getAlertTexts(profile.preferred_language || 'fr');
 
@@ -273,7 +276,6 @@ async function sendPushAlert(originalMsg, translatedMsg, propertyData, targetPro
       }
     }
 
-    // Push membres de l'équipe chacun avec SA langue
     if (teamMembers) {
       for (const member of teamMembers) {
         const hasAccess = !member.property_ids || member.property_ids.includes(propertyData.id);
@@ -551,7 +553,7 @@ export default async function handler(req, res) {
   }
 
   const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
-  // langCode = langue du VOYAGEUR (pour répondre dans sa langue et pour la traduction)
+  // langCode = langue du VOYAGEUR (pour lui répondre dans sa langue)
   const langCode = userLanguage ? userLanguage.split('-')[0] : 'fr';
 
   try {
@@ -744,14 +746,28 @@ ${emergencyInstructions}
           .eq('id', targetPropertyId);
       }
 
-      // Traduction du message du voyageur en français si nécessaire
+      // ── Récupérer la langue de l'hôte pour traduire dans SA langue ──
+      const { data: ownerProfile } = await supabase
+        .from('profiles')
+        .select('preferred_language')
+        .eq('id', propertyData.owner_id)
+        .single();
+
+      const hostLang = ownerProfile?.preferred_language || 'fr';
+      const hostAlertTexts = getAlertTexts(hostLang);
+
+      // Traduire dans la langue de l'HÔTE (pas en français)
+      // Si le voyageur écrit déjà dans la langue de l'hôte, pas besoin de traduire
       let translatedMsg = null;
-      if (langCode !== 'fr') {
+      if (langCode !== hostLang) {
         try {
           const transRes = await groq.chat.completions.create({
             model: "llama-3.1-8b-instant",
             messages: [
-              { role: 'system', content: "Traduis ce message en français. Réponds UNIQUEMENT avec la traduction." },
+              {
+                role: 'system',
+                content: `Traduis ce message en ${hostAlertTexts.translateTo}. Réponds UNIQUEMENT avec la traduction, sans explication.`
+              },
               { role: 'user', content: lastUserMsg },
             ],
             max_tokens: 150,
@@ -760,8 +776,7 @@ ${emergencyInstructions}
         } catch (_) {}
       }
 
-      // ── Les alertes utilisent la langue de l'HÔTE (stockée dans profiles.preferred_language)
-      // sendTelegramAlert et sendPushAlert vont chercher elles-mêmes cette langue dans Supabase
+      // ── Envoi des alertes dans la langue de chaque hôte/membre d'équipe ──
       await Promise.allSettled([
         sendTelegramAlert(lastUserMsg, translatedMsg, propertyData),
         sendPushAlert(lastUserMsg, translatedMsg, propertyData, targetPropertyId),
