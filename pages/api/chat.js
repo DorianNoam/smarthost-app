@@ -2,7 +2,7 @@ import Groq from 'groq-sdk';
 import { supabase } from '../../lib/supabase';
 
 // ─────────────────────────────────────────────
-// 0. TEXTES LOCALISÉS POUR LES ALERTES
+// 0. TEXTES LOCALISÉS POUR LES ALERTES HÔTE
 // ─────────────────────────────────────────────
 function getAlertTexts(lang) {
   const texts = {
@@ -145,126 +145,149 @@ async function getGoogleLocalData(category, fullAddress, propertyType = 'apartme
 }
 
 // ─────────────────────────────────────────────
-// 2. ALERTES TELEGRAM — multi-destinataires + localisées
+// 2. ALERTES TELEGRAM — multi-destinataires + langue de l'hôte
 // ─────────────────────────────────────────────
-async function sendTelegramAlert(originalMsg, translatedMsg, propertyData, lang = 'fr') {
+async function sendTelegramAlert(originalMsg, translatedMsg, propertyData) {
   const token = process.env.TELEGRAM_BOT_TOKEN;
   if (!token) return;
 
-  const t = getAlertTexts(lang);
-
-  // Récupérer le propriétaire principal
+  // Récupérer le propriétaire principal avec sa langue préférée
   const { data: profile } = await supabase
     .from('profiles')
-    .select('telegram_chat_id')
+    .select('telegram_chat_id, preferred_language')
     .eq('id', propertyData.owner_id)
     .single();
 
   // Récupérer les membres de l'équipe assignés à ce logement (actifs, avec Telegram)
   const { data: teamMembers } = await supabase
     .from('team_members')
-    .select('telegram_chat_id, role, property_ids')
+    .select('telegram_chat_id, role, property_ids, preferred_language')
     .eq('account_owner_id', propertyData.owner_id)
     .eq('status', 'active')
     .not('telegram_chat_id', 'is', null);
 
-  // Construire la liste des destinataires Telegram
-  const recipients = new Set();
-  if (profile?.telegram_chat_id) recipients.add(profile.telegram_chat_id);
+  if (!profile?.telegram_chat_id && (!teamMembers || teamMembers.length === 0)) return;
 
+  // Fonction d'envoi pour un destinataire avec SA langue
+  const sendToRecipient = async (chatId, lang) => {
+    const t = getAlertTexts(lang || 'fr');
+    let text = `${t.header}\n\n🏠 *${t.property} :* ${propertyData.name}`;
+    if (propertyData.room_name) text += ` — ${propertyData.room_name}`;
+    text += `\n\n💬 *${t.message} :*\n"${originalMsg}"`;
+    if (translatedMsg) text += `\n\n${t.translation} :\n"${translatedMsg}"`;
+    text += `\n\n⚡ *Action :*\n${t.action}\n\n_${t.regards}_\n_${t.signature}_ 🎩`;
+
+    return fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'Markdown' }),
+    }).catch(e => console.error(`Erreur Telegram ${chatId}:`, e));
+  };
+
+  const sendPromises = [];
+
+  // Propriétaire avec sa langue
+  if (profile?.telegram_chat_id) {
+    sendPromises.push(sendToRecipient(profile.telegram_chat_id, profile.preferred_language));
+  }
+
+  // Membres d'équipe chacun avec leur propre langue
   if (teamMembers) {
     for (const member of teamMembers) {
       const hasAccess = !member.property_ids || member.property_ids.includes(propertyData.id);
       if (hasAccess && member.telegram_chat_id) {
-        recipients.add(member.telegram_chat_id);
+        sendPromises.push(sendToRecipient(member.telegram_chat_id, member.preferred_language));
       }
     }
   }
-
-  if (recipients.size === 0) return;
-
-  let text = `${t.header}\n\n🏠 *${t.property} :* ${propertyData.name}`;
-  if (propertyData.room_name) text += ` — ${propertyData.room_name}`;
-  text += `\n\n💬 *${t.message} :*\n"${originalMsg}"`;
-  if (translatedMsg) text += `\n\n${t.translation} :\n"${translatedMsg}"`;
-  text += `\n\n⚡ *Action :*\n${t.action}\n\n_${t.regards}_\n_${t.signature}_ 🎩`;
-
-  const sendPromises = [...recipients].map(chatId =>
-    fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'Markdown' }),
-    }).catch(e => console.error(`Erreur Telegram ${chatId}:`, e))
-  );
 
   await Promise.allSettled(sendPromises);
 }
 
 // ─────────────────────────────────────────────
-// 2B. ALERTES PUSH — multi-destinataires + localisées
+// 2B. ALERTES PUSH — multi-destinataires + langue de l'hôte
 // ─────────────────────────────────────────────
-async function sendPushAlert(originalMsg, translatedMsg, propertyData, targetPropertyId, lang = 'fr') {
+async function sendPushAlert(originalMsg, translatedMsg, propertyData, targetPropertyId) {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.alfredmajor.com';
-  const t = getAlertTexts(lang);
 
   try {
+    // Récupérer propriétaire avec sa langue préférée
     const { data: profile } = await supabase
       .from('profiles')
-      .select('id, push_subscription, expo_push_token')
+      .select('id, push_subscription, expo_push_token, preferred_language')
       .eq('id', propertyData.owner_id)
       .single();
 
+    // Membres de l'équipe actifs avec push token et leur langue
     const { data: teamMembers } = await supabase
       .from('team_members')
-      .select('expo_push_token, property_ids')
+      .select('expo_push_token, property_ids, preferred_language')
       .eq('account_owner_id', propertyData.owner_id)
       .eq('status', 'active')
       .not('expo_push_token', 'is', null);
 
-    const title = t.pushTitle;
+    const promises = [];
+
+    // Corps du message : toujours le message traduit en français si dispo, sinon original
     const bodyText = translatedMsg
       ? `${propertyData.name} : "${translatedMsg}"`
       : `${propertyData.name} : "${originalMsg}"`;
 
-    const promises = [];
+    // Push propriétaire avec SA langue
+    if (profile) {
+      const t = getAlertTexts(profile.preferred_language || 'fr');
 
-    if (profile?.push_subscription) {
-      promises.push(
-        fetch(`${siteUrl}/api/push-send`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            userId: profile.id, title, body: bodyText,
-            url: '/dashboard', urgent: true, propertyName: propertyData.name,
-          }),
-        })
-      );
+      if (profile.push_subscription) {
+        promises.push(
+          fetch(`${siteUrl}/api/push-send`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId: profile.id,
+              title: t.pushTitle,
+              body: bodyText,
+              url: '/dashboard',
+              urgent: true,
+              propertyName: propertyData.name,
+              lang: profile.preferred_language || 'fr',
+            }),
+          })
+        );
+      }
+
+      if (profile.expo_push_token) {
+        promises.push(
+          fetch('https://exp.host/--/api/v2/push/send', {
+            method: 'POST',
+            headers: { 'Accept': 'application/json', 'Accept-encoding': 'gzip, deflate', 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              to: profile.expo_push_token,
+              sound: 'default',
+              title: t.pushTitle,
+              body: bodyText,
+              priority: 'high',
+              data: { url: '/dashboard', propertyId: targetPropertyId, propertyName: propertyData.name },
+            }),
+          })
+        );
+      }
     }
 
-    if (profile?.expo_push_token) {
-      promises.push(
-        fetch('https://exp.host/--/api/v2/push/send', {
-          method: 'POST',
-          headers: { 'Accept': 'application/json', 'Accept-encoding': 'gzip, deflate', 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            to: profile.expo_push_token, sound: 'default', title, body: bodyText,
-            priority: 'high',
-            data: { url: '/dashboard', propertyId: targetPropertyId, propertyName: propertyData.name },
-          }),
-        })
-      );
-    }
-
+    // Push membres de l'équipe chacun avec SA langue
     if (teamMembers) {
       for (const member of teamMembers) {
         const hasAccess = !member.property_ids || member.property_ids.includes(propertyData.id);
         if (hasAccess && member.expo_push_token) {
+          const t = getAlertTexts(member.preferred_language || 'fr');
           promises.push(
             fetch('https://exp.host/--/api/v2/push/send', {
               method: 'POST',
               headers: { 'Accept': 'application/json', 'Accept-encoding': 'gzip, deflate', 'Content-Type': 'application/json' },
               body: JSON.stringify({
-                to: member.expo_push_token, sound: 'default', title, body: bodyText,
+                to: member.expo_push_token,
+                sound: 'default',
+                title: t.pushTitle,
+                body: bodyText,
                 priority: 'high',
                 data: { url: '/dashboard', propertyId: targetPropertyId, propertyName: propertyData.name },
               }),
@@ -421,16 +444,16 @@ ${p.host_on_site ? `- Hôte sur place : ${p.host_name_onsite || 'Non renseigné'
 
   if (type === 'riad') {
     let block = `━━━ MÉDINA & CONTEXTE LOCAL ━━━`;
-    if (p.medina_directions)       block += `\n- Comment trouver le riad : ${p.medina_directions}`;
-    if (p.taxi_meeting_point)      block += `\n- Point de RDV taxis : ${p.taxi_meeting_point}`;
-    if (p.dress_code_info)         block += `\n- Tenue recommandée : ${p.dress_code_info}`;
-    if (p.souk_hours)              block += `\n- Horaires souks : ${p.souk_hours}`;
-    if (p.mosque_info)             block += `\n- Mosquée voisine : ${p.mosque_info}`;
-    if (p.safety_tips)             block += `\n- Conseils sécurité : ${p.safety_tips}`;
-    if (p.generator_info)          block += `\n- Générateur : ${p.generator_info}`;
-    if (p.water_reserve_info)      block += `\n- Réserve eau : ${p.water_reserve_info}`;
+    if (p.medina_directions)        block += `\n- Comment trouver le riad : ${p.medina_directions}`;
+    if (p.taxi_meeting_point)       block += `\n- Point de RDV taxis : ${p.taxi_meeting_point}`;
+    if (p.dress_code_info)          block += `\n- Tenue recommandée : ${p.dress_code_info}`;
+    if (p.souk_hours)               block += `\n- Horaires souks : ${p.souk_hours}`;
+    if (p.mosque_info)              block += `\n- Mosquée voisine : ${p.mosque_info}`;
+    if (p.safety_tips)              block += `\n- Conseils sécurité : ${p.safety_tips}`;
+    if (p.generator_info)           block += `\n- Générateur : ${p.generator_info}`;
+    if (p.water_reserve_info)       block += `\n- Réserve eau : ${p.water_reserve_info}`;
     if (p.local_emergency_contacts) block += `\n- Urgences locales : ${p.local_emergency_contacts}`;
-    if (p.pharmacy_on_call)        block += `\n- Pharmacie de garde : ${p.pharmacy_on_call}`;
+    if (p.pharmacy_on_call)         block += `\n- Pharmacie de garde : ${p.pharmacy_on_call}`;
     blocks.push(block);
   }
 
@@ -528,6 +551,7 @@ export default async function handler(req, res) {
   }
 
   const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+  // langCode = langue du VOYAGEUR (pour répondre dans sa langue et pour la traduction)
   const langCode = userLanguage ? userLanguage.split('-')[0] : 'fr';
 
   try {
@@ -720,6 +744,7 @@ ${emergencyInstructions}
           .eq('id', targetPropertyId);
       }
 
+      // Traduction du message du voyageur en français si nécessaire
       let translatedMsg = null;
       if (langCode !== 'fr') {
         try {
@@ -735,13 +760,11 @@ ${emergencyInstructions}
         } catch (_) {}
       }
 
-      // ── Envoi multi-destinataires avec langue de l'hôte ──
-      // langCode ici = langue du VOYAGEUR, pas de l'hôte
-      // On passe langCode pour adapter les alertes à la langue du voyageur
-      // (l'hôte voit le message original + traduction française dans tous les cas)
+      // ── Les alertes utilisent la langue de l'HÔTE (stockée dans profiles.preferred_language)
+      // sendTelegramAlert et sendPushAlert vont chercher elles-mêmes cette langue dans Supabase
       await Promise.allSettled([
-        sendTelegramAlert(lastUserMsg, translatedMsg, propertyData, langCode),
-        sendPushAlert(lastUserMsg, translatedMsg, propertyData, targetPropertyId, langCode),
+        sendTelegramAlert(lastUserMsg, translatedMsg, propertyData),
+        sendPushAlert(lastUserMsg, translatedMsg, propertyData, targetPropertyId),
       ]);
     }
 
