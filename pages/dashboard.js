@@ -78,6 +78,30 @@ export default function Dashboard() {
       setActiveTab(tabs);
       setCleaningData(cleaning);
 
+      // Charger les données ménage pour tous les logements au démarrage
+      if (props) {
+        for (const prop of props) {
+          const { data: config } = await supabase
+            .from('property_cleaning')
+            .select('*, cleaning_providers(*)')
+            .eq('property_id', prop.id)
+            .maybeSingle();
+
+          if (config) {
+            setCleaningData(prev => ({
+              ...prev,
+              [prop.id]: {
+                ...prev[prop.id],
+                config: config,
+                providerName: config?.cleaning_providers?.name || '',
+                providerTelegram: config?.cleaning_providers?.telegram_chat_id || '',
+                checklist: config?.checklist || [],
+              }
+            }));
+          }
+        }
+      }
+
     } catch (err) {
       console.error("Erreur chargement:", err);
     } finally {
@@ -161,14 +185,7 @@ export default function Dashboard() {
         checklist: d.checklist,
       }, { onConflict: 'property_id' });
 
-      // Recharger la config
-      const { data: newConfig } = await supabase
-        .from('property_cleaning')
-        .select('*, cleaning_providers(*)')
-        .eq('property_id', propId)
-        .maybeSingle();
-
-      setCleaningData(prev => ({ ...prev, [propId]: { ...prev[propId], config: newConfig, saving: false } }));
+      await loadCleaningData(propId);
       alert('✅ Configuration ménage sauvegardée !');
     } catch (err) {
       console.error(err);
