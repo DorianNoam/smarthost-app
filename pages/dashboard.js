@@ -86,33 +86,34 @@ export default function Dashboard() {
   };
 
   // ── Charger les données ménage pour un logement ──
-const loadCleaningData = async (propId) => {
-  const { data: config } = await supabase
-    .from('property_cleaning')
-    .select('*, cleaning_providers(*)')
-    .eq('property_id', propId)
-    .maybeSingle();
+  const loadCleaningData = async (propId) => {
 
-  const res = await fetch(`/api/cleaning/status?propertyId=${propId}`);
-  const statusData = await res.json();
+    const { data: config } = await supabase
+      .from('property_cleaning')
+      .select('*, cleaning_providers(*)')
+      .eq('property_id', propId)
+      .maybeSingle();
 
-  setCleaningData(prev => ({
-    ...prev,
-    [propId]: {
-      ...prev[propId],
-      config: config || false,
-      status: statusData,
-      providerName: config?.cleaning_providers?.name || '',
-      providerTelegram: config?.cleaning_providers?.telegram_chat_id || '',
-      checklist: config?.checklist || [],
-    }
-  }));
-};
+    const res = await fetch(`/api/cleaning/status?propertyId=${propId}`);
+    const statusData = await res.json();
 
-const switchTab = (propId, tab) => {
-  setActiveTab(prev => ({ ...prev, [propId]: tab }));
-  if (tab === 'menage') loadCleaningData(propId);
-};
+    setCleaningData(prev => ({
+      ...prev,
+      [propId]: {
+        ...prev[propId],
+        config: config || false,
+        status: statusData,
+        providerName: config?.cleaning_providers?.name || '',
+        providerTelegram: config?.cleaning_providers?.telegram_chat_id || '',
+        checklist: config?.checklist || [],
+      }
+    }));
+  };
+
+  const switchTab = (propId, tab) => {
+    setActiveTab(prev => ({ ...prev, [propId]: tab }));
+    if (tab === 'menage') loadCleaningData(propId);
+  };
 
   const updateCleaning = (propId, key, value) => {
     setCleaningData(prev => ({ ...prev, [propId]: { ...prev[propId], [key]: value } }));
@@ -496,7 +497,7 @@ const switchTab = (propId, tab) => {
                                 ✅ Marquer comme résolu
                               </button>
                             )}
-                            <Link href={`/property/${prop.id}`} legacyBehavior>
+                            <Link href={`/add-property?id=${prop.id}`} legacyBehavior>
                               <a className="action-btn btn-primary">📊 Configurer le logement</a>
                             </Link>
                             <button onClick={() => copyWelcomeMessage(prop)} className="action-btn btn-welcome">
