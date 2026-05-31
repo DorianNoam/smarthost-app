@@ -135,40 +135,47 @@ export default function Dashboard() {
     }));
   };
 
- const saveCleaning = async (propId) => {
-  updateCleaning(propId, 'saving', true);
-  try {
-    const { data: { user } } = await supabase.auth.getUser();
-    const d = cleaningData[propId];
-    let providerId = d.config?.provider_id;
+  const saveCleaning = async (propId) => {
+    updateCleaning(propId, 'saving', true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      const d = cleaningData[propId];
+      let providerId = d.config?.provider_id;
 
-    if (providerId) {
-      await supabase.from('cleaning_providers').update({
-        name: d.providerName,
-        telegram_chat_id: d.providerTelegram,
-      }).eq('id', providerId);
-    } else {
-      const { data: newProvider } = await supabase
-        .from('cleaning_providers')
-        .insert({ owner_id: user.id, name: d.providerName, telegram_chat_id: d.providerTelegram })
-        .select().single();
-      providerId = newProvider.id;
+      if (providerId) {
+        await supabase.from('cleaning_providers').update({
+          name: d.providerName,
+          telegram_chat_id: d.providerTelegram,
+        }).eq('id', providerId);
+      } else {
+        const { data: newProvider } = await supabase
+          .from('cleaning_providers')
+          .insert({ owner_id: user.id, name: d.providerName, telegram_chat_id: d.providerTelegram })
+          .select().single();
+        providerId = newProvider.id;
+      }
+
+      await supabase.from('property_cleaning').upsert({
+        property_id: propId,
+        provider_id: providerId,
+        checklist: d.checklist,
+      }, { onConflict: 'property_id' });
+
+      // Recharger la config
+      const { data: newConfig } = await supabase
+        .from('property_cleaning')
+        .select('*, cleaning_providers(*)')
+        .eq('property_id', propId)
+        .maybeSingle();
+
+      setCleaningData(prev => ({ ...prev, [propId]: { ...prev[propId], config: newConfig, saving: false } }));
+      alert('✅ Configuration ménage sauvegardée !');
+    } catch (err) {
+      console.error(err);
+      alert('Erreur lors de la sauvegarde.');
+      updateCleaning(propId, 'saving', false);
     }
-
-    await supabase.from('property_cleaning').upsert({
-      property_id: propId,
-      provider_id: providerId,
-      checklist: d.checklist,
-    }, { onConflict: 'property_id' });
-
-    await loadCleaningData(propId);
-    alert('✅ Configuration ménage sauvegardée !');
-  } catch (err) {
-    console.error(err);
-    alert('Erreur lors de la sauvegarde.');
-    updateCleaning(propId, 'saving', false);
-  }
-};
+  };
 
   const triggerCleaning = async (propId) => {
     const d = cleaningData[propId];
