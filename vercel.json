@@ -5,7 +5,7 @@
       "schedule": "0 3 * * *"
     },
     {
-      "path": "/api/cleaning/alert",
+      "path": "/cleaning/alert",
       "schedule": "*/30 * * * *"
     }
   ]
