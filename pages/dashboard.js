@@ -86,35 +86,33 @@ export default function Dashboard() {
   };
 
   // ── Charger les données ménage pour un logement ──
-  const loadCleaningData = async (propId) => {
-    if (cleaningData[propId]?.config !== null && cleaningData[propId]?.config !== undefined) return; // déjà chargé
+const loadCleaningData = async (propId) => {
+  const { data: config } = await supabase
+    .from('property_cleaning')
+    .select('*, cleaning_providers(*)')
+    .eq('property_id', propId)
+    .maybeSingle();
 
-    const { data: config } = await supabase
-      .from('property_cleaning')
-      .select('*, cleaning_providers(*)')
-      .eq('property_id', propId)
-      .maybeSingle();
+  const res = await fetch(`/api/cleaning/status?propertyId=${propId}`);
+  const statusData = await res.json();
 
-    const res = await fetch(`/api/cleaning/status?propertyId=${propId}`);
-    const statusData = await res.json();
+  setCleaningData(prev => ({
+    ...prev,
+    [propId]: {
+      ...prev[propId],
+      config: config || false,
+      status: statusData,
+      providerName: config?.cleaning_providers?.name || '',
+      providerTelegram: config?.cleaning_providers?.telegram_chat_id || '',
+      checklist: config?.checklist || [],
+    }
+  }));
+};
 
-    setCleaningData(prev => ({
-      ...prev,
-      [propId]: {
-        ...prev[propId],
-        config: config || false,
-        status: statusData,
-        providerName: config?.cleaning_providers?.name || '',
-        providerTelegram: config?.cleaning_providers?.telegram_chat_id || '',
-        checklist: config?.checklist || [],
-      }
-    }));
-  };
-
-  const switchTab = (propId, tab) => {
-    setActiveTab(prev => ({ ...prev, [propId]: tab }));
-    if (tab === 'menage') loadCleaningData(propId);
-  };
+const switchTab = (propId, tab) => {
+  setActiveTab(prev => ({ ...prev, [propId]: tab }));
+  if (tab === 'menage') loadCleaningData(propId);
+};
 
   const updateCleaning = (propId, key, value) => {
     setCleaningData(prev => ({ ...prev, [propId]: { ...prev[propId], [key]: value } }));
