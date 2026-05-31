@@ -163,32 +163,38 @@ export default function Dashboard() {
     updateCleaning(propId, 'saving', true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
+      console.log('🔍 USER:', user?.id);
       const d = cleaningData[propId];
+      console.log('🔍 DATA:', JSON.stringify(d));
       let providerId = d.config?.provider_id;
+      console.log('🔍 PROVIDER ID:', providerId);
 
       if (providerId) {
-        await supabase.from('cleaning_providers').update({
+        const { error: updateError } = await supabase.from('cleaning_providers').update({
           name: d.providerName,
           telegram_chat_id: d.providerTelegram,
         }).eq('id', providerId);
+        console.log('🔍 UPDATE PROVIDER ERROR:', updateError);
       } else {
-        const { data: newProvider } = await supabase
+        const { data: newProvider, error: insertError } = await supabase
           .from('cleaning_providers')
           .insert({ owner_id: user.id, name: d.providerName, telegram_chat_id: d.providerTelegram })
           .select().single();
-        providerId = newProvider.id;
+        console.log('🔍 INSERT PROVIDER:', newProvider, insertError);
+        providerId = newProvider?.id;
       }
 
-      await supabase.from('property_cleaning').upsert({
+      const { error: upsertError } = await supabase.from('property_cleaning').upsert({
         property_id: propId,
         provider_id: providerId,
         checklist: d.checklist,
       }, { onConflict: 'property_id' });
+      console.log('🔍 UPSERT ERROR:', upsertError);
 
       await loadCleaningData(propId);
       alert('✅ Configuration ménage sauvegardée !');
     } catch (err) {
-      console.error(err);
+      console.error('🔍 CATCH ERROR:', err);
       alert('Erreur lors de la sauvegarde.');
       updateCleaning(propId, 'saving', false);
     }
