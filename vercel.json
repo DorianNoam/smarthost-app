@@ -3,6 +3,14 @@
     {
       "path": "/api/cron/purge-conversations",
       "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/cron/ical-sync",
+      "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/cleaning/alert",
+      "schedule": "*/30 * * * *"
     }
   ]
 }
