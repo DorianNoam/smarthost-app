@@ -21,6 +21,7 @@
     "pdf-parse": "^1.1.1",
     "formidable": "^3.5.1",
     "mammoth": "^1.8.0",
-    "@next/third-parties": "latest"
+    "@next/third-parties": "latest",
+    "resend": "latest"
   }
 }
