@@ -7,14 +7,6 @@
     {
       "path": "/api/cron/ical-sync",
       "schedule": "0 * * * *"
-    },
-    {
-      "path": "/api/cleaning/alert",
-      "schedule": "0 * * * *"
-    },
-    {
-      "path": "/api/cleaning/alert",
-      "schedule": "30 * * * *"
     }
   ]
 }
