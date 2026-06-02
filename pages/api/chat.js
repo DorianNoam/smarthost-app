@@ -383,8 +383,7 @@ function buildUpsellsSection(upsells, siteUrl, propertySlug) {
   const upsellsUrl = `${siteUrl}/upsells/${propertySlug}`;
   const lines = upsells.map(u =>
     `- ${u.emoji || '✨'} **${u.name}** — ${u.price}€${u.description ? ` (${u.description})` : ''} → Lien : ${upsellsUrl}?upsell=${u.id}`
-  ).join('
-');
+  ).join('\n');
 
   return `━━━ SERVICES ADDITIONNELS DISPONIBLES ━━━
 Les services suivants sont proposés par l'hôte. Si le voyageur exprime un besoin correspondant, propose-le naturellement dans ta réponse avec le lien de paiement.
