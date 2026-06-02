@@ -17,6 +17,8 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState({});
   const [cleaningData, setCleaningData] = useState({});
   const [reservationsData, setReservationsData] = useState({});
+  const [upsellsData, setUpsellsData] = useState({}); // { [propId]: { upsells, orders, loading } }
+  const [connectStatus, setConnectStatus] = useState(null);
 
   // ── iCal Sync silencieux ─────────────────────────────────────────────────
   const runIcalSync = async () => {
@@ -108,6 +110,18 @@ export default function Dashboard() {
       setActiveTab(tabs);
       setCleaningData(cleaning);
 
+      // Charger le statut Stripe Connect
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.access_token) {
+          const csRes = await fetch('/api/connect/status', {
+            headers: { 'Authorization': `Bearer ${session.access_token}` },
+          });
+          const csData = await csRes.json();
+          setConnectStatus(csData.status);
+        }
+      } catch (_) {}
+
       // Charger les réservations pour tous les logements actifs
       if (props) {
         const today = new Date().toISOString().split('T')[0];
@@ -156,6 +170,26 @@ export default function Dashboard() {
     }
   };
 
+  const loadUpsells = async (propId) => {
+    setUpsellsData(prev => ({ ...prev, [propId]: { ...prev[propId], loading: true } }));
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const [upsellsRes, ordersRes] = await Promise.all([
+        fetch(`/api/upsells/manage?propertyId=${propId}`, {
+          headers: { 'Authorization': `Bearer ${session.access_token}` },
+        }),
+        supabase.from('upsell_orders').select('*').eq('property_id', propId).eq('status', 'paid').order('paid_at', { ascending: false }).limit(20),
+      ]);
+      const upsellsJson = await upsellsRes.json();
+      setUpsellsData(prev => ({
+        ...prev,
+        [propId]: { upsells: upsellsJson.upsells || [], orders: ordersRes.data || [], loading: false },
+      }));
+    } catch (err) {
+      setUpsellsData(prev => ({ ...prev, [propId]: { upsells: [], orders: [], loading: false } }));
+    }
+  };
+
   const loadReservations = async (propId) => {
     const today = new Date().toISOString().split('T')[0];
     const { data } = await supabase
@@ -196,6 +230,7 @@ export default function Dashboard() {
     setActiveTab(prev => ({ ...prev, [propId]: tab }));
     if (tab === 'menage') loadCleaningData(propId);
     if (tab === 'reservations') loadReservations(propId);
+    if (tab === 'upsells') loadUpsells(propId);
   };
 
   const updateCleaning = (propId, key, value) => {
@@ -598,6 +633,9 @@ export default function Dashboard() {
                         <button className={`tab-btn ${tab === 'reservations' ? 'active' : ''}`} onClick={() => switchTab(prop.id, 'reservations')}>
                           📅 {(reservationsData[prop.id] || []).length > 0 ? `${(reservationsData[prop.id] || []).length} rés.` : 'Calendrier'}
                         </button>
+                        <button className={`tab-btn ${tab === 'upsells' ? 'active' : ''}`} onClick={() => switchTab(prop.id, 'upsells')}>
+                          💰 Upsells
+                        </button>
                       </div>
 
                       {tab === 'actions' && (
@@ -721,6 +759,117 @@ export default function Dashboard() {
                           </button>
                         </div>
                       )}
+                      {tab === 'upsells' && (
+                        <div className="tab-content">
+                          {(() => {
+                            const ud = upsellsData[prop.id];
+
+                            // Pas encore de compte Connect
+                            if (connectStatus !== 'active') return (
+                              <div style={{ textAlign: 'center', padding: '20px 0' }}>
+                                <p style={{ fontSize: '32px', margin: '0 0 8px' }}>💳</p>
+                                <p style={{ fontSize: '13px', fontWeight: 700, color: '#1a2a6c', margin: '0 0 4px' }}>Connectez votre compte Stripe</p>
+                                <p style={{ fontSize: '12px', color: '#64748b', margin: '0 0 12px' }}>
+                                  {connectStatus === 'pending' ? 'Votre compte est en cours de vérification.' : 'Nécessaire pour encaisser les upsells.'}
+                                </p>
+                                <a href="/settings" style={{ display: 'inline-block', background: '#1a2a6c', color: 'white', padding: '8px 16px', borderRadius: '8px', fontSize: '12px', fontWeight: 700 }}>
+                                  Configurer dans Paramètres →
+                                </a>
+                              </div>
+                            );
+
+                            if (!ud || ud.loading) return <p style={{ color: '#94a3b8', fontSize: '13px', textAlign: 'center', padding: '16px 0' }}>Chargement...</p>;
+
+                            const siteUrl = typeof window !== 'undefined' ? window.location.origin : 'https://www.alfredmajor.com';
+                            const upsellsUrl = `${siteUrl}/upsells/${prop.slug || prop.id}`;
+
+                            return (
+                              <div>
+                                {/* Revenus */}
+                                {ud.orders.length > 0 && (
+                                  <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '12px', padding: '12px 14px', marginBottom: '14px' }}>
+                                    <p style={{ margin: '0 0 4px', fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>Revenus upsells</p>
+                                    <p style={{ margin: '0 0 8px', fontSize: '22px', fontWeight: 900, color: '#15803d' }}>
+                                      {ud.orders.reduce((sum, o) => sum + (o.amount || 0), 0).toFixed(2)} €
+                                    </p>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                      {ud.orders.slice(0, 3).map(order => (
+                                        <div key={order.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#64748b' }}>
+                                          <span>{order.guest_name || 'Voyageur'}</span>
+                                          <span style={{ fontWeight: 700, color: '#15803d' }}>{order.amount?.toFixed(2)} €</span>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Lien voyageur */}
+                                <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '10px 12px', marginBottom: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
+                                  <p style={{ margin: 0, fontSize: '11px', color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{upsellsUrl}</p>
+                                  <button
+                                    onClick={() => { navigator.clipboard.writeText(upsellsUrl); alert('Lien copié !'); }}
+                                    style={{ background: '#1a2a6c', color: 'white', border: 'none', padding: '6px 10px', borderRadius: '7px', fontSize: '11px', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: 'inherit' }}
+                                  >
+                                    Copier
+                                  </button>
+                                </div>
+
+                                {/* Liste upsells */}
+                                {ud.upsells.length === 0 ? (
+                                  <p style={{ fontSize: '12px', color: '#94a3b8', textAlign: 'center', padding: '8px 0' }}>
+                                    Aucun upsell configuré. Ajoutez-en ci-dessous.
+                                  </p>
+                                ) : (
+                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '12px' }}>
+                                    {ud.upsells.map(upsell => (
+                                      <div key={upsell.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 10px', background: upsell.is_active ? '#f8fafc' : '#fef2f2', border: `1px solid ${upsell.is_active ? '#e2e8f0' : '#fecaca'}`, borderRadius: '8px' }}>
+                                        <span style={{ fontSize: '18px' }}>{upsell.emoji}</span>
+                                        <div style={{ flex: 1, minWidth: 0 }}>
+                                          <p style={{ margin: 0, fontSize: '13px', fontWeight: 700, color: '#1a2a6c', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{upsell.name}</p>
+                                          <p style={{ margin: 0, fontSize: '11px', color: '#64748b' }}>{upsell.price} €</p>
+                                        </div>
+                                        <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
+                                          <button
+                                            onClick={async () => {
+                                              const { data: { session } } = await supabase.auth.getSession();
+                                              await fetch('/api/upsells/manage', {
+                                                method: 'PATCH',
+                                                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+                                                body: JSON.stringify({ upsellId: upsell.id, is_active: !upsell.is_active }),
+                                              });
+                                              loadUpsells(prop.id);
+                                            }}
+                                            style={{ background: upsell.is_active ? '#f0fdf4' : '#f8fafc', color: upsell.is_active ? '#15803d' : '#94a3b8', border: `1px solid ${upsell.is_active ? '#bbf7d0' : '#e2e8f0'}`, padding: '4px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+                                          >
+                                            {upsell.is_active ? '✓ Actif' : 'Inactif'}
+                                          </button>
+                                          <button
+                                            onClick={async () => {
+                                              if (!confirm('Supprimer cet upsell ?')) return;
+                                              const { data: { session } } = await supabase.auth.getSession();
+                                              await fetch('/api/upsells/manage', {
+                                                method: 'DELETE',
+                                                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+                                                body: JSON.stringify({ upsellId: upsell.id }),
+                                              });
+                                              loadUpsells(prop.id);
+                                            }}
+                                            style={{ background: '#fee2e2', color: '#e11d48', border: 'none', padding: '4px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+                                          >🗑️</button>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+
+                                {/* Formulaire ajout rapide */}
+                                <AddUpsellForm propId={prop.id} onAdded={() => loadUpsells(prop.id)} session={null} supabase={supabase} />
+                              </div>
+                            );
+                          })()}
+                        </div>
+                      )}
+
                       {tab === 'reservations' && (
                         <div className="tab-content">
                           {(() => {
@@ -835,4 +984,78 @@ export default function Dashboard() {
       )}
     </div>
   );
+
+
+// ─────────────────────────────────────────────
+// Composant formulaire ajout upsell rapide
+// ─────────────────────────────────────────────
+function AddUpsellForm({ propId, onAdded, supabase }) {
+  const [open, setOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState({ name: '', price: '', emoji: '✨', category: 'flexibility', description: '' });
+
+  const PRESETS = [
+    { name: 'Late check-out', emoji: '🕐', category: 'flexibility', price: '30', description: 'Départ jusqu'à 14h au lieu de 11h' },
+    { name: 'Early check-in', emoji: '🌅', category: 'flexibility', price: '25', description: 'Arrivée dès 10h au lieu de 15h' },
+    { name: 'Pack romantique', emoji: '🥂', category: 'experience', price: '45', description: 'Champagne, fleurs et bougies' },
+    { name: 'Ménage mi-séjour', emoji: '🧹', category: 'comfort', price: '35', description: 'Nettoyage complet pendant votre séjour' },
+    { name: 'Transfert aéroport', emoji: '🚗', category: 'practical', price: '50', description: 'Navette privée depuis/vers l'aéroport' },
+    { name: 'Pack bébé', emoji: '👶', category: 'comfort', price: '20', description: 'Lit parapluie et chaise haute' },
+  ];
+
+  const handleSave = async () => {
+    if (!form.name || !form.price) return;
+    setSaving(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch('/api/upsells/manage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+        body: JSON.stringify({ propertyId: propId, ...form, price: parseFloat(form.price) }),
+      });
+      if (res.ok) {
+        setForm({ name: '', price: '', emoji: '✨', category: 'flexibility', description: '' });
+        setOpen(false);
+        onAdded();
+      }
+    } catch (err) { console.error(err); }
+    finally { setSaving(false); }
+  };
+
+  if (!open) return (
+    <button
+      onClick={() => setOpen(true)}
+      style={{ width: '100%', padding: '10px', background: 'white', border: '2px dashed #e2e8f0', borderRadius: '10px', color: '#64748b', fontWeight: 700, fontSize: '13px', cursor: 'pointer', fontFamily: 'inherit' }}
+    >
+      + Ajouter un upsell
+    </button>
+  );
+
+  return (
+    <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '14px', marginTop: '4px' }}>
+      <p style={{ margin: '0 0 10px', fontSize: '12px', fontWeight: 800, color: '#1a2a6c', textTransform: 'uppercase' }}>Choisir un preset ou créer</p>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '12px' }}>
+        {PRESETS.map(p => (
+          <button key={p.name} onClick={() => setForm({ name: p.name, price: p.price, emoji: p.emoji, category: p.category, description: p.description })}
+            style={{ background: form.name === p.name ? '#1a2a6c' : 'white', color: form.name === p.name ? 'white' : '#1a2a6c', border: '1px solid #e2e8f0', padding: '5px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+          >
+            {p.emoji} {p.name}
+          </button>
+        ))}
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 80px 60px', gap: '6px', marginBottom: '6px' }}>
+        <input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} placeholder="Nom du service" style={{ padding: '9px 10px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', fontFamily: 'inherit', outline: 'none', background: 'white' }} />
+        <input type="number" value={form.price} onChange={e => setForm(p => ({ ...p, price: e.target.value }))} placeholder="Prix €" style={{ padding: '9px 10px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', fontFamily: 'inherit', outline: 'none', background: 'white' }} />
+        <input value={form.emoji} onChange={e => setForm(p => ({ ...p, emoji: e.target.value }))} placeholder="✨" style={{ padding: '9px 10px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '16px', fontFamily: 'inherit', outline: 'none', background: 'white', textAlign: 'center' }} />
+      </div>
+      <input value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} placeholder="Description courte (optionnel)" style={{ width: '100%', padding: '9px 10px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', fontFamily: 'inherit', outline: 'none', background: 'white', marginBottom: '8px', boxSizing: 'border-box' }} />
+      <div style={{ display: 'flex', gap: '6px' }}>
+        <button onClick={() => setOpen(false)} style={{ flex: 1, padding: '9px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', color: '#64748b' }}>Annuler</button>
+        <button onClick={handleSave} disabled={saving || !form.name || !form.price} style={{ flex: 2, padding: '9px', background: '#1a2a6c', color: 'white', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', opacity: !form.name || !form.price ? 0.5 : 1 }}>
+          {saving ? '⏳' : '✅ Ajouter'}
+        </button>
+      </div>
+    </div>
+  );
+}
 }
