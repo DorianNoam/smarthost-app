@@ -16,6 +16,7 @@ export default function Dashboard() {
   // ── MÉNAGE ──
   const [activeTab, setActiveTab] = useState({});
   const [cleaningData, setCleaningData] = useState({});
+  const [reservationsData, setReservationsData] = useState({});
 
   // ── iCal Sync silencieux ─────────────────────────────────────────────────
   const runIcalSync = async () => {
@@ -107,6 +108,24 @@ export default function Dashboard() {
       setActiveTab(tabs);
       setCleaningData(cleaning);
 
+      // Charger les réservations pour tous les logements actifs
+      if (props) {
+        const today = new Date().toISOString().split('T')[0];
+        const resMap = {};
+        await Promise.all(props.filter(p => p.is_active).map(async (prop) => {
+          const { data } = await supabase
+            .from('reservations')
+            .select('*')
+            .eq('property_id', prop.id)
+            .eq('status', 'confirmed')
+            .gte('check_out', today)
+            .order('check_in', { ascending: true })
+            .limit(10);
+          resMap[prop.id] = data || [];
+        }));
+        setReservationsData(resMap);
+      }
+
       if (props) {
         for (const prop of props) {
           const { data: config } = await supabase
@@ -137,6 +156,19 @@ export default function Dashboard() {
     }
   };
 
+  const loadReservations = async (propId) => {
+    const today = new Date().toISOString().split('T')[0];
+    const { data } = await supabase
+      .from('reservations')
+      .select('*')
+      .eq('property_id', propId)
+      .eq('status', 'confirmed')
+      .gte('check_out', today)
+      .order('check_in', { ascending: true })
+      .limit(10);
+    setReservationsData(prev => ({ ...prev, [propId]: data || [] }));
+  };
+
   const loadCleaningData = async (propId) => {
     const { data: config } = await supabase
       .from('property_cleaning')
@@ -163,6 +195,7 @@ export default function Dashboard() {
   const switchTab = (propId, tab) => {
     setActiveTab(prev => ({ ...prev, [propId]: tab }));
     if (tab === 'menage') loadCleaningData(propId);
+    if (tab === 'reservations') loadReservations(propId);
   };
 
   const updateCleaning = (propId, key, value) => {
@@ -562,6 +595,9 @@ export default function Dashboard() {
                         <button className={`tab-btn ${tab === 'menage' ? 'active' : ''}`} onClick={() => switchTab(prop.id, 'menage')}>
                           🧹 Ménage {currentStatus ? (currentStatus.label.split(' ')[0]) : ''}
                         </button>
+                        <button className={`tab-btn ${tab === 'reservations' ? 'active' : ''}`} onClick={() => switchTab(prop.id, 'reservations')}>
+                          📅 {(reservationsData[prop.id] || []).length > 0 ? `${(reservationsData[prop.id] || []).length} rés.` : 'Calendrier'}
+                        </button>
                       </div>
 
                       {tab === 'actions' && (
@@ -683,6 +719,70 @@ export default function Dashboard() {
                           <button className="btn-save-cleaning" style={{ marginTop: '14px' }} onClick={() => saveCleaning(prop.id)} disabled={cd.saving}>
                             {cd.saving ? '⏳' : '💾 Sauvegarder la checklist'}
                           </button>
+                        </div>
+                      )}
+                      {tab === 'reservations' && (
+                        <div className="tab-content">
+                          {(() => {
+                            const reservations = reservationsData[prop.id] || [];
+                            if (reservations.length === 0) return (
+                              <div style={{ textAlign: 'center', padding: '24px 0' }}>
+                                <p style={{ fontSize: '32px', margin: '0 0 8px' }}>📅</p>
+                                <p style={{ fontSize: '13px', color: '#64748b', margin: '0 0 10px' }}>
+                                  {prop.ical_url ? 'Aucune réservation à venir.' : 'Ajoutez votre lien iCal dans la configuration du logement.'}
+                                </p>
+                                {!prop.ical_url && (
+                                  <Link href={`/edit-property?id=${prop.id}`} legacyBehavior>
+                                    <a style={{ display: 'inline-block', background: '#1a2a6c', color: 'white', padding: '8px 16px', borderRadius: '8px', fontSize: '12px', fontWeight: 700 }}>
+                                      Configurer le lien iCal →
+                                    </a>
+                                  </Link>
+                                )}
+                              </div>
+                            );
+                            const platformColors = {
+                              airbnb:  { bg: '#fff1f0', color: '#e11d48', label: 'Airbnb' },
+                              booking: { bg: '#eff6ff', color: '#1d4ed8', label: 'Booking' },
+                              vrbo:    { bg: '#fefce8', color: '#ca8a04', label: 'Vrbo' },
+                              unknown: { bg: '#f8fafc', color: '#64748b', label: 'Autre' },
+                            };
+                            const fmtDate = (d) => new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' });
+                            const today = new Date(); today.setHours(0,0,0,0);
+                            return reservations.map((res) => {
+                              const checkIn  = new Date(res.check_in);
+                              const checkOut = new Date(res.check_out);
+                              const nights   = Math.round((checkOut - checkIn) / 86400000);
+                              const isActive = checkOut >= today && checkIn <= today;
+                              const pc = platformColors[res.platform] || platformColors.unknown;
+                              return (
+                                <div key={res.id} style={{ border: `1px solid ${isActive ? '#fbbf24' : '#e2e8f0'}`, borderRadius: '12px', padding: '12px', marginBottom: '10px', background: isActive ? '#fffbeb' : 'white' }}>
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+                                    <div>
+                                      {isActive && <span style={{ fontSize: '10px', fontWeight: 800, color: '#d97706', textTransform: 'uppercase' }}>● EN COURS · </span>}
+                                      <span style={{ fontSize: '14px', fontWeight: 800, color: '#1a2a6c' }}>{res.guest_name || 'Voyageur'}</span>
+                                    </div>
+                                    <span style={{ background: pc.bg, color: pc.color, padding: '3px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 700 }}>{pc.label}</span>
+                                  </div>
+                                  <div style={{ display: 'flex', alignItems: 'center', margin: '10px 0' }}>
+                                    <div style={{ textAlign: 'center', minWidth: '56px' }}>
+                                      <p style={{ margin: 0, fontSize: '10px', color: '#64748b' }}>Arrivée</p>
+                                      <p style={{ margin: 0, fontSize: '13px', fontWeight: 800, color: '#15803d' }}>{fmtDate(res.check_in)}</p>
+                                    </div>
+                                    <div style={{ flex: 1, height: '2px', background: '#e2e8f0', margin: '0 8px', position: 'relative' }}>
+                                      <span style={{ position: 'absolute', top: '-9px', left: '50%', transform: 'translateX(-50%)', fontSize: '14px' }}>🌙</span>
+                                    </div>
+                                    <div style={{ textAlign: 'center', minWidth: '56px' }}>
+                                      <p style={{ margin: 0, fontSize: '10px', color: '#64748b' }}>Départ</p>
+                                      <p style={{ margin: 0, fontSize: '13px', fontWeight: 800, color: '#c2410c' }}>{fmtDate(res.check_out)}</p>
+                                    </div>
+                                  </div>
+                                  <span style={{ background: '#f8fafc', border: '1px solid #e2e8f0', padding: '3px 8px', borderRadius: '6px', fontSize: '11px', color: '#64748b' }}>
+                                    {nights} nuit{nights > 1 ? 's' : ''}
+                                  </span>
+                                </div>
+                              );
+                            });
+                          })()}
                         </div>
                       )}
                     </>
