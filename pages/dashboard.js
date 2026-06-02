@@ -2,7 +2,67 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
+import Head from 'next/head';
 
+// ─── AddUpsellForm sub-component ───────────────────────────────
+function AddUpsellForm({ propId, onAdded, supabase }) {
+  const [open, setOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState({ name: '', price: '', emoji: '✨', category: 'flexibility', description: '' });
+  const PRESETS = [
+    { name: 'Late check-out', emoji: '🕐', category: 'flexibility', price: '30', description: "Départ jusqu'à 14h" },
+    { name: 'Early check-in', emoji: '🌅', category: 'flexibility', price: '25', description: "Arrivée dès 10h" },
+    { name: 'Pack romantique', emoji: '🥂', category: 'experience', price: '45', description: 'Champagne, fleurs' },
+    { name: 'Ménage mi-séjour', emoji: '🧹', category: 'comfort', price: '35', description: 'Nettoyage pendant le séjour' },
+    { name: 'Transfert aéroport', emoji: '🚗', category: 'practical', price: '50', description: 'Navette privée' },
+    { name: 'Pack bébé', emoji: '👶', category: 'comfort', price: '20', description: 'Lit parapluie + chaise haute' },
+  ];
+  const handleSave = async () => {
+    if (!form.name || !form.price) return;
+    setSaving(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch('/api/upsells/manage', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` }, body: JSON.stringify({ propertyId: propId, ...form, price: parseFloat(form.price) }) });
+      if (res.ok) { setForm({ name: '', price: '', emoji: '✨', category: 'flexibility', description: '' }); setOpen(false); onAdded(); }
+    } catch (err) { console.error(err); }
+    finally { setSaving(false); }
+  };
+
+  const inp = { background: '#fff', border: '1px solid #e8e8ed', borderRadius: '10px', padding: '10px 12px', fontSize: '13px', fontFamily: 'inherit', outline: 'none', color: '#1d1d1f' };
+
+  if (!open) return (
+    <button onClick={() => setOpen(true)} style={{ width: '100%', padding: '11px', background: '#f5f5f7', border: '2px dashed #d2d2d7', borderRadius: '12px', color: '#86868b', fontWeight: '500', fontSize: '13px', cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '-0.1px' }}>
+      + Ajouter un upsell
+    </button>
+  );
+  return (
+    <div style={{ background: '#f5f5f7', border: '1px solid #e8e8ed', borderRadius: '14px', padding: '16px', marginTop: '4px' }}>
+      <p style={{ margin: '0 0 12px', fontSize: '12px', fontWeight: '600', color: '#1d1d1f', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Preset ou personnalisé</p>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '14px' }}>
+        {PRESETS.map(p => (
+          <button key={p.name} onClick={() => setForm({ name: p.name, price: p.price, emoji: p.emoji, category: p.category, description: p.description })}
+            style={{ background: form.name === p.name ? '#1d1d1f' : '#fff', color: form.name === p.name ? '#fff' : '#1d1d1f', border: '1px solid #e8e8ed', padding: '5px 10px', borderRadius: '980px', fontSize: '12px', fontWeight: '500', cursor: 'pointer', fontFamily: 'inherit', transition: '0.15s' }}>
+            {p.emoji} {p.name}
+          </button>
+        ))}
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 80px 56px', gap: '6px', marginBottom: '6px' }}>
+        <input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} placeholder="Nom du service" style={inp} />
+        <input type="number" value={form.price} onChange={e => setForm(p => ({ ...p, price: e.target.value }))} placeholder="Prix €" style={inp} />
+        <input value={form.emoji} onChange={e => setForm(p => ({ ...p, emoji: e.target.value }))} placeholder="✨" style={{ ...inp, textAlign: 'center', fontSize: '16px' }} />
+      </div>
+      <input value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} placeholder="Description courte (optionnel)" style={{ ...inp, width: '100%', marginBottom: '10px', boxSizing: 'border-box' }} />
+      <div style={{ display: 'flex', gap: '6px' }}>
+        <button onClick={() => setOpen(false)} style={{ flex: 1, padding: '10px', background: '#fff', border: '1px solid #e8e8ed', borderRadius: '10px', fontSize: '13px', fontWeight: '500', cursor: 'pointer', fontFamily: 'inherit', color: '#6e6e73' }}>Annuler</button>
+        <button onClick={handleSave} disabled={saving || !form.name || !form.price} style={{ flex: 2, padding: '10px', background: !form.name || !form.price ? '#aeaeb2' : '#1d1d1f', color: '#fff', border: 'none', borderRadius: '10px', fontSize: '13px', fontWeight: '500', cursor: 'pointer', fontFamily: 'inherit', transition: '0.15s' }}>
+          {saving ? '⏳' : '✅ Ajouter'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ─── Main Dashboard ─────────────────────────────────────────────
 export default function Dashboard() {
   const router = useRouter();
   const [properties, setProperties] = useState([]);
@@ -12,162 +72,66 @@ export default function Dashboard() {
   const [showLimitModal, setShowLimitModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [propertyToDelete, setPropertyToDelete] = useState(null);
-
-  // ── MÉNAGE ──
   const [activeTab, setActiveTab] = useState({});
   const [cleaningData, setCleaningData] = useState({});
   const [reservationsData, setReservationsData] = useState({});
-  const [upsellsData, setUpsellsData] = useState({}); // { [propId]: { upsells, orders, loading } }
+  const [upsellsData, setUpsellsData] = useState({});
   const [connectStatus, setConnectStatus] = useState(null);
 
-  // ── iCal Sync silencieux ─────────────────────────────────────────────────
   const runIcalSync = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.access_token) return;
-      await fetch('/api/ical-sync-manual', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
-        },
-      });
-    } catch {
-      // Silencieux — ne jamais bloquer le dashboard
-    }
+      await fetch('/api/ical-sync-manual', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` } });
+    } catch {}
   };
 
-  // Sync au montage + quand router.query change
   useEffect(() => {
-    fetchData();
-    runIcalSync();
-    if (router.query.success) {
-      const timer = setTimeout(() => fetchData(), 1500);
-      return () => clearTimeout(timer);
-    }
+    fetchData(); runIcalSync();
+    if (router.query.success) { const t = setTimeout(() => fetchData(), 1500); return () => clearTimeout(t); }
   }, [router.query]);
 
-  // Sync à chaque retour sur la page (depuis un autre onglet ou une autre page)
   useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        runIcalSync();
-      }
-    };
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+    const h = () => { if (document.visibilityState === 'visible') runIcalSync(); };
+    document.addEventListener('visibilitychange', h);
+    return () => document.removeEventListener('visibilitychange', h);
   }, []);
 
   const fetchData = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { router.push('/login'); return; }
-
-      let { data: props } = await supabase
-        .from('properties')
-        .select('*')
-        .eq('owner_id', user.id)
-        .order('created_at', { ascending: false });
-
+      let { data: props } = await supabase.from('properties').select('*').eq('owner_id', user.id).order('created_at', { ascending: false });
       if (!props || props.length === 0) {
-        const { data: teamEntry } = await supabase
-          .from('team_members')
-          .select('property_ids, account_owner_id')
-          .eq('invited_email', user.email.toLowerCase())
-          .eq('status', 'active')
-          .maybeSingle();
-
+        const { data: teamEntry } = await supabase.from('team_members').select('property_ids, account_owner_id').eq('invited_email', user.email.toLowerCase()).eq('status', 'active').maybeSingle();
         if (teamEntry) {
-          if (teamEntry.property_ids === null) {
-            const { data: allProps } = await supabase
-              .from('properties')
-              .select('*')
-              .eq('owner_id', teamEntry.account_owner_id)
-              .order('created_at', { ascending: false });
-            props = allProps;
-          } else {
-            const { data: restrictedProps } = await supabase
-              .from('properties')
-              .select('*')
-              .in('id', teamEntry.property_ids)
-              .order('created_at', { ascending: false });
-            props = restrictedProps;
-          }
+          if (teamEntry.property_ids === null) { const { data: all } = await supabase.from('properties').select('*').eq('owner_id', teamEntry.account_owner_id).order('created_at', { ascending: false }); props = all; }
+          else { const { data: restricted } = await supabase.from('properties').select('*').in('id', teamEntry.property_ids).order('created_at', { ascending: false }); props = restricted; }
         }
       }
-
       const { data: prof } = await supabase.from('profiles').select('*, telegram_chat_id').eq('id', user.id).single();
-
       if (props) setProperties(props);
       if (prof) setProfile(prof);
-
-      const tabs = {};
-      const cleaning = {};
-      props?.forEach(p => {
-        tabs[p.id] = 'actions';
-        cleaning[p.id] = { config: null, status: null, providerName: '', providerTelegram: '', checklist: [], newItem: '', saving: false, inviteName: '', inviteEmail: '', inviting: false };
-      });
-      setActiveTab(tabs);
-      setCleaningData(cleaning);
-
-      // Charger le statut Stripe Connect
+      const tabs = {}; const cleaning = {};
+      props?.forEach(p => { tabs[p.id] = 'actions'; cleaning[p.id] = { config: null, status: null, providerName: '', providerTelegram: '', checklist: [], newItem: '', saving: false, inviteName: '', inviteEmail: '', inviting: false }; });
+      setActiveTab(tabs); setCleaningData(cleaning);
       try {
         const { data: { session } } = await supabase.auth.getSession();
-        if (session?.access_token) {
-          const csRes = await fetch('/api/connect/status', {
-            headers: { 'Authorization': `Bearer ${session.access_token}` },
-          });
-          const csData = await csRes.json();
-          setConnectStatus(csData.status);
-        }
-      } catch (_) {}
-
-      // Charger les réservations pour tous les logements actifs
+        if (session?.access_token) { const csRes = await fetch('/api/connect/status', { headers: { 'Authorization': `Bearer ${session.access_token}` } }); const csData = await csRes.json(); setConnectStatus(csData.status); }
+      } catch {}
       if (props) {
-        const today = new Date().toISOString().split('T')[0];
-        const resMap = {};
-        await Promise.all(props.filter(p => p.is_active).map(async (prop) => {
-          const { data } = await supabase
-            .from('reservations')
-            .select('*')
-            .eq('property_id', prop.id)
-            .eq('status', 'confirmed')
-            .gte('check_out', today)
-            .order('check_in', { ascending: true })
-            .limit(10);
-          resMap[prop.id] = data || [];
-        }));
+        const today = new Date().toISOString().split('T')[0]; const resMap = {};
+        await Promise.all(props.filter(p => p.is_active).map(async (prop) => { const { data } = await supabase.from('reservations').select('*').eq('property_id', prop.id).eq('status', 'confirmed').gte('check_out', today).order('check_in', { ascending: true }).limit(10); resMap[prop.id] = data || []; }));
         setReservationsData(resMap);
       }
-
       if (props) {
         for (const prop of props) {
-          const { data: config } = await supabase
-            .from('property_cleaning')
-            .select('*, cleaning_providers(*)')
-            .eq('property_id', prop.id)
-            .maybeSingle();
-
-          if (config) {
-            setCleaningData(prev => ({
-              ...prev,
-              [prop.id]: {
-                ...prev[prop.id],
-                config: config,
-                providerName: config?.cleaning_providers?.name || '',
-                providerTelegram: config?.cleaning_providers?.telegram_chat_id || '',
-                checklist: config?.checklist || [],
-              }
-            }));
-          }
+          const { data: config } = await supabase.from('property_cleaning').select('*, cleaning_providers(*)').eq('property_id', prop.id).maybeSingle();
+          if (config) setCleaningData(prev => ({ ...prev, [prop.id]: { ...prev[prop.id], config, providerName: config?.cleaning_providers?.name || '', providerTelegram: config?.cleaning_providers?.telegram_chat_id || '', checklist: config?.checklist || [] } }));
         }
       }
-
-    } catch (err) {
-      console.error("Erreur chargement:", err);
-    } finally {
-      setLoading(false);
-    }
+    } catch (err) { console.error(err); }
+    finally { setLoading(false); }
   };
 
   const loadUpsells = async (propId) => {
@@ -175,55 +139,25 @@ export default function Dashboard() {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const [upsellsRes, ordersRes] = await Promise.all([
-        fetch(`/api/upsells/manage?propertyId=${propId}`, {
-          headers: { 'Authorization': `Bearer ${session.access_token}` },
-        }),
+        fetch(`/api/upsells/manage?propertyId=${propId}`, { headers: { 'Authorization': `Bearer ${session.access_token}` } }),
         supabase.from('upsell_orders').select('*').eq('property_id', propId).eq('status', 'paid').order('paid_at', { ascending: false }).limit(20),
       ]);
       const upsellsJson = await upsellsRes.json();
-      setUpsellsData(prev => ({
-        ...prev,
-        [propId]: { upsells: upsellsJson.upsells || [], orders: ordersRes.data || [], loading: false },
-      }));
-    } catch (err) {
-      setUpsellsData(prev => ({ ...prev, [propId]: { upsells: [], orders: [], loading: false } }));
-    }
+      setUpsellsData(prev => ({ ...prev, [propId]: { upsells: upsellsJson.upsells || [], orders: ordersRes.data || [], loading: false } }));
+    } catch { setUpsellsData(prev => ({ ...prev, [propId]: { upsells: [], orders: [], loading: false } })); }
   };
 
   const loadReservations = async (propId) => {
     const today = new Date().toISOString().split('T')[0];
-    const { data } = await supabase
-      .from('reservations')
-      .select('*')
-      .eq('property_id', propId)
-      .eq('status', 'confirmed')
-      .gte('check_out', today)
-      .order('check_in', { ascending: true })
-      .limit(10);
+    const { data } = await supabase.from('reservations').select('*').eq('property_id', propId).eq('status', 'confirmed').gte('check_out', today).order('check_in', { ascending: true }).limit(10);
     setReservationsData(prev => ({ ...prev, [propId]: data || [] }));
   };
 
   const loadCleaningData = async (propId) => {
-    const { data: config } = await supabase
-      .from('property_cleaning')
-      .select('*, cleaning_providers(*)')
-      .eq('property_id', propId)
-      .maybeSingle();
-
+    const { data: config } = await supabase.from('property_cleaning').select('*, cleaning_providers(*)').eq('property_id', propId).maybeSingle();
     const res = await fetch(`/api/cleaning/status?propertyId=${propId}`);
     const statusData = await res.json();
-
-    setCleaningData(prev => ({
-      ...prev,
-      [propId]: {
-        ...prev[propId],
-        config: config || false,
-        status: statusData,
-        providerName: config?.cleaning_providers?.name || '',
-        providerTelegram: config?.cleaning_providers?.telegram_chat_id || '',
-        checklist: config?.checklist || [],
-      }
-    }));
+    setCleaningData(prev => ({ ...prev, [propId]: { ...prev[propId], config: config || false, status: statusData, providerName: config?.cleaning_providers?.name || '', providerTelegram: config?.cleaning_providers?.telegram_chat_id || '', checklist: config?.checklist || [] } }));
   };
 
   const switchTab = (propId, tab) => {
@@ -233,218 +167,90 @@ export default function Dashboard() {
     if (tab === 'upsells') loadUpsells(propId);
   };
 
-  const updateCleaning = (propId, key, value) => {
-    setCleaningData(prev => ({ ...prev, [propId]: { ...prev[propId], [key]: value } }));
-  };
-
-  const addChecklistItem = (propId) => {
-    const item = cleaningData[propId]?.newItem?.trim();
-    if (!item) return;
-    setCleaningData(prev => ({
-      ...prev,
-      [propId]: { ...prev[propId], checklist: [...(prev[propId].checklist || []), item], newItem: '' }
-    }));
-  };
-
-  const removeChecklistItem = (propId, index) => {
-    setCleaningData(prev => ({
-      ...prev,
-      [propId]: { ...prev[propId], checklist: prev[propId].checklist.filter((_, i) => i !== index) }
-    }));
-  };
+  const updateCleaning = (propId, key, value) => setCleaningData(prev => ({ ...prev, [propId]: { ...prev[propId], [key]: value } }));
+  const addChecklistItem = (propId) => { const item = cleaningData[propId]?.newItem?.trim(); if (!item) return; setCleaningData(prev => ({ ...prev, [propId]: { ...prev[propId], checklist: [...(prev[propId].checklist || []), item], newItem: '' } })); };
+  const removeChecklistItem = (propId, index) => setCleaningData(prev => ({ ...prev, [propId]: { ...prev[propId], checklist: prev[propId].checklist.filter((_, i) => i !== index) } }));
 
   const saveCleaning = async (propId) => {
     updateCleaning(propId, 'saving', true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      const d = cleaningData[propId];
-      let providerId = d.config?.provider_id;
-
-      if (providerId) {
-        await supabase.from('cleaning_providers').update({
-          name: d.providerName,
-          telegram_chat_id: d.providerTelegram,
-        }).eq('id', providerId);
-      } else {
-        const { data: newProvider } = await supabase
-          .from('cleaning_providers')
-          .insert({ owner_id: user.id, name: d.providerName, telegram_chat_id: d.providerTelegram })
-          .select().single();
-        providerId = newProvider?.id;
-      }
-
-      await supabase.from('property_cleaning').upsert({
-        property_id: propId,
-        provider_id: providerId,
-        checklist: d.checklist,
-      }, { onConflict: 'property_id' });
-
-      await loadCleaningData(propId);
-      alert('✅ Configuration ménage sauvegardée !');
-    } catch (err) {
-      console.error(err);
-      alert('Erreur lors de la sauvegarde.');
-      updateCleaning(propId, 'saving', false);
-    }
+      const d = cleaningData[propId]; let providerId = d.config?.provider_id;
+      if (providerId) { await supabase.from('cleaning_providers').update({ name: d.providerName, telegram_chat_id: d.providerTelegram }).eq('id', providerId); }
+      else { const { data: newProvider } = await supabase.from('cleaning_providers').insert({ owner_id: user.id, name: d.providerName, telegram_chat_id: d.providerTelegram }).select().single(); providerId = newProvider?.id; }
+      await supabase.from('property_cleaning').upsert({ property_id: propId, provider_id: providerId, checklist: d.checklist }, { onConflict: 'property_id' });
+      await loadCleaningData(propId); alert('✅ Configuration ménage sauvegardée !');
+    } catch (err) { console.error(err); alert('Erreur lors de la sauvegarde.'); updateCleaning(propId, 'saving', false); }
   };
 
   const triggerCleaning = async (propId) => {
     const d = cleaningData[propId];
-    if (!d?.config) { alert('Configurez d\'abord un prestataire.'); return; }
+    if (!d?.config) { alert("Configurez d'abord un prestataire."); return; }
     try {
-      await fetch('/api/cleaning/notify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ propertyId: propId }),
-      });
+      await fetch('/api/cleaning/notify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ propertyId: propId }) });
       alert('✅ Prestataire notifié !');
-      const res = await fetch(`/api/cleaning/status?propertyId=${propId}`);
-      const statusData = await res.json();
-      updateCleaning(propId, 'status', statusData);
-    } catch (err) {
-      alert('Erreur lors de la notification.');
-    }
+      const res = await fetch(`/api/cleaning/status?propertyId=${propId}`); const statusData = await res.json(); updateCleaning(propId, 'status', statusData);
+    } catch { alert('Erreur lors de la notification.'); }
   };
 
-  // ── Inviter un prestataire ────────────────────────────────
   const inviteCleaner = async (propId) => {
     const d = cleaningData[propId];
-    if (!d?.inviteName?.trim() || !d?.inviteEmail?.trim()) {
-      alert("Veuillez renseigner le nom et l'email du prestataire.");
-      return;
-    }
+    if (!d?.inviteName?.trim() || !d?.inviteEmail?.trim()) { alert("Veuillez renseigner le nom et l'email du prestataire."); return; }
     updateCleaning(propId, 'inviting', true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      const token = session?.access_token;
-      if (!token) throw new Error('Session expirée, veuillez vous reconnecter.');
-      const res = await fetch('/api/cleaning/invite-cleaner', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          cleanerName: d.inviteName.trim(),
-          cleanerEmail: d.inviteEmail.trim(),
-          propertyId: propId,
-        }),
-      });
+      const res = await fetch('/api/cleaning/invite-cleaner', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` }, body: JSON.stringify({ cleanerName: d.inviteName.trim(), cleanerEmail: d.inviteEmail.trim(), propertyId: propId }) });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Erreur lors de l'invitation");
-      alert(`✅ Invitation envoyée à ${d.inviteEmail} !`);
-      await loadCleaningData(propId);
-    } catch (err) {
-      alert('Erreur : ' + err.message);
-    } finally {
-      updateCleaning(propId, 'inviting', false);
-    }
+      alert(`✅ Invitation envoyée à ${d.inviteEmail} !`); await loadCleaningData(propId);
+    } catch (err) { alert('Erreur : ' + err.message); }
+    finally { updateCleaning(propId, 'inviting', false); }
   };
 
-  // ── Retirer un prestataire ────────────────────────────────
   const removeCleaner = async (propId) => {
-    const d = cleaningData[propId];
-    const name = d?.config?.cleaning_providers?.name || 'ce prestataire';
+    const d = cleaningData[propId]; const name = d?.config?.cleaning_providers?.name || 'ce prestataire';
     if (!window.confirm(`Retirer ${name} de ce logement ?`)) return;
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      const token = session?.access_token;
-      if (!token) throw new Error('Session expirée, veuillez vous reconnecter.');
-      const res = await fetch('/api/cleaning/remove-cleaner', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({ propertyId: propId, deleteProvider: false }),
-      });
-      if (!res.ok) throw new Error("Erreur lors de la suppression");
-      await loadCleaningData(propId);
-    } catch (err) {
-      alert('Erreur : ' + err.message);
-    }
+      const res = await fetch('/api/cleaning/remove-cleaner', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` }, body: JSON.stringify({ propertyId: propId, deleteProvider: false }) });
+      if (!res.ok) throw new Error("Erreur lors de la suppression"); await loadCleaningData(propId);
+    } catch (err) { alert('Erreur : ' + err.message); }
   };
 
   const copyWelcomeMessage = (prop) => {
     const identifier = prop.slug || prop.id;
     const guestLink = `${window.location.origin}/m/${identifier}`;
     const message = `Bonjour ! 👋\nPour toute question pendant votre séjour — que ce soit le WiFi, les équipements, ou une bonne adresse dans le quartier — vous pouvez contacter mon assistant disponible 24h/24 via ce lien :\n👉 ${guestLink}\n\nBon séjour ! 🎩`;
-    navigator.clipboard.writeText(message);
-    alert(`Lien Voyageur copié pour "${prop.name}" !`);
+    navigator.clipboard.writeText(message); alert(`Lien Voyageur copié pour "${prop.name}" !`);
   };
 
-  const handleAddClick = (e) => {
-    e.preventDefault();
-    const hasInactive = properties.some(prop => !prop.is_active);
-    if (hasInactive) { setShowLimitModal(true); } else { router.push('/add-property'); }
-  };
-
+  const handleAddClick = (e) => { e.preventDefault(); const hasInactive = properties.some(p => !p.is_active); if (hasInactive) setShowLimitModal(true); else router.push('/add-property'); };
   const handlePayment = async (e) => {
-    e.preventDefault();
-    setPaymentLoading(true);
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      const res = await fetch('/api/create-checkout-session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user.id, userEmail: user.email }),
-      });
-      const data = await res.json();
-      if (data.url) window.location.href = data.url;
-    } catch (err) {
-      alert("Erreur de connexion à Stripe.");
-    } finally {
-      setPaymentLoading(false);
-    }
+    e.preventDefault(); setPaymentLoading(true);
+    try { const { data: { user } } = await supabase.auth.getUser(); const res = await fetch('/api/create-checkout-session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: user.id, userEmail: user.email }) }); const data = await res.json(); if (data.url) window.location.href = data.url; }
+    catch { alert("Erreur de connexion à Stripe."); }
+    finally { setPaymentLoading(false); }
   };
-
   const handleManageSubscription = async () => {
-    try {
-      const res = await fetch('/api/create-portal-session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: profile?.id }),
-      });
-      const data = await res.json();
-      if (data.url) window.location.href = data.url;
-    } catch (err) { console.error(err); }
+    try { const res = await fetch('/api/create-portal-session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: profile?.id }) }); const data = await res.json(); if (data.url) window.location.href = data.url; }
+    catch (err) { console.error(err); }
   };
-
-  const triggerDeleteRequest = (e, prop) => {
-    e.stopPropagation();
-    setPropertyToDelete(prop);
-    setShowDeleteModal(true);
-  };
-
+  const triggerDeleteRequest = (e, prop) => { e.stopPropagation(); setPropertyToDelete(prop); setShowDeleteModal(true); };
   const confirmDelete = async () => {
     if (!propertyToDelete) return;
     const { error } = await supabase.from('properties').delete().eq('id', propertyToDelete.id);
-    if (!error) {
-      setProperties(properties.filter(p => p.id !== propertyToDelete.id));
-      setShowDeleteModal(false);
-      setPropertyToDelete(null);
-    }
+    if (!error) { setProperties(properties.filter(p => p.id !== propertyToDelete.id)); setShowDeleteModal(false); setPropertyToDelete(null); }
   };
-
   const resolveEmergency = async (prop) => {
     if (!window.confirm(`Confirmer que l'urgence sur "${prop.name}" est réglée ?`)) return;
     const { error } = await supabase.from('properties').update({ has_emergency: false }).eq('id', prop.id);
-    if (!error) {
-      setProperties(properties.map(p => p.id === prop.id ? { ...p, has_emergency: false } : p));
-    }
+    if (!error) setProperties(properties.map(p => p.id === prop.id ? { ...p, has_emergency: false } : p));
   };
-
   const handleDeleteAccount = async () => {
     if (window.confirm("Supprimer votre compte ?") && window.prompt("Tapez 'SUPPRIMER' :") === "SUPPRIMER") {
-      await supabase.from('profiles').delete().eq('id', profile.id);
-      await supabase.auth.signOut();
-      router.push('/');
+      await supabase.from('profiles').delete().eq('id', profile.id); await supabase.auth.signOut(); router.push('/');
     }
   };
-
-  if (loading) return <div style={{ padding: '50px', textAlign: 'center' }}>Chargement...</div>;
-
-  const telegramLinked = !!profile?.telegram_chat_id;
 
   const statusColors = {
     pending:     { bg: '#fff7ed', border: '#f97316', color: '#c2410c', label: '🔴 En attente' },
@@ -452,610 +258,363 @@ export default function Dashboard() {
     completed:   { bg: '#f0fdf4', border: '#22c55e', color: '#15803d', label: '🟢 Terminé' },
   };
 
+  if (loading) return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', fontFamily: 'Inter, -apple-system, sans-serif', color: '#86868b', fontSize: '15px', background: '#f5f5f7' }}>
+      Chargement...
+    </div>
+  );
+
+  const telegramLinked = !!profile?.telegram_chat_id;
+
+  // ── Styles réutilisables ──
+  const tabBtn = (active) => ({
+    flex: 1, padding: '10px 6px', fontSize: '12px', fontWeight: active ? '600' : '400', border: 'none', background: active ? '#fff' : 'transparent', cursor: 'pointer', color: active ? '#1d1d1f' : '#86868b', borderBottom: active ? '2px solid #1d1d1f' : '2px solid transparent', transition: '0.2s', fontFamily: 'inherit', letterSpacing: '-0.1px',
+  });
+  const actionBtn = (bg, color, border) => ({
+    padding: '11px', borderRadius: '10px', fontWeight: '500', fontSize: '13px', textAlign: 'center', border: border || 'none', cursor: 'pointer', display: 'block', width: '100%', fontFamily: 'inherit', background: bg, color, letterSpacing: '-0.1px', transition: '0.15s',
+  });
+  const cleanInput = { width: '100%', padding: '10px 12px', border: '1px solid #e8e8ed', borderRadius: '10px', fontSize: '13px', fontFamily: 'inherit', background: '#f5f5f7', outline: 'none', marginBottom: '8px', color: '#1d1d1f', boxSizing: 'border-box' };
+  const cleanLabel = { display: 'block', fontSize: '10px', fontWeight: '600', color: '#86868b', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '5px', marginTop: '10px' };
+
   return (
-    <div className="dashboard-layout">
+    <div style={{ display: 'flex', minHeight: '100vh', background: '#f5f5f7', fontFamily: 'Inter, -apple-system, sans-serif' }}>
+      <Head>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+      </Head>
       <style jsx global>{`
-        * { box-sizing: border-box; }
-        body { margin: 0; background: #f8fafc; font-family: 'Inter', -apple-system, sans-serif; overflow-x: hidden; }
-        a { text-decoration: none !important; }
-      `}</style>
-      <style jsx>{`
-        .dashboard-layout { display: flex; min-height: 100vh; max-width: 100vw; overflow-x: hidden; }
-        nav { width: 240px; background: #1a2a6c; color: white; padding: 32px 16px; position: fixed; height: 100vh; z-index: 100; display: flex; flex-direction: column; flex-shrink: 0; }
-        .logo { font-size: 20px; font-weight: 900; margin-bottom: 40px; text-align: center; }
-        .nav-item { padding: 12px 16px; border-radius: 12px; display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 14px; opacity: 0.8; margin-bottom: 8px; cursor: pointer; color: white; transition: 0.2s; }
-        .nav-item:hover { opacity: 1; background: rgba(255,255,255,0.05); }
-        .nav-item.active { background: rgba(255,255,255,0.15); color: #fbbf24; opacity: 1; }
-        .nav-footer { margin-top: auto; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.1); }
-        .tutorial-box { background: #fbbf24; color: #1a2a6c; padding: 12px; border-radius: 10px; font-size: 13px; font-weight: 700; text-align: center; cursor: pointer; display: block; margin-top: 8px; }
-        .btn-logout { width: 100%; margin-top: 8px; padding: 11px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; color: rgba(255,255,255,0.7); font-weight: 700; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; font-family: inherit; }
-        .btn-logout:hover { background: rgba(255,255,255,0.15); }
-        main { flex: 1; margin-left: 240px; padding: 40px; min-width: 0; }
-        .header-area { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; gap: 16px; }
-        h1 { margin: 0; color: #1e293b; font-size: 28px; font-weight: 800; }
-        .btn-add { background: #fbbf24; color: #1a2a6c; padding: 11px 22px; border-radius: 12px; font-weight: 800; font-size: 14px; cursor: pointer; border: none; white-space: nowrap; flex-shrink: 0; }
-        .banner { border-radius: 16px; padding: 16px 20px; margin-bottom: 20px; display: flex; align-items: center; gap: 14px; }
-        .banner.warning { background: #fff7ed; border: 1px solid #f97316; }
-        .banner.success { background: #f0fdf4; border: 1px solid #10b981; }
-        .banner-icon { font-size: 24px; flex-shrink: 0; }
-        .banner-text { flex: 1; }
-        .banner-text h4 { margin: 0 0 3px; font-weight: 800; font-size: 14px; color: #c2410c; }
-        .banner-text p { margin: 0; font-size: 12px; color: #64748b; line-height: 1.4; }
-        .btn-tg { background: #0088cc; color: white; padding: 10px 16px; border-radius: 10px; font-weight: 700; font-size: 13px; border: none; cursor: pointer; white-space: nowrap; }
-        .banner-success-text { font-size: 14px; color: #059669; font-weight: 600; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 18px; }
-        .empty-state { background: white; padding: 50px 24px; border-radius: 24px; text-align: center; border: 2px dashed #e2e8f0; grid-column: 1 / -1; }
-        .card { background: white; border-radius: 20px; border: 1px solid #e2e8f0; position: relative; box-shadow: 0 2px 8px rgba(0,0,0,0.04); transition: border-color 0.3s; overflow: hidden; }
-        .card.emergency-active { border: 2px solid #ef4444 !important; box-shadow: 0 0 12px rgba(239, 68, 68, 0.15); }
-        .card-top { padding: 18px 18px 0; }
-        .emergency-badge { display: inline-block; background: #e11d48; color: white; padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 800; animation: blinker 1.5s linear infinite; margin-bottom: 8px; }
-        @keyframes blinker { 50% { opacity: 0.4; } }
-        h3 { margin: 0 0 4px; color: #1a2a6c; font-size: 16px; font-weight: 800; line-height: 1.3; word-break: break-word; padding-right: 32px; }
-        .address { color: #64748b; font-size: 12px; margin-bottom: 0; }
-        .btn-delete { position: absolute; top: 14px; right: 12px; border: none; background: none; cursor: pointer; color: #cbd5e1; font-size: 15px; padding: 4px; z-index: 2; }
-        .btn-delete:hover { color: #e11d48; }
-        .card-tabs { display: flex; border-top: 1px solid #f1f5f9; margin-top: 14px; }
-        .tab-btn { flex: 1; padding: 10px 8px; font-size: 12px; font-weight: 700; border: none; background: none; cursor: pointer; color: #94a3b8; border-bottom: 2px solid transparent; transition: 0.2s; font-family: inherit; }
-        .tab-btn.active { color: #1a2a6c; border-bottom-color: #1a2a6c; background: #f8fafc; }
-        .tab-btn:hover:not(.active) { color: #64748b; background: #fafafa; }
-        .tab-content { padding: 14px 18px 18px; }
-        .btn-stack { display: flex; flex-direction: column; gap: 8px; }
-        .action-btn { padding: 11px; border-radius: 10px; font-weight: 700; font-size: 13px; text-align: center; border: none; cursor: pointer; display: block; width: 100%; font-family: inherit; }
-        .btn-primary { background: #1a2a6c; color: white; }
-        .btn-welcome { background: #ecfdf5; color: #059669; border: 1px solid #10b981; }
-        .btn-resolve { background: #f0fdf4; color: #15803d; border: 2px solid #22c55e; font-weight: 800; font-size: 13px; animation: pulse-green 2s ease-in-out infinite; }
-        @keyframes pulse-green { 0%, 100% { box-shadow: 0 0 0 0 rgba(34,197,94,0.4); } 50% { box-shadow: 0 0 0 6px rgba(34,197,94,0); } }
-        .btn-history { background: #fdf2f8; color: #be185d; }
-        .activation-zone { background: #fffbeb; padding: 14px; border-radius: 12px; border: 1px solid #fef3c7; text-align: center; }
-        .btn-activate { background: #fbbf24; border: none; padding: 12px; width: 100%; border-radius: 10px; font-weight: 800; color: #1a2a6c; cursor: pointer; font-size: 14px; font-family: inherit; }
-        .cleaning-status { border-radius: 10px; padding: 10px 14px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; }
-        .cleaning-input { width: 100%; padding: 10px 12px; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 13px; font-family: inherit; background: #f8fafc; margin-bottom: 8px; }
-        .cleaning-input:focus { outline: none; border-color: #1a2a6c; }
-        .cleaning-label { display: block; font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px; margin-top: 10px; }
-        .checklist-item { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
-        .checklist-item span { flex: 1; padding: 8px 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 13px; color: #1e293b; }
-        .btn-remove { padding: 6px 10px; background: #fee2e2; border: none; border-radius: 6px; cursor: pointer; color: #e11d48; font-weight: 700; font-size: 12px; }
-        .add-item-row { display: flex; gap: 6px; margin-top: 6px; }
-        .btn-add-item { padding: 8px 12px; background: #1a2a6c; color: white; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 12px; white-space: nowrap; font-family: inherit; }
-        .cleaning-actions { display: flex; gap: 8px; margin-top: 14px; }
-        .btn-save-cleaning { flex: 1; padding: 10px; background: #fbbf24; color: #1a2a6c; border: none; border-radius: 10px; font-weight: 800; cursor: pointer; font-size: 13px; font-family: inherit; }
-        .btn-notify-cleaning { flex: 1; padding: 10px; background: #f0fdf4; color: #15803d; border: 2px solid #22c55e; border-radius: 10px; font-weight: 800; cursor: pointer; font-size: 13px; font-family: inherit; }
-        .subscription-card { margin-top: 36px; padding: 22px; background: white; border-radius: 20px; border: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; gap: 16px; }
-        .btn-portal { background: #1a2a6c; color: white; padding: 11px 20px; border-radius: 12px; font-weight: 700; font-size: 14px; cursor: pointer; border: none; white-space: nowrap; }
-        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15,23,42,0.85); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
-        .modal-card { background: white; border-radius: 28px; padding: 32px 24px; max-width: 420px; width: 100%; text-align: center; }
-        .btn-close-modal { background: #fbbf24; border: none; padding: 13px; width: 100%; border-radius: 12px; font-weight: 800; color: #1a2a6c; cursor: pointer; margin-top: 18px; font-size: 15px; font-family: inherit; }
-        .info-box { background: #f1f5f9; padding: 13px; border-radius: 12px; margin-bottom: 18px; font-size: 13px; color: #475569; border-left: 4px solid #fbbf24; text-align: left; }
-        .modal-actions { display: flex; gap: 10px; margin-top: 16px; }
-        .btn-abort { flex: 1; padding: 12px; border-radius: 10px; border: 1px solid #e2e8f0; background: white; color: #64748b; font-weight: 700; cursor: pointer; font-family: inherit; }
-        .btn-confirm-delete { flex: 1; padding: 12px; border-radius: 10px; border: none; background: #e11d48; color: white; font-weight: 700; cursor: pointer; font-family: inherit; }
-        @media (max-width: 768px) {
-          nav { width: 100%; height: 60px; position: fixed; bottom: 0; left: 0; top: auto; flex-direction: row; padding: 0 0 env(safe-area-inset-bottom, 0px) 0; justify-content: space-around; align-items: center; box-shadow: 0 -2px 12px rgba(0,0,0,0.1); }
-          .logo { display: none; }
-          .nav-text { display: none; }
-          .nav-item { margin: 0; padding: 0; flex: 1; justify-content: center; font-size: 22px; border-radius: 0; background: transparent !important; height: 100%; opacity: 1; }
-          .nav-item.active { background: transparent !important; color: #fbbf24; }
-          .nav-footer { border-top: none; padding: 0; margin: 0; flex: 1; display: flex; height: 100%; align-items: center; justify-content: center; }
-          .tutorial-box { background: transparent; color: white; margin: 0; padding: 0; font-size: 22px; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; border-radius: 0; }
-          .btn-logout { display: none; }
-          main { margin-left: 0; padding: 20px 16px 90px; }
-          h1 { font-size: 22px; }
-          .grid { grid-template-columns: 1fr; gap: 12px; }
-          .banner { flex-wrap: wrap; }
-          .btn-tg { width: 100%; text-align: center; }
-          .subscription-card { flex-direction: column; align-items: stretch; padding: 18px; text-align: center; }
-          .btn-portal { width: 100%; }
-          .modal-card { padding: 24px 18px; }
-          .modal-actions { flex-direction: column; }
-        }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: #f5f5f7; -webkit-font-smoothing: antialiased; }
+        a { text-decoration: none !important; color: inherit; }
       `}</style>
 
-      <nav>
-        <div className="logo">Alfred Major 🎩</div>
-        <Link href="/dashboard" legacyBehavior><a className="nav-item active">🏠 <span className="nav-text">Mes Logements</span></a></Link>
-        <Link href="/settings" legacyBehavior><a className="nav-item">⚙️ <span className="nav-text">Paramètres</span></a></Link>
-        <div className="nav-footer">
-          <Link href="/tutorial" legacyBehavior><a className="tutorial-box">❓ <span className="nav-text">Comment ça marche ?</span></a></Link>
-          <button className="btn-logout" onClick={async () => { await supabase.auth.signOut(); router.push('/'); }}>
-            🚪 <span className="nav-text">Déconnexion</span>
+      {/* ── SIDEBAR ── */}
+      <nav style={{ width: '220px', background: '#1d1d1f', color: '#fff', padding: '28px 16px', position: 'fixed', height: '100vh', zIndex: 100, display: 'flex', flexDirection: 'column' }}>
+        <div style={{ fontSize: '17px', fontWeight: '600', marginBottom: '36px', textAlign: 'center', letterSpacing: '-0.3px' }}>
+          Alfred<span style={{ color: '#c9a227' }}>Major</span> 🎩
+        </div>
+        {[
+          { href: '/dashboard', label: 'Logements', icon: '🏠', active: true },
+          { href: '/settings', label: 'Paramètres', icon: '⚙️', active: false },
+        ].map(({ href, label, icon, active }) => (
+          <Link key={href} href={href} style={{ padding: '11px 14px', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '10px', fontWeight: active ? '500' : '400', fontSize: '14px', opacity: active ? 1 : 0.6, marginBottom: '4px', color: active ? '#c9a227' : '#fff', background: active ? 'rgba(255,255,255,0.08)' : 'transparent', letterSpacing: '-0.2px', transition: '0.2s' }}>
+            <span>{icon}</span> <span>{label}</span>
+          </Link>
+        ))}
+        <div style={{ marginTop: 'auto', paddingTop: '16px', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+          <Link href="/tutorial" style={{ display: 'block', background: '#c9a227', color: '#1d1d1f', padding: '10px', borderRadius: '10px', fontSize: '13px', fontWeight: '600', textAlign: 'center', marginBottom: '8px' }}>
+            ❓ Comment ça marche ?
+          </Link>
+          <button onClick={async () => { await supabase.auth.signOut(); router.push('/'); }} style={{ width: '100%', padding: '10px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', color: 'rgba(255,255,255,0.5)', fontWeight: '400', fontSize: '13px', cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '-0.1px' }}>
+            🚪 Déconnexion
           </button>
         </div>
       </nav>
 
-      <main>
-        <div className="header-area">
-          <h1>Mes Logements</h1>
-          <button onClick={handleAddClick} className="btn-add">+ Ajouter</button>
+      {/* ── MAIN ── */}
+      <main style={{ flex: 1, marginLeft: '220px', padding: '40px' }}>
+
+        {/* Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+          <h1 style={{ fontSize: '28px', fontWeight: '600', color: '#1d1d1f', letterSpacing: '-0.8px' }}>Mes Logements</h1>
+          <button onClick={handleAddClick} style={{ background: '#c9a227', color: '#1d1d1f', padding: '11px 22px', borderRadius: '980px', fontWeight: '600', fontSize: '14px', cursor: 'pointer', border: 'none', fontFamily: 'inherit', letterSpacing: '-0.2px' }}>
+            + Ajouter
+          </button>
         </div>
 
+        {/* Banner Telegram */}
         {!telegramLinked && (
-          <div className="banner warning">
-            <div className="banner-icon">🚨</div>
-            <div className="banner-text">
-              <h4>Activez vos alertes urgences</h4>
-              <p>Liez votre compte Telegram pour être alerté instantanément en cas d'urgence dans vos logements.</p>
+          <div style={{ background: '#fff7ed', border: '1px solid #f5d58a', borderRadius: '14px', padding: '16px 20px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '14px' }}>
+            <span style={{ fontSize: '22px' }}>🚨</span>
+            <div style={{ flex: 1 }}>
+              <p style={{ fontWeight: '600', fontSize: '14px', color: '#92400e', margin: '0 0 2px', letterSpacing: '-0.2px' }}>Activez vos alertes urgences</p>
+              <p style={{ fontSize: '13px', color: '#a16207', margin: 0, fontWeight: '300' }}>Liez Telegram pour être alerté instantanément en cas d'urgence.</p>
             </div>
-            <Link href="/settings" legacyBehavior>
-              <a><button className="btn-tg">Lier Telegram →</button></a>
+            <Link href="/settings" style={{ background: '#0088cc', color: '#fff', padding: '9px 16px', borderRadius: '980px', fontSize: '13px', fontWeight: '500', whiteSpace: 'nowrap', letterSpacing: '-0.1px' }}>
+              Lier Telegram →
             </Link>
           </div>
         )}
-
         {telegramLinked && (
-          <div className="banner success">
-            <span style={{ fontSize: '20px' }}>✅</span>
-            <span className="banner-success-text">Telegram connecté — alertes urgences actives</span>
+          <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '14px', padding: '13px 20px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <span>✅</span>
+            <span style={{ fontSize: '14px', color: '#15803d', fontWeight: '500', letterSpacing: '-0.1px' }}>Telegram connecté — alertes urgences actives</span>
           </div>
         )}
 
-        <div className="grid">
+        {/* Grid */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '16px' }}>
           {properties.length === 0 ? (
-            <div className="empty-state">
-              <span style={{ fontSize: '48px' }}>✨</span>
-              <h2 style={{ color: '#1a2a6c', fontWeight: 800, margin: '14px 0 8px' }}>Bienvenue sur Alfred Major !</h2>
-              <p style={{ color: '#64748b', maxWidth: '340px', margin: '0 auto 22px', fontSize: '14px' }}>Ajoutez votre premier logement pour configurer votre majordome.</p>
-              <button onClick={handleAddClick} className="btn-add">Créer mon premier logement</button>
+            <div style={{ background: '#fff', padding: '56px 28px', borderRadius: '20px', textAlign: 'center', border: '2px dashed #e8e8ed', gridColumn: '1 / -1' }}>
+              <span style={{ fontSize: '48px', display: 'block', marginBottom: '16px' }}>✨</span>
+              <h2 style={{ fontSize: '20px', fontWeight: '600', color: '#1d1d1f', margin: '0 0 10px', letterSpacing: '-0.4px' }}>Bienvenue sur Alfred Major !</h2>
+              <p style={{ color: '#86868b', maxWidth: '320px', margin: '0 auto 24px', fontSize: '15px', fontWeight: '300', letterSpacing: '-0.1px' }}>Ajoutez votre premier logement pour configurer votre majordome.</p>
+              <button onClick={handleAddClick} style={{ background: '#c9a227', color: '#1d1d1f', padding: '13px 28px', borderRadius: '980px', fontWeight: '600', fontSize: '15px', cursor: 'pointer', border: 'none', fontFamily: 'inherit', letterSpacing: '-0.2px' }}>
+                Créer mon premier logement
+              </button>
             </div>
-          ) : (
-            properties.map((prop) => {
-              const tab = activeTab[prop.id] || 'actions';
-              const cd = cleaningData[prop.id] || {};
-              const currentStatus = cd.status?.status ? statusColors[cd.status.status] : null;
+          ) : properties.map((prop) => {
+            const tab = activeTab[prop.id] || 'actions';
+            const cd = cleaningData[prop.id] || {};
+            const currentStatus = cd.status?.status ? statusColors[cd.status.status] : null;
 
-              return (
-                <div key={prop.id} className={`card ${prop.has_emergency ? 'emergency-active' : ''}`}>
-                  <button className="btn-delete" onClick={(e) => triggerDeleteRequest(e, prop)}>🗑️</button>
+            return (
+              <div key={prop.id} style={{ background: '#fff', borderRadius: '18px', border: prop.has_emergency ? '2px solid #ef4444' : '1px solid #e8e8ed', boxShadow: prop.has_emergency ? '0 0 20px rgba(239,68,68,0.12)' : '0 2px 8px rgba(0,0,0,0.04)', overflow: 'hidden', position: 'relative', transition: '0.2s' }}>
 
-                  <div className="card-top">
-                    {prop.has_emergency && <div className="emergency-badge">⚠️ URGENCE</div>}
-                    <h3>{prop.name}</h3>
-                    <p className="address">📍 {prop.street_number} {prop.address}{prop.city ? `, ${prop.city}` : ''}</p>
-                  </div>
+                <button onClick={(e) => triggerDeleteRequest(e, prop)} style={{ position: 'absolute', top: '14px', right: '12px', border: 'none', background: 'none', cursor: 'pointer', color: '#d2d2d7', fontSize: '15px', padding: '4px', zIndex: 2 }}>🗑️</button>
 
-                  {!prop.is_active ? (
-                    <div className="tab-content">
-                      <div className="activation-zone">
-                        <p style={{ fontSize: '13px', color: '#92400e', margin: '0 0 12px', fontWeight: 600 }}>Prêt à entrer en service.</p>
-                        <button onClick={handlePayment} className="btn-activate">
-                          {paymentLoading ? 'Connexion...' : 'Activer ce logement'}
-                        </button>
-                      </div>
+                <div style={{ padding: '18px 18px 0' }}>
+                  {prop.has_emergency && (
+                    <div style={{ display: 'inline-block', background: '#ef4444', color: '#fff', padding: '3px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: '700', marginBottom: '8px', letterSpacing: '0.2px' }}>⚠️ URGENCE</div>
+                  )}
+                  <h3 style={{ margin: '0 0 4px', color: '#1d1d1f', fontSize: '16px', fontWeight: '600', letterSpacing: '-0.3px', paddingRight: '32px' }}>{prop.name}</h3>
+                  <p style={{ color: '#86868b', fontSize: '13px', margin: '0', fontWeight: '300' }}>📍 {prop.street_number} {prop.address}{prop.city ? `, ${prop.city}` : ''}</p>
+                </div>
+
+                {!prop.is_active ? (
+                  <div style={{ padding: '14px 18px 18px' }}>
+                    <div style={{ background: '#fff8e8', padding: '16px', borderRadius: '12px', border: '1px solid #f5d58a', textAlign: 'center' }}>
+                      <p style={{ fontSize: '13px', color: '#92400e', margin: '0 0 12px', fontWeight: '500' }}>Prêt à entrer en service.</p>
+                      <button onClick={handlePayment} style={{ background: '#c9a227', border: 'none', padding: '12px', width: '100%', borderRadius: '980px', fontWeight: '600', color: '#1d1d1f', cursor: 'pointer', fontSize: '14px', fontFamily: 'inherit', letterSpacing: '-0.2px' }}>
+                        {paymentLoading ? 'Connexion...' : 'Activer ce logement'}
+                      </button>
                     </div>
-                  ) : (
-                    <>
-                      <div className="card-tabs">
-                        <button className={`tab-btn ${tab === 'actions' ? 'active' : ''}`} onClick={() => switchTab(prop.id, 'actions')}>
-                          🏠 Actions
-                        </button>
-                        <button className={`tab-btn ${tab === 'menage' ? 'active' : ''}`} onClick={() => switchTab(prop.id, 'menage')}>
-                          🧹 Ménage {currentStatus ? (currentStatus.label.split(' ')[0]) : ''}
-                        </button>
-                        <button className={`tab-btn ${tab === 'reservations' ? 'active' : ''}`} onClick={() => switchTab(prop.id, 'reservations')}>
-                          📅 {(reservationsData[prop.id] || []).length > 0 ? `${(reservationsData[prop.id] || []).length} rés.` : 'Calendrier'}
-                        </button>
-                        <button className={`tab-btn ${tab === 'upsells' ? 'active' : ''}`} onClick={() => switchTab(prop.id, 'upsells')}>
-                          💰 Upsells
-                        </button>
-                      </div>
+                  </div>
+                ) : (
+                  <>
+                    {/* Tabs */}
+                    <div style={{ display: 'flex', borderTop: '1px solid #f5f5f7', marginTop: '14px', background: '#f5f5f7' }}>
+                      {[['actions','🏠 Actions'], ['menage',`🧹 Ménage`], ['reservations','📅 Calendrier'], ['upsells','💰 Upsells']].map(([id, label]) => (
+                        <button key={id} onClick={() => switchTab(prop.id, id)} style={tabBtn(tab === id)}>{label}</button>
+                      ))}
+                    </div>
+
+                    {/* Tab content */}
+                    <div style={{ padding: '14px 18px 18px' }}>
 
                       {tab === 'actions' && (
-                        <div className="tab-content">
-                          <div className="btn-stack">
-                            {prop.has_emergency && (
-                              <button onClick={() => resolveEmergency(prop)} className="action-btn btn-resolve">
-                                ✅ Marquer comme résolu
-                              </button>
-                            )}
-                            <Link href={`/add-property?id=${prop.id}`} legacyBehavior>
-                              <a className="action-btn btn-primary">📊 Configurer le logement</a>
-                            </Link>
-                            <button onClick={() => copyWelcomeMessage(prop)} className="action-btn btn-welcome">
-                              ✨ Lien Voyageur (Copier)
-                            </button>
-                            <Link href={`/history/${prop.id}`} legacyBehavior>
-                              <a className="action-btn btn-history">📜 Historique des échanges</a>
-                            </Link>
-                          </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                          {prop.has_emergency && (
+                            <button onClick={() => resolveEmergency(prop)} style={actionBtn('#f0fdf4', '#15803d', '2px solid #22c55e')}>✅ Marquer comme résolu</button>
+                          )}
+                          <Link href={`/add-property?id=${prop.id}`} style={actionBtn('#1d1d1f', '#fff')}>📊 Configurer le logement</Link>
+                          <button onClick={() => copyWelcomeMessage(prop)} style={actionBtn('#f0fdf4', '#15803d', '1px solid #bbf7d0')}>✨ Lien Voyageur (Copier)</button>
+                          <Link href={`/history/${prop.id}`} style={actionBtn('#f5f0fa', '#7e22ce', '1px solid #e9d5ff')}>📜 Historique des échanges</Link>
                         </div>
                       )}
 
                       {tab === 'menage' && (
-                        <div className="tab-content">
-
-                          {/* STATUT DU DERNIER MÉNAGE */}
+                        <div>
                           {currentStatus && (
-                            <div className="cleaning-status" style={{ background: currentStatus.bg, border: `1px solid ${currentStatus.border}` }}>
+                            <div style={{ background: currentStatus.bg, border: `1px solid ${currentStatus.border}`, borderRadius: '10px', padding: '10px 14px', marginBottom: '14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                               <div>
-                                <p style={{ margin: '0 0 2px', fontWeight: 800, color: currentStatus.color, fontSize: '13px' }}>{currentStatus.label}</p>
-                                {cd.status?.providerName && (
-                                  <p style={{ margin: 0, fontSize: '11px', color: '#64748b' }}>
-                                    {cd.status.providerName}
-                                    {cd.status.confirmedAt && ` — ${new Date(cd.status.confirmedAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`}
-                                  </p>
-                                )}
+                                <p style={{ margin: '0 0 2px', fontWeight: '600', color: currentStatus.color, fontSize: '13px' }}>{currentStatus.label}</p>
+                                {cd.status?.providerName && <p style={{ margin: 0, fontSize: '11px', color: '#6e6e73' }}>{cd.status.providerName}{cd.status.confirmedAt && ` — ${new Date(cd.status.confirmedAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`}</p>}
                               </div>
                               {cd.status?.photos?.length > 0 && (
                                 <div style={{ display: 'flex', gap: '4px' }}>
-                                  {cd.status.photos.slice(0, 2).map((url, i) => (
-                                    <img key={i} src={url} alt="" style={{ width: '32px', height: '32px', objectFit: 'cover', borderRadius: '6px' }} />
-                                  ))}
+                                  {cd.status.photos.slice(0, 2).map((url, i) => <img key={i} src={url} alt="" style={{ width: '32px', height: '32px', objectFit: 'cover', borderRadius: '6px' }} />)}
                                 </div>
                               )}
                             </div>
                           )}
 
-                          {/* PRESTATAIRE ASSIGNÉ */}
                           {cd.config?.cleaning_providers ? (
                             <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '12px', padding: '14px', marginBottom: '14px' }}>
-                              <p style={{ margin: '0 0 4px', fontSize: '12px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>Prestataire assigné</p>
-                              <p style={{ margin: '0 0 10px', fontWeight: 800, color: '#15803d', fontSize: '15px' }}>
-                                🧹 {cd.config.cleaning_providers.name}
-                              </p>
-                              <p style={{ margin: '0 0 10px', fontSize: '12px', color: '#64748b' }}>
-                                {cd.config.cleaning_providers.email}
-                              </p>
+                              <p style={{ margin: '0 0 4px', fontSize: '11px', fontWeight: '600', color: '#6e6e73', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Prestataire assigné</p>
+                              <p style={{ margin: '0 0 4px', fontWeight: '600', color: '#15803d', fontSize: '15px' }}>🧹 {cd.config.cleaning_providers.name}</p>
+                              <p style={{ margin: '0 0 10px', fontSize: '12px', color: '#6e6e73', fontWeight: '300' }}>{cd.config.cleaning_providers.email}</p>
                               <div style={{ display: 'flex', gap: '8px' }}>
-                                <button
-                                  onClick={() => triggerCleaning(prop.id)}
-                                  style={{ flex: 1, padding: '9px', background: '#1a2a6c', color: 'white', border: 'none', borderRadius: '9px', fontWeight: 700, fontSize: '12px', cursor: 'pointer', fontFamily: 'inherit' }}
-                                >
-                                  🧹 Notifier maintenant
-                                </button>
-                                <button
-                                  onClick={() => removeCleaner(prop.id)}
-                                  style={{ padding: '9px 12px', background: '#fee2e2', color: '#e11d48', border: 'none', borderRadius: '9px', fontWeight: 700, fontSize: '12px', cursor: 'pointer', fontFamily: 'inherit' }}
-                                >
-                                  🗑️ Retirer
-                                </button>
+                                <button onClick={() => triggerCleaning(prop.id)} style={{ flex: 1, padding: '9px', background: '#1d1d1f', color: '#fff', border: 'none', borderRadius: '9px', fontWeight: '500', fontSize: '12px', cursor: 'pointer', fontFamily: 'inherit' }}>🧹 Notifier</button>
+                                <button onClick={() => removeCleaner(prop.id)} style={{ padding: '9px 12px', background: '#fff2f2', color: '#e11d48', border: 'none', borderRadius: '9px', fontWeight: '500', fontSize: '12px', cursor: 'pointer', fontFamily: 'inherit' }}>🗑️ Retirer</button>
                               </div>
                             </div>
                           ) : (
-                            /* INVITATION NOUVEAU PRESTATAIRE */
                             <div style={{ marginBottom: '14px' }}>
-                              <p style={{ margin: '0 0 10px', fontSize: '13px', color: '#64748b' }}>
-                                Invitez votre prestataire de ménage. Il recevra un email pour créer son compte.
-                              </p>
-                              <label className="cleaning-label">Prénom et nom</label>
-                              <input
-                                className="cleaning-input"
-                                placeholder="ex: Marie Dupont"
-                                value={cd.inviteName || ''}
-                                onChange={e => updateCleaning(prop.id, 'inviteName', e.target.value)}
-                              />
-                              <label className="cleaning-label">Email du prestataire</label>
-                              <input
-                                className="cleaning-input"
-                                type="email"
-                                placeholder="ex: marie@menage.fr"
-                                value={cd.inviteEmail || ''}
-                                onChange={e => updateCleaning(prop.id, 'inviteEmail', e.target.value)}
-                              />
-                              <button
-                                className="btn-save-cleaning"
-                                style={{ marginTop: '8px' }}
-                                onClick={() => inviteCleaner(prop.id)}
-                                disabled={cd.inviting}
-                              >
+                              <p style={{ margin: '0 0 10px', fontSize: '13px', color: '#6e6e73', fontWeight: '300' }}>Invitez votre prestataire de ménage. Il recevra un email pour créer son compte.</p>
+                              <span style={cleanLabel}>Prénom et nom</span>
+                              <input className="clean-input" placeholder="ex: Marie Dupont" value={cd.inviteName || ''} onChange={e => updateCleaning(prop.id, 'inviteName', e.target.value)} style={cleanInput} />
+                              <span style={cleanLabel}>Email du prestataire</span>
+                              <input type="email" placeholder="ex: marie@menage.fr" value={cd.inviteEmail || ''} onChange={e => updateCleaning(prop.id, 'inviteEmail', e.target.value)} style={cleanInput} />
+                              <button onClick={() => inviteCleaner(prop.id)} disabled={cd.inviting} style={{ width: '100%', padding: '10px', background: '#c9a227', color: '#1d1d1f', border: 'none', borderRadius: '10px', fontWeight: '600', cursor: 'pointer', fontSize: '13px', fontFamily: 'inherit', marginTop: '4px' }}>
                                 {cd.inviting ? '⏳ Envoi...' : "✉️ Envoyer l'invitation"}
                               </button>
                             </div>
                           )}
 
-                          {/* CHECKLIST */}
-                          <label className="cleaning-label">Checklist ({(cd.checklist || []).length} éléments)</label>
+                          <span style={cleanLabel}>Checklist ({(cd.checklist || []).length} éléments)</span>
                           {(cd.checklist || []).map((item, i) => (
-                            <div key={i} className="checklist-item">
-                              <span>✓ {item}</span>
-                              <button className="btn-remove" onClick={() => removeChecklistItem(prop.id, i)}>✕</button>
+                            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
+                              <span style={{ flex: 1, padding: '8px 12px', background: '#f5f5f7', border: '1px solid #e8e8ed', borderRadius: '8px', fontSize: '13px', color: '#1d1d1f', fontWeight: '300' }}>✓ {item}</span>
+                              <button onClick={() => removeChecklistItem(prop.id, i)} style={{ padding: '6px 10px', background: '#fff2f2', border: 'none', borderRadius: '6px', cursor: 'pointer', color: '#e11d48', fontWeight: '600', fontSize: '12px' }}>✕</button>
                             </div>
                           ))}
-                          <div className="add-item-row">
-                            <input className="cleaning-input" style={{ margin: 0 }} placeholder="ex: Changer les draps..." value={cd.newItem || ''} onChange={e => updateCleaning(prop.id, 'newItem', e.target.value)} onKeyPress={e => e.key === 'Enter' && addChecklistItem(prop.id)} />
-                            <button className="btn-add-item" onClick={() => addChecklistItem(prop.id)}>+ Ajouter</button>
+                          <div style={{ display: 'flex', gap: '6px', marginTop: '6px' }}>
+                            <input placeholder="ex: Changer les draps..." value={cd.newItem || ''} onChange={e => updateCleaning(prop.id, 'newItem', e.target.value)} onKeyPress={e => e.key === 'Enter' && addChecklistItem(prop.id)} style={{ ...cleanInput, margin: 0, flex: 1 }} />
+                            <button onClick={() => addChecklistItem(prop.id)} style={{ padding: '8px 12px', background: '#1d1d1f', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: '500', cursor: 'pointer', fontSize: '12px', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>+ Ajouter</button>
                           </div>
-
-                          <button className="btn-save-cleaning" style={{ marginTop: '14px' }} onClick={() => saveCleaning(prop.id)} disabled={cd.saving}>
+                          <button onClick={() => saveCleaning(prop.id)} disabled={cd.saving} style={{ width: '100%', marginTop: '12px', padding: '10px', background: '#c9a227', color: '#1d1d1f', border: 'none', borderRadius: '10px', fontWeight: '600', cursor: 'pointer', fontSize: '13px', fontFamily: 'inherit' }}>
                             {cd.saving ? '⏳' : '💾 Sauvegarder la checklist'}
                           </button>
                         </div>
                       )}
-                      {tab === 'upsells' && (
-                        <div className="tab-content">
-                          {(() => {
-                            const ud = upsellsData[prop.id];
 
-                            // Pas encore de compte Connect
-                            if (connectStatus !== 'active') return (
-                              <div style={{ textAlign: 'center', padding: '20px 0' }}>
-                                <p style={{ fontSize: '32px', margin: '0 0 8px' }}>💳</p>
-                                <p style={{ fontSize: '13px', fontWeight: 700, color: '#1a2a6c', margin: '0 0 4px' }}>Connectez votre compte Stripe</p>
-                                <p style={{ fontSize: '12px', color: '#64748b', margin: '0 0 12px' }}>
-                                  {connectStatus === 'pending' ? 'Votre compte est en cours de vérification.' : 'Nécessaire pour encaisser les upsells.'}
-                                </p>
-                                <a href="/settings" style={{ display: 'inline-block', background: '#1a2a6c', color: 'white', padding: '8px 16px', borderRadius: '8px', fontSize: '12px', fontWeight: 700 }}>
-                                  Configurer dans Paramètres →
-                                </a>
+                      {tab === 'upsells' && (() => {
+                        const ud = upsellsData[prop.id];
+                        if (connectStatus !== 'active') return (
+                          <div style={{ textAlign: 'center', padding: '20px 0' }}>
+                            <p style={{ fontSize: '32px', margin: '0 0 8px' }}>💳</p>
+                            <p style={{ fontSize: '14px', fontWeight: '600', color: '#1d1d1f', margin: '0 0 4px', letterSpacing: '-0.2px' }}>Connectez votre compte Stripe</p>
+                            <p style={{ fontSize: '13px', color: '#86868b', margin: '0 0 14px', fontWeight: '300' }}>{connectStatus === 'pending' ? 'Votre compte est en cours de vérification.' : 'Nécessaire pour encaisser les upsells.'}</p>
+                            <Link href="/settings" style={{ display: 'inline-block', background: '#1d1d1f', color: '#fff', padding: '9px 18px', borderRadius: '980px', fontSize: '13px', fontWeight: '500' }}>
+                              Configurer dans Paramètres →
+                            </Link>
+                          </div>
+                        );
+                        if (!ud || ud.loading) return <p style={{ color: '#86868b', fontSize: '13px', textAlign: 'center', padding: '16px 0', fontWeight: '300' }}>Chargement...</p>;
+                        const siteUrl = typeof window !== 'undefined' ? window.location.origin : 'https://www.alfredmajor.com';
+                        const upsellsUrl = `${siteUrl}/upsells/${prop.slug || prop.id}`;
+                        return (
+                          <div>
+                            {ud.orders.length > 0 && (
+                              <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '12px', padding: '12px 14px', marginBottom: '14px' }}>
+                                <p style={{ margin: '0 0 4px', fontSize: '11px', fontWeight: '600', color: '#6e6e73', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Revenus upsells</p>
+                                <p style={{ margin: '0 0 8px', fontSize: '22px', fontWeight: '600', color: '#15803d', letterSpacing: '-0.5px' }}>{ud.orders.reduce((sum, o) => sum + (o.amount || 0), 0).toFixed(2)} €</p>
+                                {ud.orders.slice(0, 3).map(order => (
+                                  <div key={order.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#6e6e73', fontWeight: '300' }}>
+                                    <span>{order.guest_name || 'Voyageur'}</span>
+                                    <span style={{ fontWeight: '600', color: '#15803d' }}>{order.amount?.toFixed(2)} €</span>
+                                  </div>
+                                ))}
                               </div>
-                            );
-
-                            if (!ud || ud.loading) return <p style={{ color: '#94a3b8', fontSize: '13px', textAlign: 'center', padding: '16px 0' }}>Chargement...</p>;
-
-                            const siteUrl = typeof window !== 'undefined' ? window.location.origin : 'https://www.alfredmajor.com';
-                            const upsellsUrl = `${siteUrl}/upsells/${prop.slug || prop.id}`;
-
-                            return (
-                              <div>
-                                {/* Revenus */}
-                                {ud.orders.length > 0 && (
-                                  <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '12px', padding: '12px 14px', marginBottom: '14px' }}>
-                                    <p style={{ margin: '0 0 4px', fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>Revenus upsells</p>
-                                    <p style={{ margin: '0 0 8px', fontSize: '22px', fontWeight: 900, color: '#15803d' }}>
-                                      {ud.orders.reduce((sum, o) => sum + (o.amount || 0), 0).toFixed(2)} €
-                                    </p>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                      {ud.orders.slice(0, 3).map(order => (
-                                        <div key={order.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#64748b' }}>
-                                          <span>{order.guest_name || 'Voyageur'}</span>
-                                          <span style={{ fontWeight: 700, color: '#15803d' }}>{order.amount?.toFixed(2)} €</span>
-                                        </div>
-                                      ))}
+                            )}
+                            <div style={{ background: '#f5f5f7', border: '1px solid #e8e8ed', borderRadius: '10px', padding: '10px 12px', marginBottom: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
+                              <p style={{ margin: 0, fontSize: '11px', color: '#86868b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, fontWeight: '300' }}>{upsellsUrl}</p>
+                              <button onClick={() => { navigator.clipboard.writeText(upsellsUrl); alert('Lien copié !'); }} style={{ background: '#1d1d1f', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '7px', fontSize: '11px', fontWeight: '500', cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: 'inherit' }}>Copier</button>
+                            </div>
+                            {ud.upsells.length === 0 ? (
+                              <p style={{ fontSize: '13px', color: '#aeaeb2', textAlign: 'center', padding: '8px 0', fontWeight: '300' }}>Aucun upsell configuré.</p>
+                            ) : (
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '12px' }}>
+                                {ud.upsells.map(upsell => (
+                                  <div key={upsell.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '9px 12px', background: upsell.is_active ? '#f5f5f7' : '#fff2f2', border: `1px solid ${upsell.is_active ? '#e8e8ed' : '#ffd0d0'}`, borderRadius: '10px' }}>
+                                    <span style={{ fontSize: '18px' }}>{upsell.emoji}</span>
+                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                      <p style={{ margin: 0, fontSize: '13px', fontWeight: '500', color: '#1d1d1f', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', letterSpacing: '-0.2px' }}>{upsell.name}</p>
+                                      <p style={{ margin: 0, fontSize: '11px', color: '#86868b', fontWeight: '300' }}>{upsell.price} €</p>
+                                    </div>
+                                    <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
+                                      <button onClick={async () => { const { data: { session } } = await supabase.auth.getSession(); await fetch('/api/upsells/manage', { method: 'PATCH', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` }, body: JSON.stringify({ upsellId: upsell.id, is_active: !upsell.is_active }) }); loadUpsells(prop.id); }} style={{ background: upsell.is_active ? '#f0fdf4' : '#f5f5f7', color: upsell.is_active ? '#15803d' : '#aeaeb2', border: `1px solid ${upsell.is_active ? '#bbf7d0' : '#e8e8ed'}`, padding: '4px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: '500', cursor: 'pointer', fontFamily: 'inherit' }}>{upsell.is_active ? '✓ Actif' : 'Inactif'}</button>
+                                      <button onClick={async () => { if (!confirm('Supprimer cet upsell ?')) return; const { data: { session } } = await supabase.auth.getSession(); await fetch('/api/upsells/manage', { method: 'DELETE', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` }, body: JSON.stringify({ upsellId: upsell.id }) }); loadUpsells(prop.id); }} style={{ background: '#fff2f2', color: '#e11d48', border: 'none', padding: '4px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: '500', cursor: 'pointer', fontFamily: 'inherit' }}>🗑️</button>
                                     </div>
                                   </div>
-                                )}
+                                ))}
+                              </div>
+                            )}
+                            <AddUpsellForm propId={prop.id} onAdded={() => loadUpsells(prop.id)} supabase={supabase} />
+                          </div>
+                        );
+                      })()}
 
-                                {/* Lien voyageur */}
-                                <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '10px 12px', marginBottom: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
-                                  <p style={{ margin: 0, fontSize: '11px', color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{upsellsUrl}</p>
-                                  <button
-                                    onClick={() => { navigator.clipboard.writeText(upsellsUrl); alert('Lien copié !'); }}
-                                    style={{ background: '#1a2a6c', color: 'white', border: 'none', padding: '6px 10px', borderRadius: '7px', fontSize: '11px', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: 'inherit' }}
-                                  >
-                                    Copier
-                                  </button>
+                      {tab === 'reservations' && (() => {
+                        const reservations = reservationsData[prop.id] || [];
+                        if (reservations.length === 0) return (
+                          <div style={{ textAlign: 'center', padding: '24px 0' }}>
+                            <p style={{ fontSize: '32px', margin: '0 0 8px' }}>📅</p>
+                            <p style={{ fontSize: '13px', color: '#86868b', margin: '0 0 10px', fontWeight: '300' }}>{prop.ical_url ? 'Aucune réservation à venir.' : 'Ajoutez votre lien iCal dans la configuration.'}</p>
+                            {!prop.ical_url && <Link href={`/edit-property?id=${prop.id}`} style={{ display: 'inline-block', background: '#1d1d1f', color: '#fff', padding: '8px 16px', borderRadius: '980px', fontSize: '12px', fontWeight: '500' }}>Configurer le lien iCal →</Link>}
+                          </div>
+                        );
+                        const pc = { airbnb: { bg: '#fff1f0', color: '#e11d48', label: 'Airbnb' }, booking: { bg: '#eff6ff', color: '#1d4ed8', label: 'Booking' }, vrbo: { bg: '#fefce8', color: '#ca8a04', label: 'Vrbo' }, unknown: { bg: '#f5f5f7', color: '#6e6e73', label: 'Autre' } };
+                        const fmtDate = (d) => new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' });
+                        const today = new Date(); today.setHours(0,0,0,0);
+                        return reservations.map((res) => {
+                          const checkIn = new Date(res.check_in); const checkOut = new Date(res.check_out);
+                          const nights = Math.round((checkOut - checkIn) / 86400000);
+                          const isActive = checkOut >= today && checkIn <= today;
+                          const pcc = pc[res.platform] || pc.unknown;
+                          return (
+                            <div key={res.id} style={{ border: `1px solid ${isActive ? '#c9a227' : '#e8e8ed'}`, borderRadius: '12px', padding: '12px', marginBottom: '10px', background: isActive ? '#fffbeb' : '#fff' }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+                                <div>
+                                  {isActive && <span style={{ fontSize: '10px', fontWeight: '600', color: '#c9a227', textTransform: 'uppercase', letterSpacing: '0.3px' }}>● EN COURS · </span>}
+                                  <span style={{ fontSize: '14px', fontWeight: '600', color: '#1d1d1f', letterSpacing: '-0.2px' }}>{res.guest_name || 'Voyageur'}</span>
                                 </div>
-
-                                {/* Liste upsells */}
-                                {ud.upsells.length === 0 ? (
-                                  <p style={{ fontSize: '12px', color: '#94a3b8', textAlign: 'center', padding: '8px 0' }}>
-                                    Aucun upsell configuré. Ajoutez-en ci-dessous.
-                                  </p>
-                                ) : (
-                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '12px' }}>
-                                    {ud.upsells.map(upsell => (
-                                      <div key={upsell.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 10px', background: upsell.is_active ? '#f8fafc' : '#fef2f2', border: `1px solid ${upsell.is_active ? '#e2e8f0' : '#fecaca'}`, borderRadius: '8px' }}>
-                                        <span style={{ fontSize: '18px' }}>{upsell.emoji}</span>
-                                        <div style={{ flex: 1, minWidth: 0 }}>
-                                          <p style={{ margin: 0, fontSize: '13px', fontWeight: 700, color: '#1a2a6c', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{upsell.name}</p>
-                                          <p style={{ margin: 0, fontSize: '11px', color: '#64748b' }}>{upsell.price} €</p>
-                                        </div>
-                                        <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
-                                          <button
-                                            onClick={async () => {
-                                              const { data: { session } } = await supabase.auth.getSession();
-                                              await fetch('/api/upsells/manage', {
-                                                method: 'PATCH',
-                                                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
-                                                body: JSON.stringify({ upsellId: upsell.id, is_active: !upsell.is_active }),
-                                              });
-                                              loadUpsells(prop.id);
-                                            }}
-                                            style={{ background: upsell.is_active ? '#f0fdf4' : '#f8fafc', color: upsell.is_active ? '#15803d' : '#94a3b8', border: `1px solid ${upsell.is_active ? '#bbf7d0' : '#e2e8f0'}`, padding: '4px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
-                                          >
-                                            {upsell.is_active ? '✓ Actif' : 'Inactif'}
-                                          </button>
-                                          <button
-                                            onClick={async () => {
-                                              if (!confirm('Supprimer cet upsell ?')) return;
-                                              const { data: { session } } = await supabase.auth.getSession();
-                                              await fetch('/api/upsells/manage', {
-                                                method: 'DELETE',
-                                                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
-                                                body: JSON.stringify({ upsellId: upsell.id }),
-                                              });
-                                              loadUpsells(prop.id);
-                                            }}
-                                            style={{ background: '#fee2e2', color: '#e11d48', border: 'none', padding: '4px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
-                                          >🗑️</button>
-                                        </div>
-                                      </div>
-                                    ))}
-                                  </div>
-                                )}
-
-                                {/* Formulaire ajout rapide */}
-                                <AddUpsellForm propId={prop.id} onAdded={() => loadUpsells(prop.id)} session={null} supabase={supabase} />
+                                <span style={{ background: pcc.bg, color: pcc.color, padding: '3px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: '600' }}>{pcc.label}</span>
                               </div>
-                            );
-                          })()}
-                        </div>
-                      )}
-
-                      {tab === 'reservations' && (
-                        <div className="tab-content">
-                          {(() => {
-                            const reservations = reservationsData[prop.id] || [];
-                            if (reservations.length === 0) return (
-                              <div style={{ textAlign: 'center', padding: '24px 0' }}>
-                                <p style={{ fontSize: '32px', margin: '0 0 8px' }}>📅</p>
-                                <p style={{ fontSize: '13px', color: '#64748b', margin: '0 0 10px' }}>
-                                  {prop.ical_url ? 'Aucune réservation à venir.' : 'Ajoutez votre lien iCal dans la configuration du logement.'}
-                                </p>
-                                {!prop.ical_url && (
-                                  <Link href={`/edit-property?id=${prop.id}`} legacyBehavior>
-                                    <a style={{ display: 'inline-block', background: '#1a2a6c', color: 'white', padding: '8px 16px', borderRadius: '8px', fontSize: '12px', fontWeight: 700 }}>
-                                      Configurer le lien iCal →
-                                    </a>
-                                  </Link>
-                                )}
-                              </div>
-                            );
-                            const platformColors = {
-                              airbnb:  { bg: '#fff1f0', color: '#e11d48', label: 'Airbnb' },
-                              booking: { bg: '#eff6ff', color: '#1d4ed8', label: 'Booking' },
-                              vrbo:    { bg: '#fefce8', color: '#ca8a04', label: 'Vrbo' },
-                              unknown: { bg: '#f8fafc', color: '#64748b', label: 'Autre' },
-                            };
-                            const fmtDate = (d) => new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' });
-                            const today = new Date(); today.setHours(0,0,0,0);
-                            return reservations.map((res) => {
-                              const checkIn  = new Date(res.check_in);
-                              const checkOut = new Date(res.check_out);
-                              const nights   = Math.round((checkOut - checkIn) / 86400000);
-                              const isActive = checkOut >= today && checkIn <= today;
-                              const pc = platformColors[res.platform] || platformColors.unknown;
-                              return (
-                                <div key={res.id} style={{ border: `1px solid ${isActive ? '#fbbf24' : '#e2e8f0'}`, borderRadius: '12px', padding: '12px', marginBottom: '10px', background: isActive ? '#fffbeb' : 'white' }}>
-                                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
-                                    <div>
-                                      {isActive && <span style={{ fontSize: '10px', fontWeight: 800, color: '#d97706', textTransform: 'uppercase' }}>● EN COURS · </span>}
-                                      <span style={{ fontSize: '14px', fontWeight: 800, color: '#1a2a6c' }}>{res.guest_name || 'Voyageur'}</span>
-                                    </div>
-                                    <span style={{ background: pc.bg, color: pc.color, padding: '3px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 700 }}>{pc.label}</span>
-                                  </div>
-                                  <div style={{ display: 'flex', alignItems: 'center', margin: '10px 0' }}>
-                                    <div style={{ textAlign: 'center', minWidth: '56px' }}>
-                                      <p style={{ margin: 0, fontSize: '10px', color: '#64748b' }}>Arrivée</p>
-                                      <p style={{ margin: 0, fontSize: '13px', fontWeight: 800, color: '#15803d' }}>{fmtDate(res.check_in)}</p>
-                                    </div>
-                                    <div style={{ flex: 1, height: '2px', background: '#e2e8f0', margin: '0 8px', position: 'relative' }}>
-                                      <span style={{ position: 'absolute', top: '-9px', left: '50%', transform: 'translateX(-50%)', fontSize: '14px' }}>🌙</span>
-                                    </div>
-                                    <div style={{ textAlign: 'center', minWidth: '56px' }}>
-                                      <p style={{ margin: 0, fontSize: '10px', color: '#64748b' }}>Départ</p>
-                                      <p style={{ margin: 0, fontSize: '13px', fontWeight: 800, color: '#c2410c' }}>{fmtDate(res.check_out)}</p>
-                                    </div>
-                                  </div>
-                                  <span style={{ background: '#f8fafc', border: '1px solid #e2e8f0', padding: '3px 8px', borderRadius: '6px', fontSize: '11px', color: '#64748b' }}>
-                                    {nights} nuit{nights > 1 ? 's' : ''}
-                                  </span>
+                              <div style={{ display: 'flex', alignItems: 'center', margin: '10px 0' }}>
+                                <div style={{ textAlign: 'center', minWidth: '56px' }}>
+                                  <p style={{ margin: 0, fontSize: '10px', color: '#86868b', fontWeight: '300' }}>Arrivée</p>
+                                  <p style={{ margin: 0, fontSize: '13px', fontWeight: '600', color: '#15803d', letterSpacing: '-0.2px' }}>{fmtDate(res.check_in)}</p>
                                 </div>
-                              );
-                            });
-                          })()}
-                        </div>
-                      )}
-                    </>
-                  )}
-                </div>
-              );
-            })
-          )}
+                                <div style={{ flex: 1, height: '1px', background: '#e8e8ed', margin: '0 8px', position: 'relative' }}>
+                                  <span style={{ position: 'absolute', top: '-9px', left: '50%', transform: 'translateX(-50%)', fontSize: '14px' }}>🌙</span>
+                                </div>
+                                <div style={{ textAlign: 'center', minWidth: '56px' }}>
+                                  <p style={{ margin: 0, fontSize: '10px', color: '#86868b', fontWeight: '300' }}>Départ</p>
+                                  <p style={{ margin: 0, fontSize: '13px', fontWeight: '600', color: '#c2410c', letterSpacing: '-0.2px' }}>{fmtDate(res.check_out)}</p>
+                                </div>
+                              </div>
+                              <span style={{ background: '#f5f5f7', border: '1px solid #e8e8ed', padding: '3px 8px', borderRadius: '6px', fontSize: '11px', color: '#6e6e73', fontWeight: '300' }}>{nights} nuit{nights > 1 ? 's' : ''}</span>
+                            </div>
+                          );
+                        });
+                      })()}
+
+                    </div>
+                  </>
+                )}
+              </div>
+            );
+          })}
         </div>
 
-        <div className="subscription-card">
+        {/* Subscription card */}
+        <div style={{ marginTop: '32px', padding: '22px 28px', background: '#fff', borderRadius: '18px', border: '1px solid #e8e8ed', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
           <div>
-            <h3 style={{ margin: '0 0 4px', color: '#1a2a6c', fontSize: '16px' }}>Gestion des abonnements</h3>
-            <p style={{ margin: 0, color: '#64748b', fontSize: '13px' }}>Gérez vos factures et moyens de paiement.</p>
+            <h3 style={{ margin: '0 0 4px', color: '#1d1d1f', fontSize: '16px', fontWeight: '600', letterSpacing: '-0.3px' }}>Gestion des abonnements</h3>
+            <p style={{ margin: 0, color: '#86868b', fontSize: '13px', fontWeight: '300' }}>Factures et moyens de paiement.</p>
           </div>
-          <button onClick={handleManageSubscription} className="btn-portal">Accéder au portail</button>
+          <button onClick={handleManageSubscription} style={{ background: '#1d1d1f', color: '#fff', padding: '11px 22px', borderRadius: '980px', fontWeight: '500', fontSize: '14px', cursor: 'pointer', border: 'none', fontFamily: 'inherit', letterSpacing: '-0.2px', whiteSpace: 'nowrap' }}>
+            Accéder au portail
+          </button>
         </div>
 
-        <div style={{ textAlign: 'center', marginTop: '28px', paddingBottom: '16px' }}>
-          <button onClick={handleDeleteAccount} style={{ background: 'none', border: 'none', color: '#cbd5e1', cursor: 'pointer', textDecoration: 'underline', fontSize: '12px' }}>
+        <div style={{ textAlign: 'center', marginTop: '28px', paddingBottom: '20px' }}>
+          <button onClick={handleDeleteAccount} style={{ background: 'none', border: 'none', color: '#aeaeb2', cursor: 'pointer', textDecoration: 'underline', fontSize: '13px', fontFamily: 'inherit', fontWeight: '300' }}>
             Supprimer mon compte
           </button>
         </div>
       </main>
 
+      {/* Modal limite */}
       {showLimitModal && (
-        <div className="modal-overlay" onClick={() => setShowLimitModal(false)}>
-          <div className="modal-card" onClick={e => e.stopPropagation()}>
-            <span style={{ fontSize: '46px', margin: '0 0 14px', display: 'block' }}>🎩</span>
-            <h2 style={{ color: '#1a2a6c', margin: '0 0 10px', fontSize: '20px' }}>Activation requise</h2>
-            <p style={{ color: '#64748b', fontSize: '14px', margin: '0 0 20px' }}>Veuillez activer votre logement actuel avant d'en ajouter un nouveau.</p>
-            <button className="btn-close-modal" onClick={() => setShowLimitModal(false)}>D'accord</button>
+        <div onClick={() => setShowLimitModal(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: '24px', padding: '36px 28px', maxWidth: '400px', width: '100%', textAlign: 'center', boxShadow: '0 32px 80px rgba(0,0,0,0.12)' }}>
+            <span style={{ fontSize: '48px', display: 'block', marginBottom: '16px' }}>🎩</span>
+            <h2 style={{ color: '#1d1d1f', margin: '0 0 10px', fontSize: '20px', fontWeight: '600', letterSpacing: '-0.4px' }}>Activation requise</h2>
+            <p style={{ color: '#86868b', fontSize: '15px', margin: '0 0 24px', fontWeight: '300' }}>Veuillez activer votre logement actuel avant d'en ajouter un nouveau.</p>
+            <button onClick={() => setShowLimitModal(false)} style={{ background: '#c9a227', border: 'none', padding: '14px', width: '100%', borderRadius: '12px', fontWeight: '600', color: '#1d1d1f', cursor: 'pointer', fontSize: '15px', fontFamily: 'inherit', letterSpacing: '-0.2px' }}>D'accord</button>
           </div>
         </div>
       )}
 
+      {/* Modal suppression */}
       {showDeleteModal && (
-        <div className="modal-overlay" onClick={() => setShowDeleteModal(false)}>
-          <div className="modal-card" onClick={e => e.stopPropagation()}>
-            <span style={{ fontSize: '42px', margin: '0 0 14px', display: 'block' }}>⚠️</span>
-            <h2 style={{ color: '#1a2a6c', margin: '0 0 10px', fontSize: '20px' }}>Supprimer {propertyToDelete?.name} ?</h2>
-            <p style={{ color: '#64748b', fontSize: '14px', margin: '0 0 16px' }}>Êtes-vous sûr ? Toute la configuration sera effacée.</p>
-            <div className="info-box"><strong>📌 Note :</strong> Votre licence reste active jusqu'à la fin du mois.</div>
-            <div className="modal-actions">
-              <button className="btn-abort" onClick={() => setShowDeleteModal(false)}>Annuler</button>
-              <button className="btn-confirm-delete" onClick={confirmDelete}>Supprimer</button>
+        <div onClick={() => setShowDeleteModal(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: '24px', padding: '36px 28px', maxWidth: '400px', width: '100%', textAlign: 'center', boxShadow: '0 32px 80px rgba(0,0,0,0.12)' }}>
+            <span style={{ fontSize: '44px', display: 'block', marginBottom: '16px' }}>⚠️</span>
+            <h2 style={{ color: '#1d1d1f', margin: '0 0 10px', fontSize: '20px', fontWeight: '600', letterSpacing: '-0.4px' }}>Supprimer {propertyToDelete?.name} ?</h2>
+            <p style={{ color: '#86868b', fontSize: '15px', margin: '0 0 16px', fontWeight: '300' }}>Toute la configuration sera effacée.</p>
+            <div style={{ background: '#f5f5f7', padding: '12px 16px', borderRadius: '12px', borderLeft: '4px solid #c9a227', marginBottom: '20px', textAlign: 'left' }}>
+              <p style={{ fontSize: '13px', color: '#6e6e73', margin: 0, fontWeight: '300' }}><strong style={{ fontWeight: '500', color: '#1d1d1f' }}>📌 Note :</strong> Votre licence reste active jusqu'à la fin du mois.</p>
+            </div>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button onClick={() => setShowDeleteModal(false)} style={{ flex: 1, padding: '13px', borderRadius: '12px', border: '1px solid #e8e8ed', background: '#fff', color: '#6e6e73', fontWeight: '500', cursor: 'pointer', fontFamily: 'inherit', fontSize: '14px' }}>Annuler</button>
+              <button onClick={confirmDelete} style={{ flex: 1, padding: '13px', borderRadius: '12px', border: 'none', background: '#ef4444', color: '#fff', fontWeight: '500', cursor: 'pointer', fontFamily: 'inherit', fontSize: '14px' }}>Supprimer</button>
             </div>
           </div>
         </div>
       )}
     </div>
   );
-
-
-// ─────────────────────────────────────────────
-// Composant formulaire ajout upsell rapide
-// ─────────────────────────────────────────────
-function AddUpsellForm({ propId, onAdded, supabase }) {
-  const [open, setOpen] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState({ name: '', price: '', emoji: '✨', category: 'flexibility', description: '' });
-
-  const PRESETS = [
-    { name: 'Late check-out', emoji: '🕐', category: 'flexibility', price: '30', description: "Départ jusqu'à 14h au lieu de 11h" },
-    { name: 'Early check-in', emoji: '🌅', category: 'flexibility', price: '25', description: "Arrivée dès 10h au lieu de 15h" },
-    { name: 'Pack romantique', emoji: '🥂', category: 'experience', price: '45', description: 'Champagne, fleurs et bougies' },
-    { name: 'Ménage mi-séjour', emoji: '🧹', category: 'comfort', price: '35', description: 'Nettoyage complet pendant votre séjour' },
-    { name: 'Transfert aéroport', emoji: '🚗', category: 'practical', price: '50', description: "Navette privée depuis/vers l'aéroport" },
-    { name: 'Pack bébé', emoji: '👶', category: 'comfort', price: '20', description: 'Lit parapluie et chaise haute' },
-  ];
-
-  const handleSave = async () => {
-    if (!form.name || !form.price) return;
-    setSaving(true);
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const res = await fetch('/api/upsells/manage', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
-        body: JSON.stringify({ propertyId: propId, ...form, price: parseFloat(form.price) }),
-      });
-      if (res.ok) {
-        setForm({ name: '', price: '', emoji: '✨', category: 'flexibility', description: '' });
-        setOpen(false);
-        onAdded();
-      }
-    } catch (err) { console.error(err); }
-    finally { setSaving(false); }
-  };
-
-  if (!open) return (
-    <button
-      onClick={() => setOpen(true)}
-      style={{ width: '100%', padding: '10px', background: 'white', border: '2px dashed #e2e8f0', borderRadius: '10px', color: '#64748b', fontWeight: 700, fontSize: '13px', cursor: 'pointer', fontFamily: 'inherit' }}
-    >
-      + Ajouter un upsell
-    </button>
-  );
-
-  return (
-    <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '14px', marginTop: '4px' }}>
-      <p style={{ margin: '0 0 10px', fontSize: '12px', fontWeight: 800, color: '#1a2a6c', textTransform: 'uppercase' }}>Choisir un preset ou créer</p>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '12px' }}>
-        {PRESETS.map(p => (
-          <button key={p.name} onClick={() => setForm({ name: p.name, price: p.price, emoji: p.emoji, category: p.category, description: p.description })}
-            style={{ background: form.name === p.name ? '#1a2a6c' : 'white', color: form.name === p.name ? 'white' : '#1a2a6c', border: '1px solid #e2e8f0', padding: '5px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
-          >
-            {p.emoji} {p.name}
-          </button>
-        ))}
-      </div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 80px 60px', gap: '6px', marginBottom: '6px' }}>
-        <input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} placeholder="Nom du service" style={{ padding: '9px 10px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', fontFamily: 'inherit', outline: 'none', background: 'white' }} />
-        <input type="number" value={form.price} onChange={e => setForm(p => ({ ...p, price: e.target.value }))} placeholder="Prix €" style={{ padding: '9px 10px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', fontFamily: 'inherit', outline: 'none', background: 'white' }} />
-        <input value={form.emoji} onChange={e => setForm(p => ({ ...p, emoji: e.target.value }))} placeholder="✨" style={{ padding: '9px 10px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '16px', fontFamily: 'inherit', outline: 'none', background: 'white', textAlign: 'center' }} />
-      </div>
-      <input value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} placeholder="Description courte (optionnel)" style={{ width: '100%', padding: '9px 10px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', fontFamily: 'inherit', outline: 'none', background: 'white', marginBottom: '8px', boxSizing: 'border-box' }} />
-      <div style={{ display: 'flex', gap: '6px' }}>
-        <button onClick={() => setOpen(false)} style={{ flex: 1, padding: '9px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', color: '#64748b' }}>Annuler</button>
-        <button onClick={handleSave} disabled={saving || !form.name || !form.price} style={{ flex: 2, padding: '9px', background: '#1a2a6c', color: 'white', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', opacity: !form.name || !form.price ? 0.5 : 1 }}>
-          {saving ? '⏳' : '✅ Ajouter'}
-        </button>
-      </div>
-    </div>
-  );
-}
 }
