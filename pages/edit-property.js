@@ -79,6 +79,21 @@ export default function EditProperty() {
     if (id) fetchProperty(id);
   }, [id]);
 
+  // Intercepter le bouton retour du navigateur → rediriger proprement
+  useEffect(() => {
+    const handleBeforeUnload = () => {};
+    
+    // Pousser un état dans l'historique pour capturer le retour
+    window.history.pushState(null, '', window.location.href);
+    
+    const handlePopState = () => {
+      router.push('/dashboard');
+    };
+    
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
   const fetchProperty = async (propId) => {
     setLoading(true);
     try {
@@ -287,23 +302,6 @@ export default function EditProperty() {
             <div><label>Étage</label><input name="floor" value={formData.floor} onChange={handleChange} placeholder="ex: 3ème étage" /></div>
             <div><label>Bâtiment</label><input name="building" value={formData.building} onChange={handleChange} placeholder="ex: Bâtiment B" /></div>
             <div className="full"><label>Lien GPS</label><input name="gps_link" value={formData.gps_link} onChange={handleChange} placeholder="Lien Google Maps" /></div>
-
-            {/* ── iCal Sync ── */}
-            <div className="full" style={{marginTop:'8px'}}>
-              <p style={{margin:'0 0 8px', fontSize:'11px', fontWeight:800, color:'#64748b', textTransform:'uppercase', letterSpacing:'0.5px'}}>📅 Synchronisation calendrier</p>
-            </div>
-            <div className="full">
-              <label>Lien iCal Airbnb / Booking (optionnel)</label>
-              <input
-                name="ical_url"
-                value={formData.ical_url || ''}
-                onChange={handleChange}
-                placeholder="ex: https://www.airbnb.fr/calendar/ical/XXXXX.ics"
-              />
-              <p style={{fontSize:'12px', color:'#94a3b8', margin:'4px 0 0'}}>
-                Airbnb → Calendrier → Exporter → Copier le lien .ics · Même chose sur Booking.com
-              </p>
-            </div>
           </div>
         </div>
 
