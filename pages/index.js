@@ -707,7 +707,7 @@ export default function Home() {
       <section className="pricing" id="tarifs">
         <div className="eyebrow">Tarifs</div>
         <h2 className="s-h2" style={{marginBottom:'12px'}}>Simple. Transparent.<br/><strong>Sans surprise.</strong></h2>
-        <p className="s-sub" style={{margin:'0 auto 64px', color:'rgba(255,255,255,0.45)', maxWidth:'440px'}}>Un majordome privé 24h/24 pour une fraction du coût d'une conciergerie traditionnelle.</p>
+        <p className="s-sub" style={{margin:'0 auto 64px', color:'rgba(255,255,255,0.45)', maxWidth:'440px'}}>Boostez votre productivité et passez à une étape supérieure avec Alfred Major.</p>
         <div className="price-card">
           <div className="price-promo">🎁 1er mois 100% offert</div>
           <div className="plan-label">Licence par logement</div>
@@ -791,7 +791,7 @@ export default function Home() {
           </div>
         </div>
         <div className="footer-bottom">
-          <p>© 2026 Alfred Major — Tous droits réservés · Dorian BISCARRAT · SIRET 531 965 044 00039</p>
+          <p>© 2026 Alfred Major — Tous droits réservés · Alfred Major · SIRET 531 965 044 00039</p>
         </div>
       </footer>
     </div>
