@@ -995,11 +995,11 @@ function AddUpsellForm({ propId, onAdded, supabase }) {
   const [form, setForm] = useState({ name: '', price: '', emoji: '✨', category: 'flexibility', description: '' });
 
   const PRESETS = [
-    { name: 'Late check-out', emoji: '🕐', category: 'flexibility', price: '30', description: 'Départ jusqu'à 14h au lieu de 11h' },
-    { name: 'Early check-in', emoji: '🌅', category: 'flexibility', price: '25', description: 'Arrivée dès 10h au lieu de 15h' },
+    { name: 'Late check-out', emoji: '🕐', category: 'flexibility', price: '30', description: "Départ jusqu'à 14h au lieu de 11h" },
+    { name: 'Early check-in', emoji: '🌅', category: 'flexibility', price: '25', description: "Arrivée dès 10h au lieu de 15h" },
     { name: 'Pack romantique', emoji: '🥂', category: 'experience', price: '45', description: 'Champagne, fleurs et bougies' },
     { name: 'Ménage mi-séjour', emoji: '🧹', category: 'comfort', price: '35', description: 'Nettoyage complet pendant votre séjour' },
-    { name: 'Transfert aéroport', emoji: '🚗', category: 'practical', price: '50', description: 'Navette privée depuis/vers l'aéroport' },
+    { name: 'Transfert aéroport', emoji: '🚗', category: 'practical', price: '50', description: "Navette privée depuis/vers l'aéroport" },
     { name: 'Pack bébé', emoji: '👶', category: 'comfort', price: '20', description: 'Lit parapluie et chaise haute' },
   ];
 
