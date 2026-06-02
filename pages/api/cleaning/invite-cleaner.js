@@ -4,6 +4,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
+import crypto from 'crypto'; // Ajouté par sécurité pour la génération du token
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -31,14 +32,14 @@ export default async function handler(req, res) {
 
   try {
     // 1. Récupérer le logement pour l'afficher dans l'email
-    const { data: property } = await supabaseAdmin
+    const { data: property, error: propertyError } = await supabaseAdmin
       .from('properties')
       .select('name, city')
       .eq('id', propertyId)
       .eq('owner_id', host.id)
       .single();
 
-    if (!property) return res.status(404).json({ error: 'Logement introuvable' });
+    if (propertyError || !property) return res.status(404).json({ error: 'Logement introuvable' });
 
     // 2. Récupérer le profil de l'hôte
     const { data: hostProfile } = await supabaseAdmin
@@ -62,7 +63,7 @@ export default async function handler(req, res) {
     if (existingUser) {
       // Le compte existe déjà — mettre à jour le token et le rôle
       cleanerProfileId = existingUser.id;
-      await supabaseAdmin
+      const { error: updateProfileError } = await supabaseAdmin
         .from('profiles')
         .update({
           role: 'cleaner',
@@ -70,20 +71,23 @@ export default async function handler(req, res) {
           invitation_token: invitationToken,
         })
         .eq('id', existingUser.id);
+      
+      if (updateProfileError) throw updateProfileError;
     } else {
       // Créer un compte Supabase Auth pour le cleaner
       const { data: newAuthUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
         email: cleanerEmail.toLowerCase(),
-        email_confirm: true, // Pas besoin de confirmation email (on envoie notre propre lien)
+        email_confirm: true,
         user_metadata: { full_name: cleanerName, role: 'cleaner' },
       });
 
       if (createError) throw createError;
+      if (!newAuthUser?.user) throw new Error("Impossible de créer l'utilisateur Auth");
 
       cleanerProfileId = newAuthUser.user.id;
 
       // Créer le profil cleaner
-      await supabaseAdmin.from('profiles').upsert({
+      const { error: upsertProfileError } = await supabaseAdmin.from('profiles').upsert({
         id: cleanerProfileId,
         full_name: cleanerName,
         email: cleanerEmail.toLowerCase(),
@@ -92,6 +96,8 @@ export default async function handler(req, res) {
         invitation_token: invitationToken,
         active_licenses: 0,
       }, { onConflict: 'id' });
+
+      if (upsertProfileError) throw upsertProfileError;
     }
 
     // 5. Créer ou mettre à jour le prestataire dans cleaning_providers
@@ -106,12 +112,14 @@ export default async function handler(req, res) {
 
     if (existingProvider) {
       providerId = existingProvider.id;
-      await supabaseAdmin
+      const { error: updateProviderError } = await supabaseAdmin
         .from('cleaning_providers')
         .update({ name: cleanerName, profile_id: cleanerProfileId })
         .eq('id', providerId);
+      
+      if (updateProviderError) throw updateProviderError;
     } else {
-      const { data: newProvider } = await supabaseAdmin
+      const { data: newProvider, error: newProviderError } = await supabaseAdmin
         .from('cleaning_providers')
         .insert({
           owner_id: host.id,
@@ -121,16 +129,23 @@ export default async function handler(req, res) {
         })
         .select()
         .single();
+      
+      // ✅ VRAIE GESTION D'ERREUR ICI
+      if (newProviderError) throw newProviderError;
+      if (!newProvider) throw new Error("Le prestataire n'a pas pu être créé.");
+
       providerId = newProvider.id;
     }
 
     // 6. Assigner le prestataire au logement
-    await supabaseAdmin
+    const { error: assignError } = await supabaseAdmin
       .from('property_cleaning')
       .upsert({
         property_id: propertyId,
         provider_id: providerId,
       }, { onConflict: 'property_id' });
+    
+    if (assignError) throw assignError;
 
     // 7. Générer le lien d'invitation
     const inviteLink = `${siteUrl}/cleaner/register?token=${invitationToken}&email=${encodeURIComponent(cleanerEmail)}`;
@@ -147,13 +162,11 @@ export default async function handler(req, res) {
         <body style="margin:0;padding:0;background:#f8fafc;font-family:'Inter',Arial,sans-serif;">
           <div style="max-width:560px;margin:40px auto;padding:0 20px;">
 
-            <!-- Header -->
             <div style="text-align:center;margin-bottom:32px;">
               <div style="font-size:48px;margin-bottom:8px;">🎩</div>
               <div style="font-size:22px;font-weight:900;color:#1a2a6c;">Alfred<span style="color:#d4af37;">Major</span></div>
             </div>
 
-            <!-- Card -->
             <div style="background:white;border-radius:24px;padding:36px;border:1px solid #e2e8f0;">
               <h1 style="margin:0 0 8px;font-size:22px;font-weight:800;color:#1a2a6c;">Bonjour ${cleanerName} 👋</h1>
               <p style="margin:0 0 24px;font-size:15px;color:#64748b;line-height:1.6;">
@@ -179,7 +192,6 @@ export default async function handler(req, res) {
               </p>
             </div>
 
-            <!-- Footer -->
             <p style="text-align:center;font-size:12px;color:#cbd5e1;margin-top:24px;">
               🎩 Alfred Major — L'excellence du service, à portée de clic
             </p>
@@ -193,6 +205,7 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error('Erreur invite-cleaner:', error);
+    // On renvoie la vraie erreur au dashboard !
     return res.status(500).json({ error: error.message || 'Erreur serveur' });
   }
 }
