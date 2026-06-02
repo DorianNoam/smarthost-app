@@ -319,6 +319,83 @@ function detectLocalCategory(msg) {
 }
 
 // ─────────────────────────────────────────────
+// 3B. DÉTECTION D'INTENTION UPSELL
+// ─────────────────────────────────────────────
+function detectUpsellIntent(msg) {
+  const m = msg.toLowerCase();
+
+  // Late check-out
+  if (['partir plus tard', 'départ tardif', 'check-out tardif', 'late check',
+       'rester plus longtemps', 'prolonger', 'midi', 'après 11', 'apres 11',
+       'quitter plus tard', 'sortir plus tard'].some(k => m.includes(k))) return 'late_checkout';
+
+  // Early check-in
+  if (['arriver tôt', 'arriver tot', 'arriver plus tôt', 'arriver plus tot',
+       'early check', 'check-in tôt', 'avant 15', 'avant 14', 'avant 13',
+       'tôt le matin', 'tot le matin', 'entrée anticipée'].some(k => m.includes(k))) return 'early_checkin';
+
+  // Pack romantique / anniversaire / célébration
+  if (['anniversaire', 'romantique', 'surprise', 'champagne', 'bouteille',
+       'bouquet', 'fleurs', 'saint-valentin', 'lune de miel', 'honeymoon',
+       'fête', 'célébration', 'celebration', 'mariage', 'pétales'].some(k => m.includes(k))) return 'romantic';
+
+  // Ménage mi-séjour
+  if (['ménage pendant', 'nettoyage pendant', 'femme de ménage', 'nettoyage mi',
+       'ménage supplémentaire', 'chambre propre', 'draps changés',
+       'linge changé', 'repassage', 'aspirateur'].some(k => m.includes(k))) return 'mid_stay_cleaning';
+
+  // Transfert / taxi
+  if (['navette', 'transfer', 'aéroport', 'airport', 'gare', 'taxi privé',
+       'voiture avec chauffeur', 'vtc', 'aller chercher'].some(k => m.includes(k))) return 'transfer';
+
+  // Pack bébé
+  if (['lit bébé', 'lit parapluie', 'chaise haute', 'baby', 'bébé',
+       'nourrisson', 'poussette', 'équipement enfant'].some(k => m.includes(k))) return 'baby';
+
+  return null;
+}
+
+// Trouve les upsells actifs correspondant à une intention
+function findMatchingUpsells(upsells, intent) {
+  if (!upsells || upsells.length === 0) return [];
+
+  const intentKeywords = {
+    late_checkout:      ['late', 'tardif', 'départ', 'checkout', 'check-out', 'tard'],
+    early_checkin:      ['early', 'tôt', 'anticipé', 'checkin', 'check-in', 'arrivée'],
+    romantic:           ['romantique', 'anniversaire', 'champagne', 'surprise', 'célébration'],
+    mid_stay_cleaning:  ['ménage', 'nettoyage', 'mid', 'séjour', 'linge'],
+    transfer:           ['transfert', 'navette', 'aéroport', 'airport', 'taxi'],
+    baby:               ['bébé', 'baby', 'lit', 'chaise'],
+  };
+
+  const keywords = intentKeywords[intent] || [];
+  return upsells.filter(u => {
+    const nameLower = u.name.toLowerCase();
+    const descLower = (u.description || '').toLowerCase();
+    return keywords.some(k => nameLower.includes(k) || descLower.includes(k));
+  });
+}
+
+// Construit le bloc upsells pour le prompt système
+function buildUpsellsSection(upsells, siteUrl, propertySlug) {
+  if (!upsells || upsells.length === 0) return '';
+
+  const upsellsUrl = `${siteUrl}/upsells/${propertySlug}`;
+  const lines = upsells.map(u =>
+    `- ${u.emoji || '✨'} **${u.name}** — ${u.price}€${u.description ? ` (${u.description})` : ''} → Lien : ${upsellsUrl}?upsell=${u.id}`
+  ).join('
+');
+
+  return `━━━ SERVICES ADDITIONNELS DISPONIBLES ━━━
+Les services suivants sont proposés par l'hôte. Si le voyageur exprime un besoin correspondant, propose-le naturellement dans ta réponse avec le lien de paiement.
+RÈGLE ABSOLUE : Ne propose JAMAIS un service qui n'est pas dans cette liste. Si le service n'est pas listé, réponds normalement sans mentionner de paiement.
+
+${lines}
+
+Page complète des services : ${upsellsUrl}`;
+}
+
+// ─────────────────────────────────────────────
 // 4. DÉTECTION D'URGENCE
 // ─────────────────────────────────────────────
 function isEmergency(msg) {
@@ -573,6 +650,14 @@ export default async function handler(req, res) {
     const fullAddress = `${propertyData.street_number || ''} ${propertyData.address || ''}, ${city}`.trim();
     const propertyType = propertyData.property_type || 'apartment';
 
+    // Charger les upsells actifs du logement
+    const { data: activeUpsells } = await supabase
+      .from('upsells')
+      .select('id, name, description, emoji, price, category')
+      .eq('property_id', targetPropertyId)
+      .eq('is_active', true)
+      .order('category');
+
     const { data: kb } = await supabase
       .from('knowledge_base')
       .select('category, content')
@@ -591,6 +676,17 @@ export default async function handler(req, res) {
     if (localCategory) {
       googleData = await getGoogleLocalData(localCategory, fullAddress, propertyType);
     }
+
+    // Détecter l'intention upsell et trouver les services correspondants
+    const upsellIntent = detectUpsellIntent(lastUserMsg);
+    const matchingUpsells = upsellIntent
+      ? findMatchingUpsells(activeUpsells, upsellIntent)
+      : [];
+    // Si pas d'intention spécifique mais des upsells existent → les inclure tous dans le prompt
+    const upsellsToShow = matchingUpsells.length > 0 ? matchingUpsells : [];
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.alfredmajor.com';
+    const propertySlug = propertyData.slug || propertyData.id;
+    const upsellsSection = buildUpsellsSection(upsellsToShow, siteUrl, propertySlug);
 
     const localSection = hostLocalInfo
       ? `${hostLocalInfo}${googleData ? `\n\nComplément Google Maps :\n${googleData}` : ''}`
@@ -688,7 +784,7 @@ Départ :
 - Lien avis : ${propertyData.review_link || "Non renseigné"}
 
 ${conditionalBlocks ? conditionalBlocks + '\n' : ''}
-━━━ CONSIGNES SPÉCIALES DE L'HÔTE ━━━
+${upsellsSection ? upsellsSection + '\n\n' : ''}━━━ CONSIGNES SPÉCIALES DE L'HÔTE ━━━
 ${formattedKB || "Aucune consigne particulière."}
 
 ━━━ QUARTIER & ENVIRONS ━━━
