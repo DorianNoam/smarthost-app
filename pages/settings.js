@@ -23,7 +23,8 @@ export default function Settings() {
   const botName = "Alfred_Alerte_Bot";
 
   // ── Stripe Connect ─────────────────────────────────────────
-  const [connectStatus, setConnectStatus] = useState(null); // null | 'not_connected' | 'pending' | 'active'
+  const [connectStatus, setConnectStatus] = useState(null);
+  const [referralData, setReferralData] = useState({ code: null, credits: 0, count: 0 }); // null | 'not_connected' | 'pending' | 'active'
   const [connectLoading, setConnectLoading] = useState(false);
   const [connectChecking, setConnectChecking] = useState(false);
 
@@ -60,7 +61,7 @@ export default function Settings() {
 
     const { data } = await supabase
       .from('profiles')
-      .select('full_name, email, active_licenses, subscription_status, telegram_chat_id, stripe_account_id, stripe_connect_status')
+      .select('full_name, email, active_licenses, subscription_status, telegram_chat_id, stripe_account_id, stripe_connect_status, referral_code, referral_credits')
       .eq('id', authUser.id)
       .single();
 
@@ -74,6 +75,19 @@ export default function Settings() {
       });
       setTelegramLinked(!!data.telegram_chat_id);
       setConnectStatus(data.stripe_account_id ? (data.stripe_connect_status || 'pending') : 'not_connected');
+
+      // Compter les parrainages complétés
+      const { count } = await supabase
+        .from('referrals')
+        .select('*', { count: 'exact', head: true })
+        .eq('referrer_id', authUser.id)
+        .eq('status', 'completed');
+
+      setReferralData({
+        code: data.referral_code,
+        credits: data.referral_credits || 0,
+        count: count || 0,
+      });
     }
 
     try {
@@ -590,6 +604,57 @@ export default function Settings() {
                     </div>
                   </>
                 )}
+              </div>
+            )}
+          </div>
+
+          {/* ── PARRAINAGE ── */}
+          <div className="settings-card">
+            <h2>🎁 Parrainage</h2>
+            <p style={{ margin: '0 0 20px', fontSize: '14px', color: '#64748b', lineHeight: 1.6 }}>
+              Partagez votre lien de parrainage. Pour chaque hôte qui s'inscrit et active un logement : <strong style={{ color: '#1a2a6c' }}>2 mois offerts pour vous</strong>, <strong style={{ color: '#1a2a6c' }}>1 mois offert pour eux</strong>.
+            </p>
+
+            {/* Stats */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '20px' }}>
+              {[
+                { label: 'Filleuls actifs', value: referralData.count, emoji: '👥' },
+                { label: 'Mois offerts gagnés', value: referralData.credits, emoji: '🎁' },
+                { label: 'Économies', value: `${(referralData.credits * 19.9).toFixed(0)}€`, emoji: '💶' },
+              ].map((stat, i) => (
+                <div key={i} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '14px', textAlign: 'center' }}>
+                  <p style={{ margin: '0 0 4px', fontSize: '20px' }}>{stat.emoji}</p>
+                  <p style={{ margin: '0 0 3px', fontSize: '22px', fontWeight: 900, color: '#1a2a6c' }}>{stat.value}</p>
+                  <p style={{ margin: 0, fontSize: '11px', color: '#64748b', fontWeight: 600 }}>{stat.label}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Lien de parrainage */}
+            {referralData.code ? (
+              <div>
+                <p style={{ margin: '0 0 8px', fontSize: '12px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Votre lien de parrainage</p>
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'center', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '14px 16px', marginBottom: '12px' }}>
+                  <p style={{ margin: 0, flex: 1, fontSize: '14px', color: '#1a2a6c', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    alfredmajor.com/register?ref={referralData.code}
+                  </p>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(`https://www.alfredmajor.com/register?ref=${referralData.code}`);
+                      alert('Lien copié !');
+                    }}
+                    style={{ background: '#1a2a6c', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '8px', fontWeight: 700, fontSize: '13px', cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: 'inherit' }}
+                  >
+                    Copier
+                  </button>
+                </div>
+                <p style={{ margin: 0, fontSize: '12px', color: '#94a3b8' }}>
+                  Votre code : <strong style={{ color: '#1a2a6c', letterSpacing: '2px' }}>{referralData.code}</strong>
+                </p>
+              </div>
+            ) : (
+              <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '12px', padding: '14px', fontSize: '13px', color: '#92400e' }}>
+                ⏳ Votre code de parrainage sera généré lors de votre première connexion.
               </div>
             )}
           </div>
