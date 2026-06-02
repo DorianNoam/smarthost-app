@@ -5,10 +5,8 @@ import { useRouter } from 'next/router';
 import { supabase } from '../lib/supabase';
 import { useTranslation } from '../lib/useTranslation';
 
-// Génère un code parrainage unique (8 caractères alphanumériques)
 function generateReferralCode() {
-  return Math.random().toString(36).substring(2, 6).toUpperCase() +
-         Math.random().toString(36).substring(2, 6).toUpperCase();
+  return Math.random().toString(36).substring(2,6).toUpperCase() + Math.random().toString(36).substring(2,6).toUpperCase();
 }
 
 export default function Register() {
@@ -20,41 +18,27 @@ export default function Register() {
   const [firstName, setFirstName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [referralCode, setReferralCode] = useState(''); // code du parrain (depuis l'URL)
-  const [referralValid, setReferralValid] = useState(null); // null | true | false
+  const [referralCode, setReferralCode] = useState('');
+  const [referralValid, setReferralValid] = useState(null);
 
-  const switchLocale = (l) => {
-    if (l === 'fr') router.push('/register');
-    else router.push(`/${l}/register`);
-  };
+  const switchLocale = (l) => { if (l === 'fr') router.push('/register'); else router.push(`/${l}/register`); };
 
-  // Capturer le code parrain depuis l'URL (?ref=XXXXXXXX)
   useEffect(() => {
     const ref = router.query.ref;
-    if (ref) {
-      setReferralCode(ref.toUpperCase());
-      validateReferralCode(ref.toUpperCase());
-    }
+    if (ref) { setReferralCode(ref.toUpperCase()); validateReferralCode(ref.toUpperCase()); }
   }, [router.query]);
 
   const validateReferralCode = async (code) => {
     if (!code || code.length < 4) { setReferralValid(false); return; }
-    const { data } = await supabase
-      .from('profiles')
-      .select('id, full_name')
-      .eq('referral_code', code)
-      .maybeSingle();
+    const { data } = await supabase.from('profiles').select('id').eq('referral_code', code).maybeSingle();
     setReferralValid(!!data);
   };
 
   const handleReferralChange = async (val) => {
     const code = val.toUpperCase();
     setReferralCode(code);
-    if (code.length >= 6) {
-      await validateReferralCode(code);
-    } else {
-      setReferralValid(null);
-    }
+    if (code.length >= 6) await validateReferralCode(code);
+    else setReferralValid(null);
   };
 
   const handleRegister = async (e) => {
@@ -63,175 +47,134 @@ export default function Register() {
     setLoading(true);
     setError(null);
     try {
-      // 1. Créer le compte Supabase Auth
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: { data: { first_name: firstName } },
-      });
+      const { data: authData, error: authError } = await supabase.auth.signUp({ email, password, options: { data: { first_name: firstName } } });
       if (authError) throw authError;
-
       if (authData.user) {
-        // 2. Générer un code parrainage unique pour ce nouvel hôte
         const newReferralCode = generateReferralCode();
-
-        // 3. Trouver le parrain si code valide
         let referrerId = null;
         if (referralCode && referralValid) {
-          const { data: referrer } = await supabase
-            .from('profiles')
-            .select('id')
-            .eq('referral_code', referralCode)
-            .maybeSingle();
+          const { data: referrer } = await supabase.from('profiles').select('id').eq('referral_code', referralCode).maybeSingle();
           referrerId = referrer?.id || null;
         }
-
-        // 4. Créer le profil avec code parrainage + référence parrain
-        await supabase.from('profiles').upsert([{
-          id:            authData.user.id,
-          full_name:     firstName,
-          email,
-          active_licenses: 0,
-          referral_code: newReferralCode,
-          referred_by:   referrerId,
-          referral_credits: referralValid && referrerId ? 1 : 0, // 1 mois offert au filleul (activé au premier paiement)
-        }], { onConflict: 'email' });
-
-        // 5. Créer l'entrée referral si parrain trouvé
+        await supabase.from('profiles').upsert([{ id: authData.user.id, full_name: firstName, email, active_licenses: 0, referral_code: newReferralCode, referred_by: referrerId, referral_credits: referralValid && referrerId ? 1 : 0 }], { onConflict: 'email' });
         if (referrerId) {
-          await supabase.from('referrals').insert({
-            referrer_id:    referrerId,
-            referee_id:     authData.user.id,
-            status:         'pending',
-            referrer_months: 2,
-            referee_months:  1,
-          });
+          await supabase.from('referrals').insert({ referrer_id: referrerId, referee_id: authData.user.id, status: 'pending', referrer_months: 2, referee_months: 1 });
         }
-
         router.push('/add-property?first=true');
       }
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
+    } catch (err) { setError(err.message); }
+    finally { setLoading(false); }
   };
 
   return (
-    <div className="container">
+    <>
       <Head>
         <title>{r.metaTitle}</title>
         <meta name="description" content={r.metaDesc} />
-        <meta name="robots" content="index, follow" />
-        <link rel="canonical" href={`https://www.alfredmajor.com${locale === 'fr' ? '/register' : `/${locale}/register`}`} />
-        <link rel="alternate" hrefLang="fr" href="https://www.alfredmajor.com/register" />
-        <link rel="alternate" hrefLang="en" href="https://www.alfredmajor.com/en/register" />
-        <link rel="alternate" hrefLang="es" href="https://www.alfredmajor.com/es/register" />
-        <meta property="og:title" content={r.metaTitle} />
-        <meta property="og:image" content="https://www.alfredmajor.com/og-image.jpg" />
-        <meta property="og:locale" content={t.meta.ogLocale} />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
       </Head>
 
-      <style jsx>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@700;800;900&display=swap');
-        :global(*) { box-sizing: border-box; }
-        :global(body) { margin: 0; background: #0f172a; font-family: 'Inter', sans-serif; }
-        .container { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 20px; }
-        .lang-switcher { display: flex; gap: 6px; margin-bottom: 24px; }
-        .lang-btn { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: white; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 14px; font-family: inherit; transition: 0.2s; }
-        .lang-btn.active { background: rgba(212,175,55,0.2); border-color: #d4af37; }
-        .header { text-align: center; margin-bottom: 36px; }
-        .logo { font-size: 56px; display: block; margin-bottom: 14px; }
-        .brand { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 28px; font-weight: 900; color: white; letter-spacing: -0.5px; }
-        .gold { color: #d4af37; }
-        .card { background: white; border-radius: 24px; padding: 36px 32px; width: 100%; max-width: 420px; }
-        .card-title { font-size: 22px; font-weight: 800; color: #1a2a6c; margin-bottom: 6px; }
-        .card-sub { font-size: 14px; color: #64748b; margin-bottom: 28px; }
-        label { display: block; font-size: 13px; font-weight: 700; color: #475569; margin-bottom: 6px; }
-        input { width: 100%; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; font-size: 15px; color: #1e293b; margin-bottom: 18px; font-family: inherit; outline: none; transition: 0.2s; }
-        input:focus { border-color: #1a2a6c; box-shadow: 0 0 0 3px rgba(26,42,108,0.1); }
-        .error { background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; padding: 12px; border-radius: 10px; font-size: 13px; margin-bottom: 16px; }
-        .btn { width: 100%; background: #1a2a6c; color: white; border: none; border-radius: 14px; padding: 16px; font-size: 16px; font-weight: 800; cursor: pointer; font-family: inherit; transition: 0.3s; }
-        .btn:hover:not(:disabled) { background: #1e3280; transform: translateY(-1px); }
-        .btn:disabled { background: #94a3b8; cursor: not-allowed; }
-        .footer-link { margin-top: 22px; text-align: center; font-size: 14px; color: #64748b; }
-        .footer-link a { color: #1a2a6c; font-weight: 700; text-decoration: none; }
-        .referral-banner { background: linear-gradient(135deg, #1a2a6c, #2d4a9e); border-radius: 14px; padding: 16px; margin-bottom: 24px; display: flex; align-items: center; gap: 12px; }
-        .referral-banner-icon { font-size: 28px; flex-shrink: 0; }
-        .referral-banner-text { color: white; }
-        .referral-banner-title { font-weight: 800; font-size: 14px; margin: 0 0 3px; }
-        .referral-banner-sub { font-size: 12px; opacity: 0.8; margin: 0; }
-        .referral-input-wrapper { position: relative; margin-bottom: 18px; }
-        .referral-input-wrapper input { margin-bottom: 0; padding-right: 40px; text-transform: uppercase; letter-spacing: 2px; font-weight: 700; }
-        .referral-status { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); font-size: 16px; }
-        .divider { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; color: #94a3b8; font-size: 12px; font-weight: 600; }
-        .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: #e2e8f0; }
+      <style jsx global>{`
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { -webkit-font-smoothing: antialiased; }
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: #f5f5f7; min-height: 100vh; }
+        a { text-decoration: none; color: inherit; }
       `}</style>
 
-      <div className="lang-switcher">
-        <button className={`lang-btn${locale === 'fr' ? ' active' : ''}`} onClick={() => switchLocale('fr')}>🇫🇷 FR</button>
-        <button className={`lang-btn${locale === 'en' ? ' active' : ''}`} onClick={() => switchLocale('en')}>🇬🇧 EN</button>
-        <button className={`lang-btn${locale === 'es' ? ' active' : ''}`} onClick={() => switchLocale('es')}>🇪🇸 ES</button>
-      </div>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 20px' }}>
 
-      <div className="header">
-        <span className="logo">🎩</span>
-        <div className="brand">Alfred<span className="gold">Major</span></div>
-      </div>
-
-      <div className="card">
-        <div className="card-title">{r.title}</div>
-        <div className="card-sub">{r.subtitle}</div>
-
-        {/* Bannière parrainage si code valide */}
-        {referralValid && referralCode && (
-          <div className="referral-banner">
-            <div className="referral-banner-icon">🎁</div>
-            <div className="referral-banner-text">
-              <p className="referral-banner-title">1 mois offert !</p>
-              <p className="referral-banner-sub">Code parrainage appliqué — votre premier mois est gratuit.</p>
-            </div>
-          </div>
-        )}
-
-        {error && <div className="error">{error}</div>}
-
-        <form onSubmit={handleRegister}>
-          <label>{r.labelName}</label>
-          <input type="text" value={firstName} onChange={e => setFirstName(e.target.value)} placeholder={r.placeholderName} autoCapitalize="words" />
-
-          <label>{r.labelEmail}</label>
-          <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder={r.placeholderEmail} autoCapitalize="none" />
-
-          <label>{r.labelPassword}</label>
-          <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder={r.placeholderPassword} />
-
-          <div className="divider">Code parrainage (optionnel)</div>
-
-          <div className="referral-input-wrapper">
-            <input
-              type="text"
-              value={referralCode}
-              onChange={e => handleReferralChange(e.target.value)}
-              placeholder="ex: ABC12345"
-              maxLength={8}
-            />
-            {referralCode.length >= 6 && (
-              <span className="referral-status">
-                {referralValid === null ? '⏳' : referralValid ? '✅' : '❌'}
-              </span>
-            )}
-          </div>
-
-          <button type="submit" className="btn" disabled={loading}>
-            {loading ? r.loading : r.cta}
-          </button>
-        </form>
-
-        <div className="footer-link">
-          {r.alreadyAccount} <Link href="/login" locale={locale}>{r.login}</Link>
+        {/* Lang switcher */}
+        <div style={{ display: 'flex', gap: '6px', marginBottom: '28px' }}>
+          {[['fr','🇫🇷'], ['en','🇬🇧'], ['es','🇪🇸']].map(([loc, flag]) => (
+            <button key={loc} onClick={() => switchLocale(loc)} style={{ background: locale === loc ? '#fff' : 'transparent', border: `1px solid ${locale === loc ? '#e8e8ed' : '#d2d2d7'}`, color: '#1d1d1f', padding: '6px 12px', borderRadius: '980px', cursor: 'pointer', fontSize: '13px', fontFamily: 'inherit', fontWeight: locale === loc ? '600' : '400', transition: '0.2s', boxShadow: locale === loc ? '0 1px 4px rgba(0,0,0,0.08)' : 'none' }}>
+              {flag} {loc.toUpperCase()}
+            </button>
+          ))}
         </div>
+
+        {/* Brand */}
+        <Link href="/" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '36px', gap: '10px' }}>
+          <span style={{ fontSize: '52px', lineHeight: 1 }}>🎩</span>
+          <span style={{ fontSize: '22px', fontWeight: '600', color: '#1d1d1f', letterSpacing: '-0.4px' }}>
+            Alfred<span style={{ color: '#c9a227' }}>Major</span>
+          </span>
+        </Link>
+
+        {/* Card */}
+        <div style={{ background: '#fff', borderRadius: '20px', padding: '40px 36px', width: '100%', maxWidth: '420px', boxShadow: '0 2px 20px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04)' }}>
+
+          {/* Badge offre */}
+          <div style={{ background: '#faf6e8', border: '1px solid #e8d88a', borderRadius: '980px', padding: '7px 14px', fontSize: '13px', fontWeight: '500', color: '#92710a', display: 'inline-flex', alignItems: 'center', gap: '6px', marginBottom: '20px' }}>
+            🎁 1er mois 100% offert
+          </div>
+
+          <h1 style={{ fontSize: '24px', fontWeight: '600', color: '#1d1d1f', letterSpacing: '-0.5px', marginBottom: '6px' }}>{r.title}</h1>
+          <p style={{ fontSize: '15px', color: '#86868b', fontWeight: '300', marginBottom: '28px', letterSpacing: '-0.1px' }}>{r.subtitle}</p>
+
+          {/* Bannière parrainage */}
+          {referralValid && referralCode && (
+            <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '12px', padding: '14px 16px', marginBottom: '20px', display: 'flex', gap: '12px', alignItems: 'center' }}>
+              <span style={{ fontSize: '24px' }}>🎁</span>
+              <div>
+                <p style={{ fontSize: '13px', fontWeight: '600', color: '#15803d', margin: '0 0 2px' }}>1 mois offert !</p>
+                <p style={{ fontSize: '12px', color: '#15803d', margin: 0, fontWeight: '300', opacity: 0.8 }}>Code parrainage appliqué — votre premier mois est gratuit.</p>
+              </div>
+            </div>
+          )}
+
+          {error && (
+            <div style={{ background: '#fff2f2', border: '1px solid #ffd0d0', borderRadius: '12px', padding: '12px 14px', marginBottom: '20px', fontSize: '14px', color: '#c00' }}>
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleRegister}>
+            {[
+              { label: r.labelName, type: 'text', val: firstName, set: setFirstName, ph: r.placeholderName, cap: 'words' },
+              { label: r.labelEmail, type: 'email', val: email, set: setEmail, ph: r.placeholderEmail, cap: 'none' },
+              { label: r.labelPassword, type: 'password', val: password, set: setPassword, ph: r.placeholderPassword },
+            ].map(({ label, type, val, set, ph, cap }) => (
+              <div key={label} style={{ marginBottom: '16px' }}>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', color: '#6e6e73', marginBottom: '7px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{label}</label>
+                <input type={type} value={val} onChange={e => set(e.target.value)} placeholder={ph} autoCapitalize={cap}
+                  style={{ width: '100%', background: '#f5f5f7', border: '1px solid #e8e8ed', borderRadius: '12px', padding: '14px 16px', fontSize: '15px', color: '#1d1d1f', outline: 'none', fontFamily: 'inherit' }} />
+              </div>
+            ))}
+
+            {/* Divider parrainage */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', margin: '4px 0 16px' }}>
+              <div style={{ flex: 1, height: '1px', background: '#e8e8ed' }} />
+              <span style={{ fontSize: '12px', color: '#aeaeb2', fontWeight: '400', whiteSpace: 'nowrap' }}>Code parrainage (optionnel)</span>
+              <div style={{ flex: 1, height: '1px', background: '#e8e8ed' }} />
+            </div>
+
+            <div style={{ position: 'relative', marginBottom: '24px' }}>
+              <input type="text" value={referralCode} onChange={e => handleReferralChange(e.target.value)} placeholder="ex: ABC12345" maxLength={8}
+                style={{ width: '100%', background: '#f5f5f7', border: `1px solid ${referralValid === true ? '#bbf7d0' : referralValid === false ? '#ffd0d0' : '#e8e8ed'}`, borderRadius: '12px', padding: '14px 44px 14px 16px', fontSize: '15px', color: '#1d1d1f', outline: 'none', fontFamily: 'inherit', textTransform: 'uppercase', letterSpacing: '3px', fontWeight: '500' }} />
+              {referralCode.length >= 6 && (
+                <span style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', fontSize: '16px' }}>
+                  {referralValid === null ? '⏳' : referralValid ? '✅' : '❌'}
+                </span>
+              )}
+            </div>
+
+            <button type="submit" disabled={loading} style={{ width: '100%', background: loading ? '#aeaeb2' : '#1d1d1f', color: '#fff', border: 'none', borderRadius: '12px', padding: '16px', fontSize: '16px', fontWeight: '500', cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'inherit', letterSpacing: '-0.2px', transition: 'background 0.2s' }}>
+              {loading ? r.loading : r.cta}
+            </button>
+          </form>
+
+          <p style={{ marginTop: '24px', textAlign: 'center', fontSize: '14px', color: '#86868b', fontWeight: '300' }}>
+            {r.alreadyAccount}{' '}
+            <Link href="/login" style={{ color: '#c9a227', fontWeight: '500' }}>{r.login}</Link>
+          </p>
+        </div>
+
+        <p style={{ marginTop: '28px', fontSize: '12px', color: '#aeaeb2', fontWeight: '300' }}>
+          © 2026 Alfred Major · Sans engagement · Résiliable à tout moment
+        </p>
       </div>
-    </div>
+    </>
   );
 }
