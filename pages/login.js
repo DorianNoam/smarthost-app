@@ -13,8 +13,6 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-
-  // ── Gestion de l'invitation ──────────────────────────────
   const [inviteId, setInviteId] = useState(null);
 
   useEffect(() => {
@@ -27,7 +25,7 @@ export default function Login() {
   }, [router.isReady, router.query]);
 
   const switchLocale = (loc) => {
-    if (loc === "fr") router.push("/login");
+    if (loc === 'fr') router.push('/login');
     else router.push(`/${loc}/login`);
   };
 
@@ -35,135 +33,107 @@ export default function Login() {
     e.preventDefault();
     setLoading(true);
     setError(null);
-
     const { data: authData, error: authError } = await supabase.auth.signInWithPassword({ email, password });
-
-    if (authError) {
-      setError(l.errorMsg);
-      setLoading(false);
-      return;
-    }
-
-    // ── Si invitation : lier le compte existant à l'équipe ──
+    if (authError) { setError(l.errorMsg); setLoading(false); return; }
     if (inviteId && authData.user) {
-      await supabase
-        .from('team_members')
-        .update({
-          member_user_id: authData.user.id,
-          status: 'active',
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', inviteId)
-        .eq('invited_email', email.toLowerCase());
+      await supabase.from('team_members').update({ member_user_id: authData.user.id, status: 'active', updated_at: new Date().toISOString() }).eq('id', inviteId).eq('invited_email', email.toLowerCase());
     }
-
     router.push('/dashboard');
   };
 
   return (
-    <div className="container">
+    <>
       <Head>
         <title>{l.metaTitle}</title>
         <meta name="description" content={l.metaDesc} />
         <meta name="robots" content="index, follow" />
         <link rel="canonical" href={`https://www.alfredmajor.com${locale === 'fr' ? '/login' : `/${locale}/login`}`} />
-        <link rel="alternate" hrefLang="fr" href="https://www.alfredmajor.com/login" />
-        <link rel="alternate" hrefLang="en" href="https://www.alfredmajor.com/en/login" />
-        <link rel="alternate" hrefLang="es" href="https://www.alfredmajor.com/es/login" />
-        <meta property="og:title" content={l.metaTitle} />
-        <meta property="og:image" content="https://www.alfredmajor.com/og-image.jpg" />
-        <meta property="og:locale" content={t.meta.ogLocale} />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
       </Head>
 
-      <style jsx>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@700;800;900&display=swap');
-        :global(*) { box-sizing: border-box; }
-        :global(body) { margin: 0; background: #0f172a; font-family: 'Inter', sans-serif; }
-        .container { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 20px; }
-        .lang-switcher { display: flex; gap: 6px; margin-bottom: 24px; }
-        .lang-btn { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: white; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 14px; font-family: inherit; transition: 0.2s; }
-        .lang-btn.active { background: rgba(212,175,55,0.2); border-color: #d4af37; }
-        .header { text-align: center; margin-bottom: 36px; }
-        .logo { font-size: 56px; display: block; margin-bottom: 14px; }
-        .brand { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 28px; font-weight: 900; color: white; letter-spacing: -0.5px; }
-        .gold { color: #d4af37; }
-        .card { background: white; border-radius: 24px; padding: 36px 32px; width: 100%; max-width: 420px; }
-        .card-title { font-size: 22px; font-weight: 800; color: #1a2a6c; margin-bottom: 6px; }
-        .card-sub { font-size: 14px; color: #64748b; margin-bottom: 28px; }
-        label { display: block; font-size: 13px; font-weight: 700; color: #475569; margin-bottom: 6px; }
-        input { width: 100%; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; font-size: 15px; color: #1e293b; margin-bottom: 18px; font-family: inherit; outline: none; transition: 0.2s; }
-        input:focus { border-color: #1a2a6c; box-shadow: 0 0 0 3px rgba(26,42,108,0.1); }
-        input[readonly] { opacity: 0.7; cursor: not-allowed; }
-        .forgot { display: block; text-align: right; font-size: 13px; color: #64748b; text-decoration: underline; margin-top: -12px; margin-bottom: 20px; cursor: pointer; }
-        .error { background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; padding: 12px; border-radius: 10px; font-size: 13px; margin-bottom: 16px; }
-        .btn { width: 100%; background: #1a2a6c; color: white; border: none; border-radius: 14px; padding: 16px; font-size: 16px; font-weight: 800; cursor: pointer; font-family: inherit; transition: 0.3s; }
-        .btn:hover:not(:disabled) { background: #1e3280; transform: translateY(-1px); }
-        .btn:disabled { background: #94a3b8; cursor: not-allowed; }
-        .footer-link { margin-top: 22px; text-align: center; font-size: 14px; color: #64748b; }
-        .footer-link a { color: #1a2a6c; font-weight: 700; text-decoration: none; }
-
-        /* Bandeau invitation */
-        .invite-banner { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 12px; padding: 12px 16px; margin-bottom: 20px; text-align: left; }
-        .invite-banner-title { font-size: 13px; font-weight: 800; color: #1e40af; margin-bottom: 3px; }
-        .invite-banner-sub { font-size: 12px; color: #3b82f6; }
+      <style jsx global>{`
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { -webkit-font-smoothing: antialiased; }
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: #f5f5f7; min-height: 100vh; }
+        a { text-decoration: none; color: inherit; }
       `}</style>
 
-      <div className="lang-switcher">
-        <button className={`lang-btn${locale === 'fr' ? ' active' : ''}`} onClick={() => switchLocale('fr')}>🇫🇷 FR</button>
-        <button className={`lang-btn${locale === 'en' ? ' active' : ''}`} onClick={() => switchLocale('en')}>🇬🇧 EN</button>
-        <button className={`lang-btn${locale === 'es' ? ' active' : ''}`} onClick={() => switchLocale('es')}>🇪🇸 ES</button>
-      </div>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 20px' }}>
 
-      <div className="header">
-        <span className="logo">🎩</span>
-        <div className="brand">Alfred<span className="gold">Major</span></div>
-      </div>
-
-      <div className="card">
-        <div className="card-title">
-          {inviteId ? 'Rejoindre l\'équipe' : l.title}
-        </div>
-        <div className="card-sub">
-          {inviteId ? 'Connectez-vous pour accepter l\'invitation.' : l.subtitle}
+        {/* Lang switcher */}
+        <div style={{ display: 'flex', gap: '6px', marginBottom: '28px' }}>
+          {[['fr','🇫🇷'], ['en','🇬🇧'], ['es','🇪🇸']].map(([loc, flag]) => (
+            <button key={loc} onClick={() => switchLocale(loc)} style={{ background: locale === loc ? '#fff' : 'transparent', border: `1px solid ${locale === loc ? '#e8e8ed' : '#d2d2d7'}`, color: '#1d1d1f', padding: '6px 12px', borderRadius: '980px', cursor: 'pointer', fontSize: '13px', fontFamily: 'inherit', fontWeight: locale === loc ? '600' : '400', transition: '0.2s', boxShadow: locale === loc ? '0 1px 4px rgba(0,0,0,0.08)' : 'none' }}>
+              {flag} {loc.toUpperCase()}
+            </button>
+          ))}
         </div>
 
-        {/* Bandeau invitation */}
-        {inviteId && (
-          <div className="invite-banner">
-            <div className="invite-banner-title">✉️ Invitation en attente</div>
-            <div className="invite-banner-sub">Connectez-vous pour accéder au dashboard de votre équipe.</div>
-          </div>
-        )}
+        {/* Brand */}
+        <Link href="/" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '36px', gap: '10px' }}>
+          <span style={{ fontSize: '52px', lineHeight: 1 }}>🎩</span>
+          <span style={{ fontSize: '22px', fontWeight: '600', color: '#1d1d1f', letterSpacing: '-0.4px' }}>
+            Alfred<span style={{ color: '#c9a227' }}>Major</span>
+          </span>
+        </Link>
 
-        {error && <div className="error">{error}</div>}
+        {/* Card */}
+        <div style={{ background: '#fff', borderRadius: '20px', padding: '40px 36px', width: '100%', maxWidth: '420px', boxShadow: '0 2px 20px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04)' }}>
 
-        <form onSubmit={handleLogin}>
-          <label>{l.labelEmail}</label>
-          <input
-            type="email"
-            value={email}
-            onChange={e => !inviteId && setEmail(e.target.value)}
-            placeholder={l.placeholderEmail}
-            autoCapitalize="none"
-            readOnly={!!inviteId}
-          />
-          <label>{l.labelPassword}</label>
-          <input
-            type="password"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            placeholder={l.placeholderPassword}
-          />
-          <Link href="/forgot-password" locale={locale} className="forgot">{l.forgot}</Link>
-          <button type="submit" className="btn" disabled={loading}>
-            {loading ? l.loading : inviteId ? '✅ Se connecter & Rejoindre' : l.cta}
-          </button>
-        </form>
+          <h1 style={{ fontSize: '24px', fontWeight: '600', color: '#1d1d1f', letterSpacing: '-0.5px', marginBottom: '6px' }}>
+            {inviteId ? "Rejoindre l'équipe" : l.title}
+          </h1>
+          <p style={{ fontSize: '15px', color: '#86868b', fontWeight: '300', marginBottom: '28px', letterSpacing: '-0.1px' }}>
+            {inviteId ? 'Connectez-vous pour accepter l\'invitation.' : l.subtitle}
+          </p>
 
-        <div className="footer-link">
-          {l.noAccount} <Link href={inviteId ? `/register?invite=${inviteId}&email=${encodeURIComponent(email)}` : '/register'} locale={locale}>{l.register}</Link>
+          {inviteId && (
+            <div style={{ background: '#f0f8ff', border: '1px solid #b3d9f7', borderRadius: '12px', padding: '14px 16px', marginBottom: '20px' }}>
+              <p style={{ fontSize: '13px', fontWeight: '600', color: '#0369a1', margin: '0 0 3px' }}>✉️ Invitation en attente</p>
+              <p style={{ fontSize: '12px', color: '#0369a1', margin: 0, fontWeight: '300', opacity: 0.8 }}>Connectez-vous pour accéder au dashboard de votre équipe.</p>
+            </div>
+          )}
+
+          {error && (
+            <div style={{ background: '#fff2f2', border: '1px solid #ffd0d0', borderRadius: '12px', padding: '12px 14px', marginBottom: '20px', fontSize: '14px', color: '#c00', fontWeight: '400' }}>
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleLogin}>
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', color: '#6e6e73', marginBottom: '7px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{l.labelEmail}</label>
+              <input type="email" value={email} onChange={e => !inviteId && setEmail(e.target.value)} placeholder={l.placeholderEmail} readOnly={!!inviteId} autoCapitalize="none"
+                style={{ width: '100%', background: '#f5f5f7', border: '1px solid #e8e8ed', borderRadius: '12px', padding: '14px 16px', fontSize: '15px', color: '#1d1d1f', outline: 'none', fontFamily: 'inherit', transition: 'border-color 0.2s', opacity: inviteId ? 0.6 : 1 }} />
+            </div>
+
+            <div style={{ marginBottom: '8px' }}>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', color: '#6e6e73', marginBottom: '7px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{l.labelPassword}</label>
+              <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder={l.placeholderPassword}
+                style={{ width: '100%', background: '#f5f5f7', border: '1px solid #e8e8ed', borderRadius: '12px', padding: '14px 16px', fontSize: '15px', color: '#1d1d1f', outline: 'none', fontFamily: 'inherit' }} />
+            </div>
+
+            <div style={{ textAlign: 'right', marginBottom: '24px' }}>
+              <Link href="/forgot-password" style={{ fontSize: '13px', color: '#6e6e73', fontWeight: '400' }}>{l.forgot}</Link>
+            </div>
+
+            <button type="submit" disabled={loading} style={{ width: '100%', background: loading ? '#aeaeb2' : '#1d1d1f', color: '#fff', border: 'none', borderRadius: '12px', padding: '16px', fontSize: '16px', fontWeight: '500', cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'inherit', letterSpacing: '-0.2px', transition: 'background 0.2s' }}>
+              {loading ? 'Connexion...' : inviteId ? '✅ Se connecter & Rejoindre' : l.cta}
+            </button>
+          </form>
+
+          <p style={{ marginTop: '24px', textAlign: 'center', fontSize: '14px', color: '#86868b', fontWeight: '300' }}>
+            {l.noAccount}{' '}
+            <Link href={inviteId ? `/register?invite=${inviteId}&email=${encodeURIComponent(email)}` : '/register'} style={{ color: '#c9a227', fontWeight: '500' }}>{l.register}</Link>
+          </p>
         </div>
+
+        <p style={{ marginTop: '28px', fontSize: '12px', color: '#aeaeb2', fontWeight: '300' }}>
+          © 2026 Alfred Major
+        </p>
       </div>
-    </div>
+    </>
   );
 }
