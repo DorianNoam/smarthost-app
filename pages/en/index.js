@@ -1,412 +1,673 @@
 import Link from 'next/link';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
+import { useState, useEffect } from 'react';
 
-export default function Home() {
+export default function HomeEN() {
   const router = useRouter();
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 40);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   return (
     <div className="container">
       <Head>
         <title>Alfred Major | The AI Butler for Short-Term Rentals</title>
-        <meta name="description" content="Delegate guest management to Alfred, the AI that responds 24/7, recommends local spots, and alerts you only in real emergencies. First month free, no commitment." />
+        <meta name="description" content="Manage your short-term rentals on autopilot. AI butler 24/7, automated housekeeping, commission-free upsells, emergency alerts. First month free, no commitment." />
         <meta name="robots" content="index, follow" />
         <link rel="canonical" href="https://www.alfredmajor.com/en" />
         <link rel="alternate" hrefLang="fr" href="https://www.alfredmajor.com/" />
         <link rel="alternate" hrefLang="en" href="https://www.alfredmajor.com/en" />
         <link rel="alternate" hrefLang="es" href="https://www.alfredmajor.com/es" />
         <link rel="alternate" hrefLang="x-default" href="https://www.alfredmajor.com/" />
-        <meta property="og:title" content="Alfred Major — The AI Butler for Your Rentals" />
-        <meta property="og:description" content="Alfred answers your guests 24/7, recommends the best local places, and alerts you in emergencies. First month free, no commitment." />
+        <meta property="og:title" content="Alfred Major — Manage your rentals on autopilot" />
+        <meta property="og:description" content="AI butler 24/7, automated housekeeping, commission-free upsells, emergency alerts. First month free, no commitment." />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://www.alfredmajor.com/en" />
         <meta property="og:image" content="https://www.alfredmajor.com/og-image.jpg" />
-        <meta property="og:image:width" content="1200" />
-        <meta property="og:image:height" content="630" />
-        <meta property="og:image:alt" content="Alfred Major — AI Butler for short-term rentals" />
         <meta property="og:locale" content="en_US" />
         <meta property="og:site_name" content="Alfred Major" />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Alfred Major — The AI Butler for Your Rentals" />
-        <meta name="twitter:description" content="Alfred answers your guests 24/7. First month free, no commitment." />
-        <meta name="twitter:image" content="https://www.alfredmajor.com/og-image.jpg" />
-        <meta name="twitter:image:alt" content="Alfred Major — AI Butler for short-term rentals" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta name="theme-color" content="#1a2a6c" />
+        <meta name="theme-color" content="#ffffff" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
           "@context": "https://schema.org", "@type": "SoftwareApplication",
           "name": "Alfred Major", "url": "https://www.alfredmajor.com",
-          "description": "AI Butler for short-term rentals. Responds to guests 24/7, in 30+ languages, with emergency alerts on Telegram.",
+          "description": "All-in-one platform for short-term rental management. AI butler, housekeeping, upsells, emergency alerts.",
           "applicationCategory": "BusinessApplication", "operatingSystem": "Web, Android, iOS",
-          "offers": { "@type": "Offer", "price": "9.90", "priceCurrency": "EUR", "priceValidUntil": "2026-12-31" },
-          "aggregateRating": { "@type": "AggregateRating", "ratingValue": "5", "reviewCount": "3" },
-          "publisher": { "@type": "Organization", "name": "Alfred Major", "url": "https://www.alfredmajor.com", "logo": "https://www.alfredmajor.com/icon.png" }
+          "offers": { "@type": "Offer", "price": "9.90", "priceCurrency": "EUR" },
+          "publisher": { "@type": "Organization", "name": "Alfred Major", "url": "https://www.alfredmajor.com" }
         })}} />
       </Head>
 
+      <style jsx global>{`
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+        body { background: #fff; overflow-x: hidden; }
+        a { text-decoration: none; color: inherit; }
+        img { display: block; max-width: 100%; }
+      `}</style>
+
       <style jsx>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700;800;900&display=swap');
-        :global(a) { text-decoration: none; color: inherit; }
-        :global(html), :global(body) { margin: 0; padding: 0; overflow-x: hidden; width: 100%; background-color: #fafafa; scroll-behavior: smooth; }
-        .container { font-family: 'Inter', sans-serif; color: #0f172a; width: 100%; }
-        nav { display: flex; justify-content: space-between; align-items: center; padding: 15px 5%; position: fixed; top: 0; left: 0; right: 0; background: rgba(255,255,255,0.92); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); z-index: 1000; box-shadow: 0 1px 0 rgba(0,0,0,0.06); box-sizing: border-box; }
-        .brand { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 24px; font-weight: 900; color: #1a2a6c; letter-spacing: -0.5px; }
-        .gold { color: #d4af37; }
-        .nav-links { display: flex; align-items: center; gap: 20px; }
-        .nav-link { color: #475569; font-weight: 500; font-size: 15px; transition: 0.2s; }
-        .nav-link:hover { color: #1a2a6c; }
-        .nav-login { font-weight: 700; color: white; background: #1a2a6c; padding: 10px 24px; border-radius: 50px; font-size: 14px; transition: 0.3s; white-space: nowrap; }
-        .nav-login:hover { background: #d4af37; color: #1a2a6c; transform: translateY(-1px); }
-        .lang-switcher { display: flex; align-items: center; gap: 2px; background: #f1f5f9; border-radius: 50px; padding: 3px; }
-        .lang-btn { background: none; border: none; padding: 5px 10px; border-radius: 50px; cursor: pointer; font-size: 18px; transition: 0.2s; font-family: inherit; line-height: 1; }
-        .lang-btn:hover { background: white; }
-        .lang-btn.active { background: white; box-shadow: 0 1px 4px rgba(0,0,0,0.12); }
-        .hero { position: relative; min-height: 92vh; display: flex; align-items: center; justify-content: center; text-align: center; padding: 140px 20px 100px; box-sizing: border-box; overflow: hidden; background: linear-gradient(165deg, rgba(10,15,40,0.88) 0%, rgba(26,42,108,0.75) 50%, rgba(10,15,40,0.92) 100%), url('https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?auto=format&fit=crop&w=1920&q=80') center/cover fixed; }
-        .hero-content { max-width: 900px; z-index: 10; margin: 0 auto; display: flex; flex-direction: column; align-items: center; width: 100%; }
-        .badge-hero { background: rgba(212,175,55,0.18); color: #fbbf24; padding: 10px 20px; border-radius: 50px; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; display: inline-flex; align-items: center; gap: 8px; margin-bottom: 30px; border: 1px solid rgba(212,175,55,0.35); backdrop-filter: blur(10px); }
-        h1 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: clamp(36px, 6vw, 68px); color: white; margin-bottom: 24px; line-height: 1.08; font-weight: 900; letter-spacing: -2px; }
-        h1 em { font-style: normal; color: #d4af37; }
-        .subtitle { font-size: clamp(16px, 2.5vw, 19px); margin-bottom: 44px; color: rgba(255,255,255,0.75); line-height: 1.7; font-weight: 400; max-width: 680px; }
-        .cta-main { background: linear-gradient(135deg, #d4af37, #f0cc5a); color: #1a2a6c; padding: 20px 48px; border-radius: 50px; font-weight: 800; font-size: 16px; letter-spacing: 0.3px; box-shadow: 0 12px 40px rgba(212,175,55,0.4); display: inline-flex; align-items: center; gap: 10px; transition: 0.3s; cursor: pointer; }
-        .cta-main:hover { transform: translateY(-3px); box-shadow: 0 20px 50px rgba(212,175,55,0.5); }
-        .trust-row { margin-top: 28px; display: flex; align-items: center; justify-content: center; gap: 24px; flex-wrap: wrap; }
-        .trust-item { font-size: 13px; color: rgba(255,255,255,0.6); display: flex; align-items: center; gap: 6px; }
-        .trust-dot { width: 4px; height: 4px; border-radius: 50%; background: rgba(255,255,255,0.3); }
-        .logos-section { background: white; padding: 28px 5%; border-bottom: 1px solid #f1f5f9; text-align: center; }
-        .logos-label { font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 2px; font-weight: 700; margin-bottom: 18px; }
-        .logos-flex { display: flex; justify-content: center; align-items: center; gap: 40px; flex-wrap: wrap; }
-        .logo-item { font-weight: 800; font-size: 17px; font-family: 'Plus Jakarta Sans', sans-serif; color: #94a3b8; letter-spacing: -0.3px; transition: 0.2s; }
-        .logo-item:hover { color: #475569; }
-        .steps-section { padding: 110px 5%; background: #f8fafc; text-align: center; }
-        .section-label { font-size: 12px; font-weight: 700; color: #d4af37; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 14px; }
-        .section-title { font-family: 'Plus Jakarta Sans', sans-serif; font-size: clamp(28px, 5vw, 42px); color: #0f172a; margin: 0 0 12px; font-weight: 800; letter-spacing: -1px; }
-        .section-sub { color: #64748b; font-size: 17px; margin: 0 auto; max-width: 600px; line-height: 1.6; }
-        .steps-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; max-width: 1000px; margin: 60px auto 0; position: relative; }
-        .steps-grid::before { content: ''; position: absolute; top: 40px; left: calc(16.66% + 20px); right: calc(16.66% + 20px); height: 2px; background: linear-gradient(90deg, #d4af37, #1a2a6c, #d4af37); z-index: 0; }
-        .step-card { padding: 0 30px; text-align: center; position: relative; z-index: 1; }
-        .step-icon-wrap { width: 80px; height: 80px; border-radius: 50%; margin: 0 auto 24px; display: flex; align-items: center; justify-content: center; font-size: 32px; position: relative; z-index: 2; }
-        .step-icon-wrap.s1 { background: linear-gradient(135deg, #dbeafe, #bfdbfe); box-shadow: 0 8px 24px rgba(59,130,246,0.2); }
-        .step-icon-wrap.s2 { background: linear-gradient(135deg, #fef3c7, #fde68a); box-shadow: 0 8px 24px rgba(212,175,55,0.3); }
-        .step-icon-wrap.s3 { background: linear-gradient(135deg, #d1fae5, #a7f3d0); box-shadow: 0 8px 24px rgba(16,185,129,0.2); }
-        .step-card h3 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 19px; color: #0f172a; margin-bottom: 12px; font-weight: 800; }
-        .step-card p { color: #64748b; line-height: 1.65; font-size: 15px; margin: 0; }
-        .pain-section { padding: 110px 5%; text-align: center; position: relative; overflow: hidden; background: linear-gradient(rgba(15,23,42,0.92), rgba(15,23,42,0.88)), url('https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=1920&q=80') center/cover fixed; }
-        .pain-section .section-title { color: white; }
-        .pain-section .section-sub { color: rgba(255,255,255,0.65); }
-        .pain-section .section-label { color: #fbbf24; }
-        .pain-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; max-width: 1100px; margin: 50px auto 0; }
-        .pain-card { background: rgba(255,255,255,0.07); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-radius: 24px; text-align: left; transition: 0.3s; overflow: hidden; border: 1px solid rgba(255,255,255,0.12); }
-        .pain-card:hover { transform: translateY(-6px); background: rgba(255,255,255,0.12); border-color: rgba(212,175,55,0.4); }
-        .pain-card-photo { width: 100%; height: 200px; overflow: hidden; position: relative; }
-        .pain-card-photo img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.5s ease; }
-        .pain-card:hover .pain-card-photo img { transform: scale(1.05); }
-        .pain-card-photo-overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, transparent 40%, rgba(15,23,42,0.6) 100%); }
-        .pain-card-body { padding: 28px 28px 32px; }
-        .pain-card h3 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 20px; color: white; margin: 0 0 12px; font-weight: 800; }
-        .pain-card p { color: rgba(255,255,255,0.65); line-height: 1.7; font-size: 15px; margin: 0; }
-        .demo-section { padding: 110px 5%; background: #0f172a; color: white; overflow: hidden; }
-        .demo-header { text-align: center; margin-bottom: 70px; }
-        .demo-header .section-title { color: white; }
-        .demo-header .section-sub { color: rgba(255,255,255,0.6); }
-        .demo-layout { display: flex; flex-direction: column; gap: 60px; max-width: 1100px; margin: 0 auto; align-items: center; }
-        @media (min-width: 1024px) { .demo-layout { flex-direction: row; justify-content: space-between; align-items: center; } }
-        .phone-wrapper { position: relative; width: 100%; max-width: 300px; margin: 0 auto; }
-        .phone-frame { border: 8px solid #1e293b; border-radius: 40px; background: white; height: 560px; overflow: hidden; position: relative; box-shadow: 0 40px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05); }
-        .phone-notch { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 100px; height: 22px; background: #1e293b; border-bottom-left-radius: 14px; border-bottom-right-radius: 14px; z-index: 10; }
-        .chat-app { display: flex; flex-direction: column; height: 100%; background: #f0f2f5; }
-        .chat-header { background: linear-gradient(135deg, #1a2a6c, #2a3f9f); color: white; padding: 36px 20px 14px; text-align: center; font-weight: 700; font-size: 14px; font-family: 'Plus Jakarta Sans', sans-serif; }
-        .chat-sub { font-size: 11px; opacity: 0.7; margin-top: 2px; }
-        .chat-body { flex: 1; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
-        .msg { padding: 11px 14px; border-radius: 18px; font-size: 13px; line-height: 1.5; max-width: 85%; position: relative; color: #111; }
-        .msg-user { background: #dcf8c6; align-self: flex-end; border-bottom-right-radius: 4px; }
-        .msg-alfred { background: white; align-self: flex-start; border-bottom-left-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
-        .msg-time { display: block; font-size: 10px; color: #94a3b8; text-align: right; margin-top: 4px; }
-        .demo-features { flex: 1; max-width: 520px; width: 100%; }
-        .feat-row { margin-bottom: 36px; display: flex; gap: 18px; align-items: flex-start; }
-        .feat-icon { width: 52px; height: 52px; border-radius: 16px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 24px; }
-        .feat-icon.fi1 { background: linear-gradient(135deg, rgba(212,175,55,0.2), rgba(212,175,55,0.05)); }
-        .feat-icon.fi2 { background: linear-gradient(135deg, rgba(99,102,241,0.2), rgba(99,102,241,0.05)); }
-        .feat-icon.fi3 { background: linear-gradient(135deg, rgba(16,185,129,0.2), rgba(16,185,129,0.05)); }
-        .feat-text h4 { font-size: 19px; margin: 0 0 8px; color: white; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; }
-        .feat-text p { color: rgba(255,255,255,0.6); line-height: 1.65; font-size: 15px; margin: 0; }
-        .killer-feature { background: white; padding: 60px 50px; margin: 80px auto 0; max-width: 1000px; border-radius: 28px; box-shadow: 0 30px 60px rgba(0,0,0,0.1); display: flex; flex-wrap: wrap; align-items: center; gap: 50px; text-align: left; }
-        .kf-text { flex: 1; min-width: 280px; }
-        .kf-label { color: #ef4444; font-weight: 800; letter-spacing: 1.5px; font-size: 12px; text-transform: uppercase; display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
-        .kf-dot { width: 8px; height: 8px; border-radius: 50%; background: #ef4444; animation: pulse 2s infinite; }
-        @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.5); } }
-        .kf-text h3 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: clamp(22px, 3.5vw, 30px); color: #0f172a; margin: 0 0 16px; font-weight: 900; letter-spacing: -0.5px; }
-        .kf-text p { color: #64748b; line-height: 1.7; font-size: 15px; margin-bottom: 14px; }
-        .notif-mockup { flex: 1; min-width: 280px; }
-        .notif-phone { background: #1e293b; border-radius: 20px; padding: 20px; }
-        .notif-screen { background: #f8fafc; border-radius: 12px; padding: 16px; }
-        .notif-app { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-        .notif-app-icon { width: 32px; height: 32px; border-radius: 8px; background: linear-gradient(135deg, #0088cc, #006699); display: flex; align-items: center; justify-content: center; font-size: 16px; }
-        .notif-app-name { font-size: 13px; font-weight: 700; color: #1e293b; }
-        .notif-app-time { font-size: 11px; color: #94a3b8; margin-left: auto; }
-        .notif-content { background: white; border-radius: 10px; padding: 14px; border-left: 3px solid #ef4444; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
-        .notif-content p { font-size: 13px; margin: 0; color: #334155; line-height: 1.5; }
-        .benefits { padding: 110px 5%; text-align: center; background: white; }
-        .benefits-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; max-width: 1100px; margin: 60px auto 0; align-items: center; }
-        .benefits-image { border-radius: 28px; overflow: hidden; position: relative; height: 500px; }
-        .benefits-image img { width: 100%; height: 100%; object-fit: cover; display: block; }
-        .benefits-image-overlay { position: absolute; inset: 0; background: linear-gradient(135deg, rgba(26,42,108,0.3), transparent); }
-        .benefits-cards { display: flex; flex-direction: column; gap: 20px; }
-        .benefit-card { background: #f8fafc; padding: 28px; border-radius: 20px; text-align: left; display: flex; gap: 18px; align-items: flex-start; border: 1px solid #e2e8f0; transition: 0.3s; }
-        .benefit-card:hover { transform: translateX(6px); border-color: #d4af37; box-shadow: 0 8px 24px rgba(0,0,0,0.06); }
-        .benefit-icon-wrap { width: 52px; height: 52px; border-radius: 14px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 24px; }
-        .bi1 { background: linear-gradient(135deg, #dbeafe, #bfdbfe); }
-        .bi2 { background: linear-gradient(135deg, #fef3c7, #fde68a); }
-        .bi3 { background: linear-gradient(135deg, #d1fae5, #a7f3d0); }
-        .benefit-card h4 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 17px; color: #0f172a; margin: 0 0 8px; font-weight: 800; }
-        .benefit-card p { color: #64748b; font-size: 14px; line-height: 1.6; margin: 0; }
-        .testimonials { padding: 110px 5%; text-align: center; background: linear-gradient(180deg, #f8fafc 0%, white 100%); }
-        .testi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; max-width: 1100px; margin: 50px auto 0; }
-        .testi-card { background: white; border-radius: 24px; padding: 36px; text-align: left; border: 1px solid #e2e8f0; transition: 0.3s; position: relative; box-shadow: 0 4px 16px rgba(0,0,0,0.04); }
-        .testi-card:hover { transform: translateY(-6px); box-shadow: 0 20px 50px rgba(0,0,0,0.08); border-color: #d4af37; }
-        .testi-stars { display: flex; gap: 3px; margin-bottom: 20px; }
-        .star { color: #fbbf24; font-size: 16px; }
-        .testi-quote { font-size: 15px; color: #334155; line-height: 1.75; margin-bottom: 28px; font-style: italic; }
-        .testi-quote::before { content: '"'; font-family: Georgia, serif; font-size: 56px; color: #e2e8f0; line-height: 0; vertical-align: -28px; margin-right: 4px; font-style: normal; }
-        .testi-author { display: flex; align-items: center; gap: 14px; }
-        .testi-avatar { width: 48px; height: 48px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 16px; color: white; }
-        .av1 { background: linear-gradient(135deg, #f59e0b, #d97706); }
-        .av2 { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
-        .av3 { background: linear-gradient(135deg, #10b981, #059669); }
-        .testi-name { font-weight: 800; color: #1e293b; font-size: 15px; margin: 0 0 3px; }
-        .testi-role { color: #94a3b8; font-size: 13px; margin: 0; }
-        .testi-badge { position: absolute; top: 20px; right: 20px; background: #ecfdf5; color: #059669; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 20px; border: 1px solid #a7f3d0; }
-        .pricing-section { padding: 110px 5%; text-align: center; background: linear-gradient(135deg, #0f172a 0%, #1a2a6c 100%); position: relative; overflow: hidden; }
-        .pricing-section::before { content: ''; position: absolute; top: -50%; right: -20%; width: 600px; height: 600px; border-radius: 50%; background: radial-gradient(circle, rgba(212,175,55,0.08) 0%, transparent 70%); }
-        .pricing-section .section-title { color: white; }
-        .pricing-section .section-sub { color: rgba(255,255,255,0.6); }
-        .pricing-section .section-label { color: #fbbf24; }
-        .price-card-home { background: white; padding: 52px 44px; border-radius: 28px; box-shadow: 0 40px 80px rgba(0,0,0,0.3); text-align: center; position: relative; width: 100%; max-width: 460px; margin: 50px auto 0; display: flex; flex-direction: column; box-sizing: border-box; }
-        .badge-promo { position: absolute; top: -18px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #d4af37, #f0cc5a); color: #1a2a6c; padding: 8px 28px; border-radius: 50px; font-weight: 800; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 8px 24px rgba(212,175,55,0.4); white-space: nowrap; }
-        .plan-name { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 14px; color: #94a3b8; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 20px; }
-        .price-old { font-size: 18px; color: #94a3b8; text-decoration: line-through; margin-bottom: 4px; }
-        .price { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 60px; font-weight: 900; color: #0f172a; letter-spacing: -3px; margin-bottom: 4px; line-height: 1; }
-        .price span { font-size: 20px; font-weight: 500; color: #64748b; letter-spacing: 0; }
-        .price-note { color: #94a3b8; font-size: 13px; margin-bottom: 32px; }
-        .features-list { text-align: left; margin-bottom: 36px; border-top: 1px solid #f1f5f9; padding-top: 28px; }
-        .feature { margin-bottom: 16px; font-size: 15px; display: flex; align-items: center; gap: 12px; color: #334155; font-weight: 500; }
-        .check-icon { background: linear-gradient(135deg, #d4af37, #f0cc5a); color: #1a2a6c; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 11px; font-weight: 900; }
-        .cta-pricing { background: linear-gradient(135deg, #1a2a6c, #2a3f9f); color: white; padding: 18px; border-radius: 16px; font-weight: 800; font-size: 16px; transition: 0.3s; text-decoration: none; display: block; box-shadow: 0 8px 24px rgba(26,42,108,0.3); }
-        .cta-pricing:hover { transform: translateY(-2px); box-shadow: 0 16px 40px rgba(26,42,108,0.4); }
-        .guarantee { margin-top: 18px; font-size: 13px; color: #94a3b8; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        footer { background: #060d1f; color: #64748b; padding: 70px 5% 30px; }
-        .footer-content { max-width: 1100px; margin: 0 auto; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 50px; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 50px; margin-bottom: 30px; }
-        .footer-brand { max-width: 260px; }
-        .footer-brand .brand { font-size: 22px; display: block; margin-bottom: 14px; }
-        .footer-brand p { font-size: 14px; line-height: 1.7; color: #475569; }
-        .footer-col h4 { color: rgba(255,255,255,0.85); font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 20px; }
-        .footer-col ul { list-style: none; padding: 0; margin: 0; }
-        .footer-col ul li { margin-bottom: 12px; }
-        .footer-col ul li a { font-size: 14px; color: #475569; transition: 0.2s; }
-        .footer-col ul li a:hover { color: white; }
-        .footer-bottom { text-align: center; font-size: 13px; color: #334155; }
-        @media (max-width: 1023px) {
-          .benefits-layout { grid-template-columns: 1fr; }
-          .benefits-image { height: 300px; }
-          .steps-grid { grid-template-columns: 1fr; gap: 40px; }
-          .steps-grid::before { display: none; }
+        .container { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; color: #1d1d1f; background: #fff; font-weight: 400; }
+
+        /* ── NAVBAR ── */
+        nav {
+          display: flex; justify-content: space-between; align-items: center;
+          padding: 0 48px; height: 64px;
+          position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+          transition: background 0.4s ease, border-color 0.4s ease;
+          background: ${scrolled ? 'rgba(255,255,255,0.88)' : 'transparent'};
+          backdrop-filter: ${scrolled ? 'saturate(180%) blur(20px)' : 'none'};
+          border-bottom: 1px solid ${scrolled ? 'rgba(0,0,0,0.08)' : 'transparent'};
         }
+        .brand { font-size: 20px; font-weight: 600; letter-spacing: -0.4px; color: ${scrolled ? '#1d1d1f' : '#fff'}; transition: color 0.4s; }
+        .brand-gold { color: #c9a227; }
+        .nav-links { display: flex; align-items: center; gap: 32px; }
+        .nav-link { font-size: 14px; font-weight: 400; color: ${scrolled ? '#6e6e73' : 'rgba(255,255,255,0.75)'}; transition: color 0.2s; letter-spacing: -0.1px; }
+        .nav-link:hover { color: ${scrolled ? '#1d1d1f' : '#fff'}; }
+        .nav-lang { display: flex; align-items: center; gap: 2px; background: ${scrolled ? '#f5f5f7' : 'rgba(255,255,255,0.12)'}; border-radius: 20px; padding: 3px; }
+        .lang-btn { background: none; border: none; padding: 4px 9px; border-radius: 16px; cursor: pointer; font-size: 13px; font-family: inherit; transition: background 0.2s; line-height: 1; color: inherit; }
+        .lang-btn:hover, .lang-btn.active { background: white; }
+        .nav-cta { background: #1d1d1f; color: #fff; padding: 9px 20px; border-radius: 980px; font-size: 13px; font-weight: 500; letter-spacing: -0.1px; transition: background 0.2s; }
+        .nav-cta:hover { background: #c9a227; color: #1d1d1f; }
+
+        /* ── HERO ── */
+        .hero {
+          min-height: 100vh; display: flex; align-items: center; justify-content: center;
+          text-align: center; padding: 120px 24px 100px; position: relative; overflow: hidden;
+          background: linear-gradient(180deg, rgba(0,0,0,0.52) 0%, rgba(0,0,0,0.38) 60%, rgba(0,0,0,0.62) 100%),
+            url('https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?auto=format&fit=crop&w=1920&q=80') center/cover no-repeat;
+          background-attachment: fixed;
+        }
+        .hero-content { max-width: 880px; margin: 0 auto; position: relative; z-index: 2; }
+        .hero-badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(201,162,39,0.18); border: 1px solid rgba(201,162,39,0.35); color: #f0d060; padding: 7px 16px; border-radius: 980px; font-size: 13px; font-weight: 500; margin-bottom: 40px; letter-spacing: -0.1px; }
+        .hero h1 { font-size: clamp(48px, 8vw, 88px); font-weight: 300; color: #fff; line-height: 1.04; letter-spacing: -2.5px; margin-bottom: 24px; }
+        .hero h1 strong { font-weight: 600; color: #f0d060; }
+        .hero-sub { font-size: clamp(17px, 2vw, 21px); color: rgba(255,255,255,0.58); line-height: 1.6; max-width: 560px; margin: 0 auto 48px; font-weight: 300; letter-spacing: -0.2px; }
+        .hero-actions { display: flex; align-items: center; justify-content: center; gap: 16px; flex-wrap: wrap; }
+        .cta-primary { background: #c9a227; color: #1d1d1f; padding: 17px 38px; border-radius: 980px; font-weight: 600; font-size: 16px; letter-spacing: -0.3px; display: inline-flex; align-items: center; gap: 6px; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 8px 32px rgba(201,162,39,0.4); }
+        .cta-primary:hover { transform: scale(1.02); box-shadow: 0 16px 48px rgba(201,162,39,0.5); }
+        .cta-secondary { color: rgba(255,255,255,0.65); font-size: 16px; font-weight: 400; letter-spacing: -0.2px; display: inline-flex; align-items: center; gap: 4px; transition: color 0.2s; }
+        .cta-secondary:hover { color: #fff; }
+        .hero-trust { margin-top: 40px; display: flex; align-items: center; justify-content: center; gap: 24px; flex-wrap: wrap; }
+        .trust-item { font-size: 13px; color: rgba(255,255,255,0.4); display: flex; align-items: center; gap: 5px; font-weight: 300; }
+        .trust-sep { width: 3px; height: 3px; border-radius: 50%; background: rgba(255,255,255,0.2); }
+
+        /* ── LOGOS ── */
+        .logos { background: #f5f5f7; padding: 24px 48px; text-align: center; border-bottom: 1px solid #e8e8ed; }
+        .logos-label { font-size: 11px; color: #86868b; text-transform: uppercase; letter-spacing: 2px; font-weight: 500; margin-bottom: 14px; }
+        .logos-row { display: flex; justify-content: center; align-items: center; gap: 40px; flex-wrap: wrap; }
+        .logo-pill { font-size: 15px; font-weight: 500; color: #aeaeb2; letter-spacing: -0.2px; transition: color 0.2s; }
+        .logo-pill:hover { color: #6e6e73; }
+
+        /* ── SHARED ── */
+        .eyebrow { font-size: 12px; font-weight: 600; color: #c9a227; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 12px; }
+        .s-h2 { font-size: clamp(36px, 5vw, 56px); font-weight: 300; color: #1d1d1f; line-height: 1.07; letter-spacing: -1.5px; margin-bottom: 16px; }
+        .s-h2 strong { font-weight: 600; }
+        .s-sub { font-size: 19px; color: #6e6e73; line-height: 1.6; font-weight: 300; letter-spacing: -0.2px; }
+
+        /* ── PILLARS ── */
+        .pillars { padding: 120px 48px; background: #fff; }
+        .pillars-header { margin-bottom: 64px; text-align: center; }
+        .pillars-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: #e8e8ed; border: 1px solid #e8e8ed; border-radius: 18px; overflow: hidden; max-width: 1200px; margin: 0 auto; }
+        .pillar-card { background: #fff; padding: 36px 32px; transition: background 0.2s; }
+        .pillar-card:hover { background: #fbfaf5; }
+        .pillar-icon { width: 48px; height: 48px; border-radius: 12px; background: #f5f5f7; display: flex; align-items: center; justify-content: center; font-size: 22px; margin-bottom: 20px; }
+        .pillar-card h3 { font-size: 17px; font-weight: 600; color: #1d1d1f; margin-bottom: 8px; letter-spacing: -0.3px; }
+        .pillar-card p { font-size: 14px; color: #6e6e73; line-height: 1.65; font-weight: 300; }
+        .pillar-tag { display: inline-block; margin-top: 16px; font-size: 11px; font-weight: 600; color: #c9a227; background: #faf6e8; border: 1px solid #f0e6b0; padding: 3px 10px; border-radius: 980px; letter-spacing: 0.2px; }
+
+        /* ── PAIN ── */
+        .pain { padding: 120px 48px; text-align: center; background: linear-gradient(rgba(0,0,0,0.88), rgba(0,0,0,0.84)), url('https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=1920&q=80') center/cover; background-attachment: fixed; color: #fff; }
+        .pain .s-h2 { color: #fff; }
+        .pain-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; max-width: 1100px; margin: 0 auto; }
+        .pain-card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 18px; overflow: hidden; text-align: left; transition: 0.3s; }
+        .pain-card:hover { background: rgba(255,255,255,0.09); transform: translateY(-4px); }
+        .pain-img { width: 100%; height: 180px; object-fit: cover; opacity: 0.85; }
+        .pain-body { padding: 24px; }
+        .pain-body h3 { font-size: 20px; font-weight: 500; color: #fff; margin-bottom: 10px; letter-spacing: -0.4px; }
+        .pain-body p { font-size: 14px; color: rgba(255,255,255,0.5); line-height: 1.7; font-weight: 300; }
+
+        /* ── DEMO ── */
+        .demo { padding: 120px 48px; background: #f5f5f7; }
+        .demo-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; max-width: 1100px; margin: 64px auto 0; align-items: center; }
+        .phone-wrap { position: relative; max-width: 270px; margin: 0 auto; }
+        .phone-frame { border: 8px solid #1d1d1f; border-radius: 48px; overflow: hidden; background: #fff; box-shadow: 0 48px 100px rgba(0,0,0,0.16); height: 560px; }
+        .phone-notch { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 88px; height: 22px; background: #1d1d1f; border-radius: 0 0 16px 16px; z-index: 10; }
+        .chat-app { display: flex; flex-direction: column; height: 100%; background: #f0f2f5; }
+        .chat-head { background: linear-gradient(135deg, #0f172a, #1e3a5f); color: #fff; padding: 36px 16px 14px; text-align: center; }
+        .chat-head-title { font-weight: 600; font-size: 14px; }
+        .chat-head-sub { font-size: 11px; opacity: 0.55; margin-top: 2px; }
+        .chat-msgs { flex: 1; padding: 16px; display: flex; flex-direction: column; gap: 10px; overflow: hidden; }
+        .msg { padding: 10px 13px; border-radius: 16px; font-size: 12px; line-height: 1.55; max-width: 82%; }
+        .msg-user { background: #c9a227; color: #fff; align-self: flex-end; border-bottom-right-radius: 4px; font-weight: 500; }
+        .msg-alfred { background: #fff; color: #1d1d1f; align-self: flex-start; border-bottom-left-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .demo-text h2 { font-size: clamp(28px, 3.5vw, 40px); font-weight: 300; color: #1d1d1f; margin-bottom: 16px; line-height: 1.1; letter-spacing: -1px; }
+        .demo-text h2 strong { font-weight: 600; }
+        .demo-text > p { font-size: 17px; color: #6e6e73; line-height: 1.7; margin-bottom: 32px; font-weight: 300; letter-spacing: -0.1px; }
+        .demo-feats { display: flex; flex-direction: column; gap: 16px; }
+        .demo-feat { display: flex; align-items: flex-start; gap: 14px; }
+        .feat-dot { width: 22px; height: 22px; border-radius: 50%; background: #faf6e8; border: 1.5px solid #c9a227; display: flex; align-items: center; justify-content: center; color: #c9a227; font-size: 10px; font-weight: 700; flex-shrink: 0; margin-top: 2px; }
+        .demo-feat div h4 { font-size: 14px; font-weight: 600; color: #1d1d1f; margin-bottom: 3px; letter-spacing: -0.2px; }
+        .demo-feat div p { font-size: 13px; color: #6e6e73; line-height: 1.55; font-weight: 300; }
+
+        /* ── URGENCE ── */
+        .urgence { background: #fff; padding: 100px 48px; border-top: 1px solid #f5f5f7; }
+        .urgence-inner { max-width: 1000px; margin: 0 auto; display: flex; align-items: center; gap: 80px; flex-wrap: wrap; }
+        .urgence-text { flex: 1; min-width: 280px; }
+        .urgence-tag { display: inline-flex; align-items: center; gap: 8px; background: #fff5f5; border: 1px solid #fecaca; color: #dc2626; padding: 6px 14px; border-radius: 980px; font-size: 12px; font-weight: 600; margin-bottom: 24px; }
+        .urgence-dot { width: 7px; height: 7px; border-radius: 50%; background: #dc2626; animation: pulse 2s infinite; }
+        @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(1.4)} }
+        .urgence-text h2 { font-size: clamp(28px, 3.5vw, 40px); font-weight: 300; color: #1d1d1f; margin-bottom: 16px; line-height: 1.1; letter-spacing: -1px; }
+        .urgence-text h2 strong { font-weight: 600; }
+        .urgence-text p { font-size: 16px; color: #6e6e73; line-height: 1.7; font-weight: 300; letter-spacing: -0.1px; }
+        .urgence-text p + p { margin-top: 12px; }
+        .urgence-mockup { flex: 1; min-width: 280px; }
+        .notif-phone { background: #1d1d1f; border-radius: 24px; padding: 20px; max-width: 320px; }
+        .notif-screen { background: #f5f5f7; border-radius: 14px; padding: 16px; }
+        .notif-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+        .notif-icon { width: 32px; height: 32px; border-radius: 8px; background: linear-gradient(135deg, #0088cc, #005fa3); display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+        .notif-app { font-size: 12px; font-weight: 600; color: #1d1d1f; }
+        .notif-time { font-size: 11px; color: #86868b; }
+        .notif-bubble { background: #fff; border-radius: 12px; padding: 14px; border-left: 3px solid #dc2626; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .notif-bubble p { font-size: 13px; color: #1d1d1f; line-height: 1.6; margin: 0; }
+
+        /* ── UPSELLS ── */
+        .upsells-section { padding: 120px 48px; background: #f5f5f7; }
+        .upsells-inner { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center; }
+        .upsells-text h2 { font-size: clamp(28px, 3.5vw, 44px); font-weight: 300; color: #1d1d1f; margin-bottom: 16px; letter-spacing: -1px; line-height: 1.1; }
+        .upsells-text h2 strong { font-weight: 600; }
+        .upsells-text > p { font-size: 17px; color: #6e6e73; line-height: 1.7; margin-bottom: 32px; font-weight: 300; letter-spacing: -0.1px; }
+        .upsells-perks { display: flex; flex-direction: column; gap: 14px; }
+        .perk { display: flex; align-items: center; gap: 12px; font-size: 15px; color: #1d1d1f; font-weight: 400; letter-spacing: -0.2px; }
+        .perk-icon { width: 34px; height: 34px; background: #fff; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .upsells-mockup { display: flex; flex-direction: column; gap: 10px; }
+        .upsell-card { background: #fff; border: 1px solid #e8e8ed; border-radius: 14px; padding: 16px 18px; display: flex; align-items: center; gap: 14px; transition: 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
+        .upsell-card:hover { border-color: #c9a227; box-shadow: 0 4px 16px rgba(201,162,39,0.12); }
+        .upsell-emoji { font-size: 26px; flex-shrink: 0; }
+        .upsell-info { flex: 1; }
+        .upsell-name { font-size: 14px; font-weight: 600; color: #1d1d1f; margin-bottom: 2px; letter-spacing: -0.2px; }
+        .upsell-desc { font-size: 12px; color: #86868b; font-weight: 300; }
+        .upsell-price { font-size: 16px; font-weight: 600; color: #1d1d1f; letter-spacing: -0.3px; }
+        .upsell-cta { background: #1d1d1f; color: #fff; border: none; padding: 7px 14px; border-radius: 980px; font-size: 12px; font-weight: 500; cursor: pointer; white-space: nowrap; font-family: inherit; transition: background 0.2s; }
+        .upsell-cta:hover { background: #c9a227; color: #1d1d1f; }
+
+        /* ── BENEFITS ── */
+        .benefits { padding: 120px 48px; background: #fff; }
+        .benefits-inner { max-width: 1100px; margin: 64px auto 0; display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center; }
+        .benefits-img { border-radius: 20px; overflow: hidden; height: 460px; position: relative; }
+        .benefits-img img { width: 100%; height: 100%; object-fit: cover; }
+        .benefits-img-overlay { position: absolute; inset: 0; background: linear-gradient(135deg, rgba(0,0,0,0.12), transparent); }
+        .benefits-cards { display: flex; flex-direction: column; gap: 16px; }
+        .benefit-card { background: #f5f5f7; border-radius: 16px; padding: 24px; display: flex; gap: 16px; align-items: flex-start; transition: 0.2s; border: 1px solid transparent; }
+        .benefit-card:hover { border-color: #e8e8ed; background: #fff; transform: translateX(4px); }
+        .benefit-ico { width: 44px; height: 44px; border-radius: 12px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+        .bi1 { background: #e8f0fe; } .bi2 { background: #faf6e8; } .bi3 { background: #e8faf0; }
+        .benefit-card h4 { font-size: 15px; font-weight: 600; color: #1d1d1f; margin-bottom: 5px; letter-spacing: -0.2px; }
+        .benefit-card p { font-size: 13px; color: #6e6e73; line-height: 1.6; font-weight: 300; }
+
+        /* ── TESTIMONIALS ── */
+        .testi { padding: 120px 48px; background: #f5f5f7; text-align: center; }
+        .testi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; max-width: 1100px; margin: 64px auto 0; }
+        .testi-card { background: #fff; border: 1px solid #e8e8ed; border-radius: 20px; padding: 32px; text-align: left; position: relative; transition: 0.3s; box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
+        .testi-card:hover { box-shadow: 0 16px 48px rgba(0,0,0,0.08); transform: translateY(-4px); }
+        .testi-verified { position: absolute; top: 20px; right: 20px; background: #e8faf0; color: #1a7a40; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 980px; border: 1px solid #b0edca; }
+        .testi-stars { color: #f59e0b; font-size: 14px; margin-bottom: 18px; letter-spacing: 2px; }
+        .testi-quote { font-size: 15px; color: #1d1d1f; line-height: 1.75; margin-bottom: 24px; font-weight: 300; letter-spacing: -0.1px; }
+        .testi-author { display: flex; align-items: center; gap: 12px; }
+        .testi-av { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 14px; color: #fff; flex-shrink: 0; }
+        .av1{background:linear-gradient(135deg,#f59e0b,#d97706)} .av2{background:linear-gradient(135deg,#3b82f6,#1d4ed8)} .av3{background:linear-gradient(135deg,#10b981,#059669)}
+        .testi-name { font-weight: 600; font-size: 14px; color: #1d1d1f; margin-bottom: 2px; letter-spacing: -0.2px; }
+        .testi-role { font-size: 12px; color: #86868b; font-weight: 300; }
+
+        /* ── PRICING ── */
+        .pricing { padding: 120px 48px; text-align: center; background: linear-gradient(160deg, #0a0e1e 0%, #0f172a 60%, #0a0e1e 100%); position: relative; overflow: hidden; }
+        .pricing::before { content: ''; position: absolute; top: -20%; right: -5%; width: 600px; height: 600px; border-radius: 50%; background: radial-gradient(circle, rgba(201,162,39,0.07) 0%, transparent 70%); pointer-events: none; }
+        .pricing .s-h2 { color: #fff; }
+        .pricing .s-sub { color: rgba(255,255,255,0.45); max-width: 480px; margin: 0 auto 64px; }
+        .price-card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(20px); border-radius: 24px; padding: 48px 44px; max-width: 440px; margin: 0 auto; position: relative; }
+        .price-promo { position: absolute; top: -14px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #c9a227, #e8c84a); color: #1d1d1f; padding: 5px 22px; border-radius: 980px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+        .plan-label { font-size: 12px; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 2px; font-weight: 500; margin-bottom: 24px; }
+        .price-amount { font-size: 72px; font-weight: 300; color: #fff; line-height: 1; margin-bottom: 4px; letter-spacing: -3px; }
+        .price-amount sup { font-size: 24px; letter-spacing: -0.5px; font-weight: 400; vertical-align: super; }
+        .price-amount span { font-size: 20px; font-weight: 300; color: rgba(255,255,255,0.4); letter-spacing: 0; }
+        .price-note { font-size: 13px; color: rgba(255,255,255,0.3); margin-bottom: 36px; font-weight: 300; }
+        .price-divider { border: none; border-top: 1px solid rgba(255,255,255,0.07); margin-bottom: 28px; }
+        .price-feats { text-align: left; margin-bottom: 36px; display: flex; flex-direction: column; gap: 14px; }
+        .price-feat { display: flex; align-items: center; gap: 12px; font-size: 14px; color: rgba(255,255,255,0.65); font-weight: 300; letter-spacing: -0.1px; }
+        .price-check { width: 20px; height: 20px; border-radius: 50%; background: rgba(201,162,39,0.18); display: flex; align-items: center; justify-content: center; color: #e8c84a; font-size: 10px; font-weight: 700; flex-shrink: 0; }
+        .price-cta { background: #c9a227; color: #1d1d1f; padding: 17px; border-radius: 14px; font-weight: 600; font-size: 16px; display: block; transition: 0.2s; letter-spacing: -0.3px; }
+        .price-cta:hover { background: #e8c84a; transform: scale(1.01); }
+        .price-security { margin-top: 16px; font-size: 12px; color: rgba(255,255,255,0.22); display: flex; align-items: center; justify-content: center; gap: 6px; font-weight: 300; }
+
+        /* ── REFERRAL ── */
+        .referral { padding: 100px 48px; background: #fff; text-align: center; border-top: 1px solid #f5f5f7; }
+        .referral-inner { max-width: 640px; margin: 0 auto; }
+        .referral h2 { font-size: clamp(32px, 4vw, 48px); font-weight: 300; color: #1d1d1f; margin-bottom: 16px; letter-spacing: -1.2px; line-height: 1.1; }
+        .referral h2 strong { font-weight: 600; }
+        .referral-inner > p { font-size: 18px; color: #6e6e73; line-height: 1.65; margin-bottom: 40px; font-weight: 300; letter-spacing: -0.2px; }
+        .referral-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; max-width: 480px; margin: 0 auto 40px; }
+        .referral-card { background: #f5f5f7; border-radius: 16px; padding: 28px; text-align: center; transition: 0.2s; }
+        .referral-card:hover { background: #faf6e8; }
+        .referral-number { font-size: 56px; font-weight: 300; color: #c9a227; line-height: 1; margin-bottom: 8px; letter-spacing: -2px; }
+        .referral-label { font-size: 13px; color: #6e6e73; font-weight: 400; letter-spacing: -0.1px; }
+
+        /* ── FOOTER ── */
+        footer { background: #1d1d1f; color: #6e6e73; padding: 64px 48px 28px; }
+        .footer-inner { max-width: 1100px; margin: 0 auto; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 40px; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 48px; margin-bottom: 24px; }
+        .footer-brand-col { max-width: 220px; }
+        .footer-logo { font-size: 20px; font-weight: 600; color: #fff; display: block; margin-bottom: 12px; letter-spacing: -0.3px; }
+        .footer-logo span { color: #c9a227; }
+        .footer-brand-col p { font-size: 13px; line-height: 1.7; color: #6e6e73; font-weight: 300; }
+        .footer-col h4 { color: rgba(255,255,255,0.5); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 16px; }
+        .footer-col ul { list-style: none; }
+        .footer-col ul li { margin-bottom: 10px; }
+        .footer-col ul li a { font-size: 14px; color: #6e6e73; transition: color 0.2s; font-weight: 300; }
+        .footer-col ul li a:hover { color: rgba(255,255,255,0.7); }
+        .footer-bottom { text-align: center; font-size: 12px; color: #424245; font-weight: 300; }
+
+        /* ── RESPONSIVE ── */
         @media (max-width: 768px) {
-          nav { padding: 10px 16px; }
-          .brand { font-size: 20px; }
+          nav { padding: 0 20px; }
           .nav-link { display: none; }
-          .nav-links { gap: 8px; }
-          .nav-login { padding: 8px 14px; font-size: 12px; }
-          .lang-switcher { padding: 2px; }
-          .lang-btn { padding: 4px 7px; font-size: 16px; }
-          .hero { padding: 120px 20px 70px; background-attachment: scroll; }
-          h1 { letter-spacing: -1px; }
-          .pain-section { background-attachment: scroll; }
-          .steps-section, .pain-section, .demo-section, .benefits, .testimonials, .pricing-section { padding: 70px 20px; }
-          .pain-grid, .testi-grid { grid-template-columns: 1fr; gap: 16px; }
-          .cta-main { width: 100%; justify-content: center; font-size: 15px; padding: 18px 24px; box-sizing: border-box; }
-          .phone-frame { height: 480px; }
-          .killer-feature { flex-direction: column; padding: 32px 24px; margin: 40px auto 0; }
-          .kf-text, .notif-mockup { min-width: 100%; }
-          .price-card-home { padding: 44px 24px; }
-          .price { font-size: 48px; }
-          .footer-content { flex-direction: column; gap: 36px; }
-          .footer-brand { max-width: 100%; }
-          .pain-card-photo { height: 160px; }
+          .nav-links { gap: 12px; }
+          .hero { padding: 110px 20px 80px; background-attachment: scroll; }
+          .logos { padding: 20px; }
+          .pillars { padding: 80px 20px; }
+          .pillars-grid { grid-template-columns: 1fr; }
+          .pain { padding: 80px 20px; background-attachment: scroll; }
+          .demo { padding: 80px 20px; }
+          .demo-layout { grid-template-columns: 1fr; gap: 48px; }
+          .urgence { padding: 80px 20px; }
+          .urgence-inner { gap: 48px; }
+          .upsells-section { padding: 80px 20px; }
+          .upsells-inner { grid-template-columns: 1fr; gap: 48px; }
+          .benefits { padding: 80px 20px; }
+          .benefits-inner { grid-template-columns: 1fr; gap: 40px; }
+          .benefits-img { height: 260px; }
+          .testi { padding: 80px 20px; }
+          .pricing { padding: 80px 20px; }
+          .referral { padding: 80px 20px; }
+          footer { padding: 48px 20px 24px; }
         }
       `}</style>
 
       {/* ── NAVBAR ── */}
       <nav>
-        <Link href="/" passHref legacyBehavior><a className="brand">Alfred<span className="gold">Major</span></a></Link>
+        <Link href="/en" passHref legacyBehavior>
+          <a className="brand">Alfred<span className="brand-gold">Major</span></a>
+        </Link>
         <div className="nav-links">
-          <a href="#how-it-works" className="nav-link">How it works</a>
+          <a href="#features" className="nav-link">Features</a>
           <a href="#pricing" className="nav-link">Pricing</a>
-          <div className="lang-switcher">
+          <div className="nav-lang">
             <button className="lang-btn" onClick={() => router.push('/')}>🇫🇷</button>
             <button className="lang-btn active">🇬🇧</button>
             <button className="lang-btn" onClick={() => router.push('/es')}>🇪🇸</button>
           </div>
-          <Link href="/login" passHref legacyBehavior><a className="nav-login">Host Login</a></Link>
+          <Link href="/login" passHref legacyBehavior>
+            <a className="nav-cta">Host Login</a>
+          </Link>
         </div>
       </nav>
 
       {/* ── HERO ── */}
       <section className="hero">
         <div className="hero-content">
-          <div className="badge-hero">🎁 1st month 100% FREE — No commitment</div>
-          <h1>Sleep soundly.<br/><em>Alfred</em> handles your guests.</h1>
-          <p className="subtitle">The first AI butler that answers questions 24/7, recommends the best local restaurants, and alerts you only in real emergencies.</p>
-          <Link href="/register" passHref legacyBehavior><a className="cta-main">Start for free <span>→</span></a></Link>
-          <div className="trust-row">
-            <span className="trust-item">✓ No commitment</span>
-            <span className="trust-dot" />
+          <div className="hero-badge">🎁 1st month 100% free — No commitment</div>
+          <h1>
+            Manage your rentals<br />
+            on <strong>autopilot.</strong>
+          </h1>
+          <p className="hero-sub">
+            AI butler 24/7 · Automated housekeeping · Commission-free upsells · Emergency alerts.<br/>
+            All in one, at €9.90/month.
+          </p>
+          <div className="hero-actions">
+            <Link href="/register" passHref legacyBehavior>
+              <a className="cta-primary">Start for free →</a>
+            </Link>
+            <a href="#demo" className="cta-secondary">See the demo ↓</a>
+          </div>
+          <div className="hero-trust">
+            <span className="trust-item">✓ No credit card</span>
+            <span className="trust-sep" />
             <span className="trust-item">✓ 5-minute setup</span>
-            <span className="trust-dot" />
+            <span className="trust-sep" />
             <span className="trust-item">✓ 30+ languages</span>
+            <span className="trust-sep" />
+            <span className="trust-item">✓ 0% commission</span>
           </div>
         </div>
       </section>
 
       {/* ── LOGOS ── */}
-      <section className="logos-section">
-        <p className="logos-label">Compatible with guests from all major platforms</p>
-        <div className="logos-flex">
-          <span className="logo-item">Airbnb</span>
-          <span className="logo-item">Booking.com</span>
-          <span className="logo-item">Abritel</span>
-          <span className="logo-item">Expedia</span>
-          <span className="logo-item">VRBO</span>
+      <section className="logos">
+        <p className="logos-label">Compatible with all major platforms</p>
+        <div className="logos-row">
+          {['Airbnb', 'Booking.com', 'Abritel', 'Vrbo', 'Expedia'].map(p => (
+            <span key={p} className="logo-pill">{p}</span>
+          ))}
         </div>
       </section>
 
-      {/* ── HOW IT WORKS ── */}
-      <section className="steps-section" id="how-it-works">
-        <p className="section-label">Simple & Fast</p>
-        <h2 className="section-title">Deploy Alfred in 5 minutes</h2>
-        <p className="section-sub">No tech skills needed. Your butler is ready before your next check-in.</p>
-        <div className="steps-grid">
-          <div className="step-card"><div className="step-icon-wrap s1">🏠</div><h3>Create your listing</h3><p>Fill in the guided form with your property details — codes, WiFi, amenities, rules, local recommendations.</p></div>
-          <div className="step-card"><div className="step-icon-wrap s2">🔗</div><h3>Share the link</h3><p>Paste Alfred's unique link in your Airbnb or Booking welcome message. A QR code is also available.</p></div>
-          <div className="step-card"><div className="step-icon-wrap s3">😴</div><h3>Relax</h3><p>Alfred answers 95% of your guests' questions. You only step in for real emergencies.</p></div>
+      {/* ── PILLARS ── */}
+      <section className="pillars" id="features">
+        <div className="pillars-header">
+          <div className="eyebrow">All included</div>
+          <h2 className="s-h2">6 tools. 1 subscription.<br/><strong>Zero friction.</strong></h2>
+          <p className="s-sub" style={{maxWidth:'520px', margin:'0 auto'}}>Where others charge €300/month to assemble 6 separate tools, Alfred Major does everything for €9.90.</p>
+        </div>
+        <div className="pillars-grid">
+          {[
+            { icon: '🎩', title: 'AI Butler', desc: 'Responds to guests 24/7 in 30+ languages. Warm tone, precise answers, conversation memory.', tag: 'Available 24/7' },
+            { icon: '🧹', title: 'Automated Housekeeping', desc: 'Detects new bookings, notifies your cleaner, confirms the job with photos before each check-in.', tag: 'Zero manual management' },
+            { icon: '💰', title: 'Commission-Free Upsells', desc: 'Late checkout, romantic package, transfer... Alfred suggests at the right moment. Payment goes straight to your Stripe.', tag: '0% commission' },
+            { icon: '📅', title: 'Synced Calendar', desc: 'iCal sync with Airbnb & Booking in real time. Bookings detected automatically, housekeeping created instantly.', tag: 'Real-time sync' },
+            { icon: '🚨', title: 'Emergency Alerts', desc: 'Leak, breakdown, fire — Alfred detects and alerts you instantly via Telegram and mobile, with auto-translation.', tag: 'Telegram + Push' },
+            { icon: '🎁', title: 'Referral Programme', desc: 'Earn 2 free months for every referred host who activates. Your network works to reduce your subscription to zero.', tag: '2 months free' },
+          ].map((p, i) => (
+            <div key={i} className="pillar-card">
+              <div className="pillar-icon">{p.icon}</div>
+              <h3>{p.title}</h3>
+              <p>{p.desc}</p>
+              <span className="pillar-tag">{p.tag}</span>
+            </div>
+          ))}
         </div>
       </section>
 
-      {/* ── PAIN POINTS ── */}
-      <section className="pain-section">
-        <p className="section-label">No more interrupted nights</p>
-        <h2 className="section-title">Short-term rental management reinvented</h2>
-        <p className="section-sub" style={{color: 'rgba(255,255,255,0.6)'}}>Alfred eliminates daily interruptions so you can enjoy what really matters.</p>
+      {/* ── PAIN ── */}
+      <section className="pain">
+        <div className="eyebrow">No more interrupted nights</div>
+        <h2 className="s-h2" style={{color:'white', marginBottom:'12px'}}>Short-term rental<br/><strong>reinvented.</strong></h2>
+        <p className="s-sub" style={{margin:'0 auto 64px', textAlign:'center', color:'rgba(255,255,255,0.45)', maxWidth:'480px'}}>Alfred eliminates the daily interruptions.</p>
         <div className="pain-grid">
-          <div className="pain-card"><div className="pain-card-photo"><img src="/pain-nuit.png" alt="Person woken up at night looking at phone" loading="lazy" /><div className="pain-card-photo-overlay" /></div><div className="pain-card-body"><h3>The 11:30pm message</h3><p>Your guest arrives late and can't find the WiFi. Your phone rings while you sleep. Let Alfred handle it — he responds instantly, in the middle of the night.</p></div></div>
-          <div className="pain-card"><div className="pain-card-photo"><img src="/pain-langue.png" alt="International traveling couple" loading="lazy" /><div className="pain-card-photo-overlay" /></div><div className="pain-card-body"><h3>The language barrier</h3><p>Alfred speaks 30+ languages fluently. English, Spanish, German, Japanese — your international guests are served in their language, effortlessly.</p></div></div>
-          <div className="pain-card"><div className="pain-card-photo"><img src="/pain-questions.png" alt="Professional concierge service" loading="lazy" /><div className="pain-card-photo-overlay" /></div><div className="pain-card-body"><h3>The same questions, again</h3><p>Trash, check-out, shops... Alfred answers tirelessly with impeccable courtesy, every time as if it were the first question.</p></div></div>
+          {[
+            { img: '/pain-nuit.png', alt: 'Late night message', title: 'The 11:30pm message', desc: "The guest can't find the WiFi. Your phone rings while you sleep. Alfred responds instantly, in the middle of the night." },
+            { img: '/pain-langue.png', alt: 'Language barrier', title: 'The language barrier', desc: 'Alfred speaks 30+ languages fluently. Your international guests are served in their language, effortlessly.' },
+            { img: '/pain-questions.png', alt: 'Repeated questions', title: 'The same questions, again', desc: "Trash, checkout, parking... Alfred answers with precision, every time as if it were the first." },
+          ].map((item, i) => (
+            <div key={i} className="pain-card">
+              <img src={item.img} alt={item.alt} className="pain-img" loading="lazy" />
+              <div className="pain-body">
+                <h3>{item.title}</h3>
+                <p>{item.desc}</p>
+              </div>
+            </div>
+          ))}
         </div>
       </section>
 
       {/* ── DEMO ── */}
-      <section id="demo" className="demo-section">
-        <div className="demo-header">
-          <p className="section-label">In action</p>
-          <h2 className="section-title">The perfect illusion of a concierge</h2>
-          <p className="section-sub">Alfred understands context, searches for local recommendations, and responds naturally.</p>
+      <section className="demo" id="demo">
+        <div style={{textAlign:'center'}}>
+          <div className="eyebrow">In action</div>
+          <h2 className="s-h2">The perfect illusion<br/>of a <strong>human concierge.</strong></h2>
+          <p className="s-sub" style={{maxWidth:'480px', margin:'0 auto'}}>Your guests have no idea they're talking to an AI.</p>
         </div>
         <div className="demo-layout">
-          <div className="phone-wrapper">
+          <div className="phone-wrap">
             <div className="phone-frame">
-              <div className="phone-notch"></div>
+              <div className="phone-notch" />
               <div className="chat-app">
-                <div className="chat-header">🎩 Alfred — Villa Noam<div className="chat-sub">Available 24/7</div></div>
-                <div className="chat-body">
-                  <div className="msg msg-user">Hi! We just arrived. Where are the trash bins and do you have a restaurant recommendation?<span className="msg-time">19:42</span></div>
-                  <div className="msg msg-alfred">Welcome to Villa Noam! 🎩<br/><br/>Bins are under the kitchen sink. For dinner, I recommend "Pizzeria Da Luigi" — just 5 min walk! 🍕<span className="msg-time">19:42</span></div>
-                  <div className="msg msg-user">Perfect! And what's the WiFi password?<span className="msg-time">19:43</span></div>
-                  <div className="msg msg-alfred">The network is <strong>VillaNomad_Guest</strong> and the password is <strong>Holiday2024</strong>. Enjoy! 🌐<span className="msg-time">19:43</span></div>
+                <div className="chat-head">
+                  <div className="chat-head-title">🎩 Alfred — Villa Noam</div>
+                  <div className="chat-head-sub">Available 24/7</div>
+                </div>
+                <div className="chat-msgs">
+                  <div className="msg msg-user">Hi! What's the WiFi password? 📶</div>
+                  <div className="msg msg-alfred">Welcome to Villa Noam! 🎩 Network: <strong>VillaNomad_5G</strong>, password: <strong>Holiday2024</strong></div>
+                  <div className="msg msg-user">Can we check out at 2pm?</div>
+                  <div className="msg msg-alfred">Of course! Late check-out until 2pm is available for €30. You can book it here → ✨</div>
+                  <div className="msg msg-user">There's a leak under the sink!</div>
+                  <div className="msg msg-alfred">Stay calm. The stopcock is under the right side of the sink. I'm alerting your host immediately. 🚨</div>
                 </div>
               </div>
             </div>
           </div>
-          <div className="demo-features">
-            <div className="feat-row"><div className="feat-icon fi1">⚡</div><div className="feat-text"><h4>Instant Responses</h4><p>Your guests never wait. Alfred responds in under a second, drawing from your personalised knowledge base.</p></div></div>
-            <div className="feat-row"><div className="feat-icon fi2">🔍</div><div className="feat-text"><h4>Real-Time Local Search</h4><p>Alfred scans the area around your property for precise recommendations — restaurants, pharmacies, transport, activities.</p></div></div>
-            <div className="feat-row"><div className="feat-icon fi3">🌐</div><div className="feat-text"><h4>30+ Languages Automatically</h4><p>Alfred detects your guest's language and replies in theirs — English, Spanish, German, Japanese and many more.</p></div></div>
-            <div style={{marginTop: '10px'}}><Link href="/register" passHref legacyBehavior><a className="cta-main" style={{background: 'linear-gradient(135deg, #d4af37, #f0cc5a)', color: '#1a2a6c', fontSize: '15px', padding: '16px 36px'}}>Try Alfred free — 1st month included</a></Link></div>
+          <div className="demo-text">
+            <h2>Responds, recommends, alerts —<br/><strong>without ever disturbing you.</strong></h2>
+            <p>Alfred draws from the knowledge base you set up to answer with precision. He finds the best local spots in real time and detects emergencies automatically.</p>
+            <div className="demo-feats">
+              {[
+                { title: 'Real-time local recommendations', desc: 'Restaurants, pharmacies, transport — Alfred scans the area via Google Maps.' },
+                { title: 'Naturally suggests your upsells', desc: 'If a guest asks about a late checkout, Alfred proposes your service directly.' },
+                { title: 'Detects emergencies and alerts', desc: 'Leak, breakdown, gas — Alfred alerts you on Telegram with auto-translation.' },
+                { title: 'Conversation memory', desc: 'Alfred understands context and never asks the same thing twice.' },
+              ].map((f, i) => (
+                <div key={i} className="demo-feat">
+                  <div className="feat-dot">✓</div>
+                  <div><h4>{f.title}</h4><p>{f.desc}</p></div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
-        <div className="killer-feature">
-          <div className="kf-text">
-            <div className="kf-label"><div className="kf-dot"></div> Real-time alert</div>
-            <h3>You're only disturbed when it's truly urgent.</h3>
-            <p>If a guest reports an emergency (water leak, power outage), Alfred immediately forwards the information to you via Telegram — with automatic translation if needed.</p>
+      </section>
+
+      {/* ── URGENCE ── */}
+      <section className="urgence">
+        <div className="urgence-inner">
+          <div className="urgence-text">
+            <div className="urgence-tag"><div className="urgence-dot" /> Real-time alert</div>
+            <h2>You're only disturbed<br/><strong>when it truly matters.</strong></h2>
+            <p>If a guest reports an emergency, Alfred instantly forwards the information to you on Telegram — with automatic translation if needed.</p>
             <p><strong>Result:</strong> You filter out 95% of daily noise and stay in control of what matters.</p>
           </div>
-          <div className="notif-mockup">
-            <div className="notif-phone"><div className="notif-screen">
-              <div className="notif-app"><div className="notif-app-icon">✈️</div><span className="notif-app-name">Telegram</span><span className="notif-app-time">now</span></div>
-              <div className="notif-content"><p>🚨 <strong>ALFRED MAJOR ALERT</strong><br/><br/>🏠 Property: Villa Noam<br/>💬 Guest: "There's a huge leak under the sink!"</p></div>
-            </div></div>
+          <div className="urgence-mockup">
+            <div className="notif-phone">
+              <div className="notif-screen">
+                <div className="notif-row">
+                  <div className="notif-icon">✈️</div>
+                  <div>
+                    <div className="notif-app">Telegram</div>
+                    <div className="notif-time">now</div>
+                  </div>
+                </div>
+                <div className="notif-bubble">
+                  <p>🚨 <strong>ALFRED MAJOR ALERT</strong><br/><br/>🏠 Villa Noam — Paris<br/>💬 "There's a huge leak under the sink!"<br/>🔄 Translation: Fuite sous l'évier</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── UPSELLS ── */}
+      <section className="upsells-section">
+        <div className="upsells-inner">
+          <div className="upsells-text">
+            <div className="eyebrow">Additional revenue</div>
+            <h2>Boost your income.<br/><strong>0% commission.</strong></h2>
+            <p>Guests can order premium services directly through Alfred. Payment goes straight to your Stripe — Alfred Major takes nothing.</p>
+            <div className="upsells-perks">
+              {[
+                { icon: '💶', text: 'Direct payment to your Stripe account' },
+                { icon: '0️⃣', text: 'Alfred Major charges zero commission' },
+                { icon: '🤖', text: 'Alfred suggests at the right moment, naturally' },
+                { icon: '🌍', text: 'Multilingual, personalised guest page' },
+              ].map((p, i) => (
+                <div key={i} className="perk">
+                  <div className="perk-icon">{p.icon}</div>
+                  {p.text}
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="upsells-mockup">
+            {[
+              { emoji: '🕐', name: 'Late check-out', desc: 'Departure until 2pm', price: '€30' },
+              { emoji: '🌅', name: 'Early check-in', desc: 'Arrival from 10am', price: '€25' },
+              { emoji: '🥂', name: 'Romantic package', desc: 'Champagne & flowers', price: '€45' },
+              { emoji: '🚗', name: 'Airport transfer', desc: 'Private shuttle', price: '€50' },
+            ].map((u, i) => (
+              <div key={i} className="upsell-card">
+                <div className="upsell-emoji">{u.emoji}</div>
+                <div className="upsell-info">
+                  <div className="upsell-name">{u.name}</div>
+                  <div className="upsell-desc">{u.desc}</div>
+                </div>
+                <div style={{display:'flex', alignItems:'center', gap:'10px'}}>
+                  <div className="upsell-price">{u.price}</div>
+                  <button className="upsell-cta">Book</button>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
       {/* ── BENEFITS ── */}
       <section className="benefits">
-        <p className="section-label">Why Alfred</p>
-        <h2 className="section-title">What our hosts experience every day</h2>
-        <div className="benefits-layout">
-          <div className="benefits-image"><img src="https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?auto=format&fit=crop&w=800&q=80" alt="Relaxed host with phone" loading="lazy" /><div className="benefits-image-overlay" /></div>
+        <div style={{textAlign:'center'}}>
+          <div className="eyebrow">Why Alfred</div>
+          <h2 className="s-h2">What our hosts experience<br/><strong>every day.</strong></h2>
+        </div>
+        <div className="benefits-inner">
+          <div className="benefits-img">
+            <img src="https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?auto=format&fit=crop&w=800&q=80" alt="Relaxed host" loading="lazy" />
+            <div className="benefits-img-overlay" />
+          </div>
           <div className="benefits-cards">
-            <div className="benefit-card"><div className="benefit-icon-wrap bi1">😴</div><div><h4>Full nights guaranteed</h4><p>No more keeping an eye on your phone. Alfred handles WiFi, code and appliance questions for you, 24/7.</p></div></div>
-            <div className="benefit-card"><div className="benefit-icon-wrap bi2">🛡️</div><div><h4>Zero missed emergencies</h4><p>With instant Telegram alerts, you're always informed of real problems — without being flooded with trivial questions.</p></div></div>
-            <div className="benefit-card"><div className="benefit-icon-wrap bi3">⭐</div><div><h4>Better Airbnb ratings</h4><p>Better-served guests leave better reviews. Several hosts have seen their ratings improve after adopting Alfred.</p></div></div>
+            {[
+              { ico: '😴', cls: 'bi1', title: 'Full nights guaranteed', desc: 'No more watching your phone. Alfred handles WiFi, codes and appliance questions for you, 24/7.' },
+              { ico: '🧹', cls: 'bi2', title: 'Housekeeping on autopilot', desc: 'As soon as a booking is detected, your cleaner is notified. You get a photo confirmation before every check-in.' },
+              { ico: '⭐', cls: 'bi3', title: 'Better Airbnb ratings', desc: 'Better-served guests leave better reviews. Instant availability and multilingual service make the difference.' },
+            ].map((b, i) => (
+              <div key={i} className="benefit-card">
+                <div className={`benefit-ico ${b.cls}`}>{b.ico}</div>
+                <div><h4>{b.title}</h4><p>{b.desc}</p></div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
       {/* ── TESTIMONIALS ── */}
-      <section className="testimonials">
-        <p className="section-label">Trusted by hosts</p>
-        <h2 className="section-title">What our first hosts say</h2>
-        <p className="section-sub" style={{color: '#64748b', marginTop: '12px'}}>They adopted Alfred and will never go back.</p>
+      <section className="testi">
+        <div className="eyebrow">Trusted by hosts</div>
+        <h2 className="s-h2">What our first hosts say.</h2>
         <div className="testi-grid">
-          <div className="testi-card"><span className="testi-badge">✓ Verified host</span><div className="testi-stars">{'★★★★★'.split('').map((s,i) => <span key={i} className="star">{s}</span>)}</div><p className="testi-quote">Alfred answers all my guests' questions, even at 3am. I haven't received a single call about the WiFi code since I set it up. A real relief.</p><div className="testi-author"><div className="testi-avatar av1">SL</div><div><p className="testi-name">Sophie L.</p><p className="testi-role">3 properties · Nice</p></div></div></div>
-          <div className="testi-card"><span className="testi-badge">✓ Verified host</span><div className="testi-stars">{'★★★★★'.split('').map((s,i) => <span key={i} className="star">{s}</span>)}</div><p className="testi-quote">I had foreign guests who didn't speak French. Alfred answered them in English, Spanish and even German. My Airbnb ratings have gone up since.</p><div className="testi-author"><div className="testi-avatar av2">TR</div><div><p className="testi-name">Thomas R.</p><p className="testi-role">2 properties · Bordeaux</p></div></div></div>
-          <div className="testi-card"><span className="testi-badge">✓ Verified host</span><div className="testi-stars">{'★★★★★'.split('').map((s,i) => <span key={i} className="star">{s}</span>)}</div><p className="testi-quote">The Telegram alert saved me: a guest reported a leak, I received the message instantly and was able to send a plumber before it got worse.</p><div className="testi-author"><div className="testi-avatar av3">MC</div><div><p className="testi-name">Marie C.</p><p className="testi-role">5 properties · Paris</p></div></div></div>
+          {[
+            { av: 'av1', initials: 'SL', name: 'Sophie L.', role: '3 properties · Nice', quote: "Alfred answers all my guests' questions, even at 3am. I haven't received a single call about the WiFi code since I set it up. A real relief." },
+            { av: 'av2', initials: 'TR', name: 'Thomas R.', role: '2 properties · Bordeaux', quote: "I had foreign guests who didn't speak French. Alfred answered them in English, Spanish and even German. My Airbnb ratings have gone up since." },
+            { av: 'av3', initials: 'MC', name: 'Marie C.', role: '5 properties · Paris', quote: "The Telegram alert saved me: a guest reported a leak, I got the message instantly and sent a plumber before it got worse." },
+          ].map((t, i) => (
+            <div key={i} className="testi-card">
+              <span className="testi-verified">✓ Verified host</span>
+              <div className="testi-stars">★★★★★</div>
+              <p className="testi-quote">{t.quote}</p>
+              <div className="testi-author">
+                <div className={`testi-av ${t.av}`}>{t.initials}</div>
+                <div>
+                  <div className="testi-name">{t.name}</div>
+                  <div className="testi-role">{t.role}</div>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       </section>
 
       {/* ── PRICING ── */}
-      <section className="pricing-section" id="pricing">
-        <p className="section-label">Pricing</p>
-        <h2 className="section-title">Excellence made affordable.</h2>
-        <p className="section-sub">A private 24/7 butler at a fraction of the cost of a traditional concierge.</p>
-        <div className="price-card-home">
-          <div className="badge-promo">🎁 1st month 100% FREE — No commitment</div>
-          <div className="plan-name">Per-property license</div>
-          <div className="price-old">€9.90/month</div>
-          <div className="price">€0<span>/1st month</span></div>
-          <div className="price-note">then €9.90/month — no commitment, cancel anytime</div>
-          <div className="features-list">
-            {['AI butler available 24/7','Auto-translation (30+ languages)','Integrated Google Maps local search','Instant emergency alert on Telegram','Personalised web link & QR code','Guest conversation history'].map((f,i) => (
-              <div key={i} className="feature"><div className="check-icon">✓</div>{f}</div>
+      <section className="pricing" id="pricing">
+        <div className="eyebrow">Pricing</div>
+        <h2 className="s-h2" style={{marginBottom:'12px'}}>Simple. Transparent.<br/><strong>No surprises.</strong></h2>
+        <p className="s-sub" style={{margin:'0 auto 64px', color:'rgba(255,255,255,0.45)', maxWidth:'440px'}}>A private 24/7 butler at a fraction of the cost of a traditional concierge.</p>
+        <div className="price-card">
+          <div className="price-promo">🎁 1st month 100% free</div>
+          <div className="plan-label">Per-property licence</div>
+          <div className="price-amount"><sup>€</sup>9.90<span>/mo</span></div>
+          <div className="price-note">No commitment · Cancel in 1 click</div>
+          <hr className="price-divider" />
+          <div className="price-feats">
+            {[
+              'AI butler 24/7 · 30+ languages',
+              'Automated housekeeping management',
+              'Commission-free upsells (Stripe Connect)',
+              'iCal calendar sync Airbnb & Booking',
+              'Emergency alerts Telegram + Push',
+              'Guest conversation history',
+              'Referral programme — 2 months free',
+            ].map((f, i) => (
+              <div key={i} className="price-feat">
+                <div className="price-check">✓</div>
+                {f}
+              </div>
             ))}
           </div>
-          <Link href="/register" passHref legacyBehavior><a className="cta-pricing">Start for free — 1st month included</a></Link>
-          <div className="guarantee">🔒 Secure payment via Stripe</div>
+          <Link href="/register" passHref legacyBehavior>
+            <a className="price-cta">Start for free — 1st month included</a>
+          </Link>
+          <div className="price-security">🔒 Secure payment via Stripe · 0% commission on your bookings</div>
+        </div>
+      </section>
+
+      {/* ── REFERRAL ── */}
+      <section className="referral">
+        <div className="referral-inner">
+          <div className="eyebrow">Referral</div>
+          <h2>Refer. Save.<br/><strong>Reduce your subscription to zero.</strong></h2>
+          <p>Share your unique link with other hosts. As soon as a referred host activates their first property, you're both rewarded automatically.</p>
+          <div className="referral-cards">
+            <div className="referral-card">
+              <div className="referral-number">2</div>
+              <div className="referral-label">free months for you</div>
+            </div>
+            <div className="referral-card">
+              <div className="referral-number">1</div>
+              <div className="referral-label">free month for your referral</div>
+            </div>
+          </div>
+          <Link href="/register" passHref legacyBehavior>
+            <a className="cta-primary" style={{display:'inline-flex'}}>Create my account and get my link →</a>
+          </Link>
         </div>
       </section>
 
       {/* ── FOOTER ── */}
       <footer>
-        <div className="footer-content">
-          <div className="footer-brand">
-            <span className="brand">Alfred<span className="gold">Major</span></span>
-            <p>The first AI butler that simplifies life for short-term rental hosts. Available 24/7, multilingual, and always discreet.</p>
+        <div className="footer-inner">
+          <div className="footer-brand-col">
+            <span className="footer-logo">Alfred<span>Major</span></span>
+            <p>The all-in-one platform to manage your short-term rentals on autopilot.</p>
           </div>
-          <div className="footer-col"><h4>Product</h4><ul><li><Link href="/login" passHref legacyBehavior><a>Host Dashboard</a></Link></li><li><Link href="/register" passHref legacyBehavior><a>Create an account</a></Link></li></ul></div>
-          <div className="footer-col"><h4>Legal</h4><ul><li><Link href="/conditions-generales" passHref legacyBehavior><a>Terms & Conditions</a></Link></li><li><Link href="/confidentialite" passHref legacyBehavior><a>Privacy Policy (GDPR)</a></Link></li><li><Link href="/mentions-legales" passHref legacyBehavior><a>Legal Notice</a></Link></li></ul></div>
-          <div className="footer-col"><h4>Contact</h4><ul><li><a href="mailto:contact@alfredmajor.com">contact@alfredmajor.com</a></li></ul></div>
+          <div className="footer-col">
+            <h4>Product</h4>
+            <ul>
+              <li><Link href="/login" passHref legacyBehavior><a>Host Dashboard</a></Link></li>
+              <li><Link href="/register" passHref legacyBehavior><a>Create an account</a></Link></li>
+              <li><a href="#pricing">Pricing</a></li>
+              <li><a href="#features">Features</a></li>
+            </ul>
+          </div>
+          <div className="footer-col">
+            <h4>Legal</h4>
+            <ul>
+              <li><Link href="/conditions-generales" passHref legacyBehavior><a>Terms & Conditions</a></Link></li>
+              <li><Link href="/confidentialite" passHref legacyBehavior><a>Privacy Policy (GDPR)</a></Link></li>
+              <li><Link href="/mentions-legales" passHref legacyBehavior><a>Legal Notice</a></Link></li>
+            </ul>
+          </div>
+          <div className="footer-col">
+            <h4>Contact</h4>
+            <ul>
+              <li><a href="mailto:contact@alfredmajor.com">contact@alfredmajor.com</a></li>
+            </ul>
+          </div>
         </div>
-        <div className="footer-bottom"><p>© 2026 Alfred Major — All rights reserved · Dorian BISCARRAT · SIRET 531 965 044 00039</p></div>
+        <div className="footer-bottom">
+          <p>© 2026 Alfred Major — All rights reserved · Dorian BISCARRAT · SIRET 531 965 044 00039</p>
+        </div>
       </footer>
     </div>
   );
