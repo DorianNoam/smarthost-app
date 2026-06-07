@@ -43,6 +43,7 @@ export default function Home() {
         <link rel="alternate" hrefLang="fr" href="https://www.alfredmajor.com/" />
         <link rel="alternate" hrefLang="en" href="https://www.alfredmajor.com/en" />
         <link rel="alternate" hrefLang="es" href="https://www.alfredmajor.com/es" />
+        <link rel="alternate" hrefLang="it" href="https://www.alfredmajor.com/it" />
         <link rel="alternate" hrefLang="x-default" href="https://www.alfredmajor.com/" />
         <meta property="og:title" content="Alfred Major — Gérez vos locations en mode autopilote" />
         <meta property="og:description" content="Majordome IA 24h/24, ménage automatisé, upsells sans commission, alertes urgences. Premier mois offert, sans engagement." />
