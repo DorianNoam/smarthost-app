@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import Head from 'next/head';
-import Script from 'next/script'; // 1. Ajout de l'import pour le Pixel TikTok
 import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
 
@@ -38,6 +37,8 @@ export default function Home() {
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+        
+        {/* Données structurées JSON-LD */}
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
           "@context": "https://schema.org", "@type": "SoftwareApplication",
           "name": "Alfred Major", "url": "https://www.alfredmajor.com",
@@ -46,6 +47,18 @@ export default function Home() {
           "offers": { "@type": "Offer", "price": "9.90", "priceCurrency": "EUR" },
           "publisher": { "@type": "Organization", "name": "Alfred Major", "url": "https://www.alfredmajor.com" }
         })}} />
+
+        {/* ── PIXEL TIKTOK INJECTÉ DIRECTEMENT DANS LE HEAD ── */}
+        <script dangerouslySetInnerHTML={{ __html: `
+          !function (w, d, t) {
+            w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie","holdConsent","revokeConsent","grantConsent"],ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(
+          var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e},ttq.load=function(e,n){var r="https://analytics.tiktok.com/i18n/pixel/events.js",o=n&&n.partner;ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=r,ttq._t=ttq._t||{},ttq._t[e]=+new Date,ttq._o=ttq._o||{},ttq._o[e]=n||{};n=document.createElement("script")
+          ;n.type="text/javascript",n.async=!0,n.src=r+"?sdkid="+e+"&lib="+t;e=document.getElementsByTagName("script")[0];e.parentNode.insertBefore(n,e)};
+
+            ttq.load('D8I61URC77UB4KU2EVFG');
+            ttq.page();
+          }(window, document, 'ttq');
+        `}} />
       </Head>
 
       <style jsx global>{`
@@ -514,7 +527,7 @@ export default function Home() {
       {/* ── PAIN POINTS ── */}
       <section className="pain">
         <div className="eyebrow">Fini les nuits coupees</div>
-        <h2 className="s-h2" style={{color:'white', marginBottom:'12px'}}>La gestion locative<br/><strong>reinventee.</strong></h2>
+        <h2 className="s-h2" style={{color:'white', margin_bottom:'12px'}}>La gestion locative<br/><strong>reinventee.</strong></h2>
         <p className="s-sub pain-sub" style={{margin:'0 auto 64px', textAlign:'center', color:'rgba(255,255,255,0.45)', maxWidth:'480px'}}>Alfred elimine les interruptions du quotidien.</p>
         <div className="pain-grid">
           {[
@@ -795,24 +808,6 @@ export default function Home() {
           <p>© 2026 Alfred Major — Tous droits reserves · Alfred Major · SIRET 531 965 044 00039</p>
         </div>
       </footer>
-
-      {/* ── 2. PIXEL TIKTOK INITIALISÉ DE MANIÈRE OPTIMISÉE ── */}
-      <Script
-        id="tiktok-pixel"
-        strategy="afterInteractive"
-        dangerouslySetInnerHTML={{
-          __html: `
-            !function (w, d, t) {
-              w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie","holdConsent","revokeConsent","grantConsent"],ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(
-            var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e},ttq.load=function(e,n){var r="https://analytics.tiktok.com/i18n/pixel/events.js",o=n&&n.partner;ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=r,ttq._t=ttq._t||{},ttq._t[e]=+new Date,ttq._o=ttq._o||{},ttq._o[e]=n||{};n=document.createElement("script")
-            ;n.type="text/javascript",n.async=!0,n.src=r+"?sdkid="+e+"&lib="+t;e=document.getElementsByTagName("script")[0];e.parentNode.insertBefore(n,e)};
-
-              ttq.load('D8I61URC77UB4KU2EVFG');
-              ttq.page();
-            }(window, document, 'ttq');
-          `,
-        }}
-      />
     </div>
   );
 }
