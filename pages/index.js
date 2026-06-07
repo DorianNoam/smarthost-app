@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import Head from 'next/head';
+import Script from 'next/script'; // 1. Ajout de l'import pour le Pixel TikTok
 import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
 
@@ -449,18 +450,18 @@ export default function Home() {
         <div className="hero-content">
           <div className="hero-badge">🎁 1er mois 100% offert — Sans engagement</div>
           <h1>
-            Gérez vos locations<br />
+            Gerez vos locations<br />
             en mode <strong>autopilote.</strong>
           </h1>
           <p className="hero-sub">
-            Majordome IA 24h/24 · Ménage automatisé · Upsells sans commission · Alertes urgences.<br/>
+            Majordome IA 24h/24 · Menage automatisé · Upsells sans commission · Alertes urgences.<br/>
             Tout en un, à 9,90€/mois.
           </p>
           <div className="hero-actions">
             <Link href="/register" passHref legacyBehavior>
-              <a className="cta-primary">Démarrer gratuitement →</a>
+              <a className="cta-primary">Demarrer gratuitement →</a>
             </Link>
-            <a href="#demo" className="cta-secondary">Voir la démo ↓</a>
+            <a href="#demo" className="cta-secondary">Voir la demo ↓</a>
           </div>
           <div className="hero-trust">
             <span className="trust-item">✓ Sans carte bancaire</span>
@@ -488,17 +489,17 @@ export default function Home() {
       <section className="pillars" id="fonctionnement">
         <div className="pillars-header" style={{textAlign:'center'}}>
           <div className="eyebrow">Tout inclus</div>
-          <h2 className="s-h2">6 outils. 1 abonnement.<br/><strong>Zéro friction.</strong></h2>
-          <p className="s-sub" style={{maxWidth:'520px', margin:'0 auto'}}>Là où d'autres facturent 300€/mois pour assembler 6 outils séparés, Alfred Major fait tout pour 9,90€.</p>
+          <h2 className="s-h2">6 outils. 1 abonnement.<br/><strong>Zero friction.</strong></h2>
+          <p className="s-sub" style={{maxWidth:'520px', margin:'0 auto'}}>La ou d'autres facturent 300€/mois pour assembler 6 outils separes, Alfred Major fait tout pour 9,90€.</p>
         </div>
         <div className="pillars-grid">
           {[
-            { icon: '🎩', title: 'Majordome IA', desc: 'Répond aux voyageurs 24h/24 en 30+ langues. Ton chaleureux, réponses précises, mémoire de conversation.', tag: 'Disponible 24h/24' },
-            { icon: '🧹', title: 'Ménage automatisé', desc: 'Détecte les nouvelles réservations, notifie votre prestataire, confirme le ménage par photos avant chaque arrivée.', tag: 'Zéro gestion manuelle' },
+            { icon: '🎩', title: 'Majordome IA', desc: 'Repond aux voyageurs 24h/24 en 30+ langues. Ton chaleureux, reponses precises, memoire de conversation.', tag: 'Disponible 24h/24' },
+            { icon: '🧹', title: 'Menage automatise', desc: 'Detecte les nouvelles reservations, notifie votre prestataire, confirme le menage par photos avant chaque arrivee.', tag: 'Zero gestion manuelle' },
             { icon: '💰', title: 'Upsells sans commission', desc: 'Late checkout, pack romantique, transfert... Alfred propose au bon moment. Paiement direct sur votre compte Stripe.', tag: '0% de commission' },
-            { icon: '📅', title: 'Calendrier synchronisé', desc: 'Sync iCal Airbnb & Booking en temps réel. Réservations détectées automatiquement, missions ménage créées dans la foulée.', tag: 'Sync en temps réel' },
-            { icon: '🚨', title: 'Alertes urgences', desc: 'Fuite, panne, incendie — Alfred détecte et vous alerte instantanément sur Telegram et votre mobile, avec traduction auto.', tag: 'Telegram + Push' },
-            { icon: '🎁', title: 'Programme parrainage', desc: "2 mois offerts pour chaque hôte parrainé qui s'active. Votre réseau travaille pour réduire votre abonnement à zéro.", tag: '2 mois offerts' },
+            { icon: '📅', title: 'Calendrier synchronise', desc: 'Sync iCal Airbnb & Booking en temps reel. Reservations detectees automatiquement, missions menage creees dans la foulee.', tag: 'Sync en temps reel' },
+            { icon: '🚨', title: 'Alertes urgences', desc: 'Fuite, panne, incendie — Alfred detecte et vous alerte instantanement sur Telegram et votre mobile, avec traduction auto.', tag: 'Telegram + Push' },
+            { icon: '🎁', title: 'Programme parrainage', desc: "2 mois offerts pour chaque hote parraine qui s'active. Votre reseau travaille pour reduire votre abonnement a zero.", tag: '2 mois offerts' },
           ].map((p, i) => (
             <div key={i} className="pillar-card">
               <div className="pillar-icon">{p.icon}</div>
@@ -512,14 +513,14 @@ export default function Home() {
 
       {/* ── PAIN POINTS ── */}
       <section className="pain">
-        <div className="eyebrow">Fini les nuits coupées</div>
-        <h2 className="s-h2" style={{color:'white', marginBottom:'12px'}}>La gestion locative<br/><strong>réinventée.</strong></h2>
-        <p className="s-sub pain-sub" style={{margin:'0 auto 64px', textAlign:'center', color:'rgba(255,255,255,0.45)', maxWidth:'480px'}}>Alfred élimine les interruptions du quotidien.</p>
+        <div className="eyebrow">Fini les nuits coupees</div>
+        <h2 className="s-h2" style={{color:'white', marginBottom:'12px'}}>La gestion locative<br/><strong>reinventee.</strong></h2>
+        <p className="s-sub pain-sub" style={{margin:'0 auto 64px', textAlign:'center', color:'rgba(255,255,255,0.45)', maxWidth:'480px'}}>Alfred elimine les interruptions du quotidien.</p>
         <div className="pain-grid">
           {[
-            { img: '/pain-nuit.png', alt: 'Message de nuit', title: 'Le message à 23h30', desc: 'Le voyageur ne trouve pas le WiFi. Votre téléphone sonne pendant votre sommeil. Alfred répond instantanément, sans vous déranger.' },
-            { img: '/pain-langue.png', alt: 'Barrière langue', title: 'La barrière de la langue', desc: 'Alfred parle 30+ langues couramment. Vos voyageurs étrangers sont servis dans leur langue, sans effort de votre part.' },
-            { img: '/pain-questions.png', alt: 'Questions répétées', title: 'Les questions répétées', desc: "Poubelles, départ, parking... Alfred répond avec précision, chaque fois comme si c'était la première." },
+            { img: '/pain-nuit.png', alt: 'Message de nuit', title: 'Le message a 23h30', desc: 'Le voyageur ne trouve pas le WiFi. Votre telephone sonne pendant votre sommeil. Alfred repond instantanement, sans vous deranger.' },
+            { img: '/pain-langue.png', alt: 'Barriere langue', title: 'La barriere de la langue', desc: 'Alfred parle 30+ langues couramment. Vos voyageurs etrangers sont servis dans leur langue, sans effort de votre part.' },
+            { img: '/pain-questions.png', alt: 'Questions repetees', title: 'Les questions repetees', desc: "Poubelles, depart, parking... Alfred repond avec precision, chaque fois comme si c'etait la premiere." },
           ].map((item, i) => (
             <div key={i} className="pain-card">
               <img src={item.img} alt={item.alt} className="pain-img" loading="lazy" />
@@ -537,7 +538,7 @@ export default function Home() {
         <div style={{textAlign:'center'}}>
           <div className="eyebrow">En action</div>
           <h2 className="s-h2">L'illusion parfaite<br/>d'un <strong>concierge humain.</strong></h2>
-          <p className="s-sub" style={{maxWidth:'480px', margin:'0 auto'}}>Vos voyageurs ne savent pas qu'ils parlent à une IA.</p>
+          <p className="s-sub" style={{maxWidth:'480px', margin:'0 auto'}}>Vos voyageurs ne savent pas qu'ils parlent a une IA.</p>
         </div>
         <div className="demo-layout">
           <div className="phone-wrap">
@@ -553,21 +554,21 @@ export default function Home() {
                   <div className="msg msg-alfred">Welcome to Villa Noam! 🎩 Network: <strong>VillaNomad_5G</strong>, password: <strong>Holiday2024</strong></div>
                   <div className="msg msg-user">Can we check out at 2pm?</div>
                   <div className="msg msg-alfred">Of course! Late check-out until 2pm is available for 30€. You can book it here → ✨</div>
-                  <div className="msg msg-user">Il y a une fuite sous l'évier !</div>
-                  <div className="msg msg-alfred">Je comprends, restez calme. La vanne est sous l'évier à droite. Je préviens immédiatement votre hôte. 🚨</div>
+                  <div className="msg msg-user">Il y a une fuite sous l'evier !</div>
+                  <div className="msg msg-alfred">Je comprends, restez calme. La vanne est sous l'evier a droite. Je previens immediatement votre hote. 🚨</div>
                 </div>
               </div>
             </div>
           </div>
           <div className="demo-text">
-            <h2>Répond, recommande, alerte —<br/><strong>sans jamais vous déranger.</strong></h2>
-            <p>Alfred puise dans la base de connaissance que vous avez configurée pour répondre avec précision. Il cherche les meilleures adresses locales en temps réel et détecte les urgences automatiquement.</p>
+            <h2>Repond, recommande, alerte —<br/><strong>sans jamais vous deranger.</strong></h2>
+            <p>Alfred puise dans la base de connaissance que vous avez configuree pour repondre avec precision. Il cherche les meilleures adresses locales en temps reel et detecte les urgences automatiquement.</p>
             <div className="demo-feats">
               {[
-                { title: 'Recommandations locales en temps réel', desc: 'Restaurants, pharmacies, transports — Alfred scanne les environs via Google Maps.' },
-                { title: 'Propose vos upsells naturellement', desc: 'Si un voyageur demande un départ tardif, Alfred propose votre late check-out directement.' },
-                { title: 'Détecte les urgences et alerte', desc: 'Fuite, panne, gaz — Alfred vous alerte sur Telegram avec traduction automatique.' },
-                { title: 'Mémoire de conversation', desc: 'Alfred comprend le contexte et ne demande jamais deux fois la même chose.' },
+                { title: 'Recommandations locales en temps reel', desc: 'Restaurants, pharmacies, transports — Alfred scanne les environs via Google Maps.' },
+                { title: 'Propose vos upsells naturellement', desc: 'Si un voyageur demande un depart tardif, Alfred propose votre late check-out directement.' },
+                { title: 'Detecte les urgences et alerte', desc: 'Fuite, panne, gaz — Alfred vous alerte sur Telegram avec traduction automatique.' },
+                { title: 'Memoire de conversation', desc: 'Alfred comprend le contexte et ne demande jamais deux fois la même chose.' },
               ].map((f, i) => (
                 <div key={i} className="demo-feat">
                   <div className="feat-dot">✓</div>
@@ -583,10 +584,10 @@ export default function Home() {
       <section className="urgence">
         <div className="urgence-inner">
           <div className="urgence-text">
-            <div className="urgence-tag"><div className="urgence-dot" /> Alerte en temps réel</div>
-            <h2>Vous n'êtes dérangé<br/><strong>que lorsque c'est vital.</strong></h2>
-            <p>Si un voyageur signale une urgence, Alfred vous transfère instantanément l'information sur Telegram — avec traduction automatique si nécessaire.</p>
-            <p><strong>Résultat :</strong> Vous filtrez 95% du bruit quotidien et gardez le contrôle sur l'essentiel.</p>
+            <div className="urgence-tag"><div className="urgence-dot" /> Alerte en temps reel</div>
+            <h2>Vous n'êtes derange<br/><strong>que lorsque c'est vital.</strong></h2>
+            <p>Si un voyageur signale une urgence, Alfred vous transfere instantanement l'information sur Telegram — avec traduction automatique si necessaire.</p>
+            <p><strong>Resultat :</strong> Vous filtrez 95% du bruit quotidien et gardez le controle sur l'essentiel.</p>
           </div>
           <div className="urgence-mockup">
             <div className="notif-phone">
@@ -599,7 +600,7 @@ export default function Home() {
                   </div>
                 </div>
                 <div className="notif-bubble">
-                  <p>🚨 <strong>ALERTE ALFRED MAJOR</strong><br/><br/>🏠 Villa Noam — Paris<br/>💬 "Il y a une énorme fuite sous l'évier !"<br/>🔄 Traduction : Water leak under the sink</p>
+                  <p>🚨 <strong>ALERTE ALFRED MAJOR</strong><br/><br/>🏠 Villa Noam — Paris<br/>💬 "Il y a une enorme fuite sous l'evier !"<br/>🔄 Traduction : Water leak under the sink</p>
                 </div>
               </div>
             </div>
@@ -619,7 +620,7 @@ export default function Home() {
                 { icon: '💶', text: 'Paiement direct sur votre compte Stripe' },
                 { icon: '0️⃣', text: 'Alfred Major ne prend aucune commission' },
                 { icon: '🤖', text: 'Alfred propose au bon moment, naturellement' },
-                { icon: '🌍', text: 'Page voyageur multilingue et personnalisée' },
+                { icon: '🌍', text: 'Page voyageur multilingue et personnalisee' },
               ].map((p, i) => (
                 <div key={i} className="perk">
                   <div className="perk-icon">{p.icon}</div>
@@ -630,10 +631,10 @@ export default function Home() {
           </div>
           <div className="upsells-mockup">
             {[
-              { emoji: '🕐', name: 'Late check-out', desc: "Départ jusqu'à 14h", price: '30€' },
-              { emoji: '🌅', name: 'Early check-in', desc: 'Arrivée dès 10h', price: '25€' },
+              { emoji: '🕐', name: 'Late check-out', desc: "Depart jusqu'à 14h", price: '30€' },
+              { emoji: '🌅', name: 'Early check-in', desc: 'Arrivee des 10h', price: '25€' },
               { emoji: '🥂', name: 'Pack romantique', desc: 'Champagne & fleurs', price: '45€' },
-              { emoji: '🚗', name: 'Transfert aéroport', desc: 'Navette privée', price: '50€' },
+              { emoji: '🚗', name: 'Transfert aeroport', desc: 'Navette privee', price: '50€' },
             ].map((u, i) => (
               <div key={i} className="upsell-card">
                 <div className="upsell-emoji">{u.emoji}</div>
@@ -643,7 +644,7 @@ export default function Home() {
                 </div>
                 <div style={{display:'flex', alignItems:'center', gap:'10px'}}>
                   <div className="upsell-price">{u.price}</div>
-                  <button className="upsell-cta">Réserver</button>
+                  <button className="upsell-cta">Reserver</button>
                 </div>
               </div>
             ))}
@@ -655,18 +656,18 @@ export default function Home() {
       <section className="benefits">
         <div style={{textAlign:'center'}}>
           <div className="eyebrow">Pourquoi Alfred</div>
-          <h2 className="s-h2">Ce que vivent nos hôtes<br/><strong>au quotidien.</strong></h2>
+          <h2 className="s-h2">Ce que vivent nos hotes<br/><strong>au quotidien.</strong></h2>
         </div>
         <div className="benefits-inner">
           <div className="benefits-img">
-            <img src="https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?auto=format&fit=crop&w=800&q=80" alt="Hôte détendu" loading="lazy" />
+            <img src="https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?auto=format&fit=crop&w=800&q=80" alt="Hote detendu" loading="lazy" />
             <div className="benefits-img-overlay" />
           </div>
           <div className="benefits-cards">
             {[
-              { ico: '😴', cls: 'bi1', title: 'Nuits complètes garanties', desc: 'Plus besoin de garder un œil sur votre téléphone. Alfred gère les questions WiFi, codes et équipements à votre place, 24h/24.' },
-              { ico: '🧹', cls: 'bi2', title: 'Ménage géré automatiquement', desc: "Dès qu'une réservation est détectée, votre prestataire est notifié. Vous recevez une confirmation avec photos avant chaque arrivée." },
-              { ico: '⭐', cls: 'bi3', title: 'Notes Airbnb améliorées', desc: 'Des voyageurs mieux accompagnés laissent de meilleures notes. Réactivité instantanée et service multilingue font la différence.' },
+              { ico: '😴', cls: 'bi1', title: 'Nuits completes garanties', desc: 'Plus besoin de garder un œil sur votre telephone. Alfred gere les questions WiFi, codes et equipements a votre place, 24h/24.' },
+              { ico: '🧹', cls: 'bi2', title: 'Menage gere automatiquement', desc: "Des qu'une reservation est dectectee, votre prestataire est notifie. Vous recevez une confirmation avec photos avant chaque arrivee." },
+              { ico: '⭐', cls: 'bi3', title: 'Notes Airbnb ameliorees', desc: 'Des voyageurs mieux accompagnes laissent de meilleures notes. Reactivite instantanee et service multilingue font la difference.' },
             ].map((b, i) => (
               <div key={i} className="benefit-card">
                 <div className={`benefit-ico ${b.cls}`}>{b.ico}</div>
@@ -680,15 +681,15 @@ export default function Home() {
       {/* ── TEMOIGNAGES ── */}
       <section className="testi">
         <div className="eyebrow">Ils nous font confiance</div>
-        <h2 className="s-h2">Ce que disent<br/><strong>nos premiers hôtes.</strong></h2>
+        <h2 className="s-h2">Ce que disent<br/><strong>nos premiers hotes.</strong></h2>
         <div className="testi-grid">
           {[
-            { av: 'av1', initials: 'SL', name: 'Sophie L.', role: '3 logements · Nice', quote: "Alfred répond à toutes les questions de mes voyageurs, même à 3h du matin. Je n'ai plus reçu un seul appel pour le code WiFi depuis que je l'ai installé. Un vrai soulagement." },
-            { av: 'av2', initials: 'TR', name: 'Thomas R.', role: '2 logements · Bordeaux', quote: "J'avais des voyageurs étrangers qui ne parlaient pas français. Alfred leur a répondu en anglais, espagnol et même en allemand. Mes notes Airbnb ont augmenté depuis." },
-            { av: 'av3', initials: 'MC', name: 'Marie C.', role: '5 logements · Paris', quote: "L'alerte Telegram m'a sauvé la mise : un voyageur a signalé une fuite, j'ai reçu le message instantanément et j'ai pu envoyer un plombier avant que ça empire." },
+            { av: 'av1', initials: 'SL', name: 'Sophie L.', role: '3 logements · Nice', quote: "Alfred repond a toutes les questions de mes voyageurs, meme a 3h du matin. Je n'ai plus reçu un seul appel pour le code WiFi depuis que je l'ai installe. Un vrai soulagement." },
+            { av: 'av2', initials: 'TR', name: 'Thomas R.', role: '2 logements · Bordeaux', quote: "J'avais des voyageurs etrangers qui ne parlaient pas français. Alfred leur a repondu en anglais, espagnol et meme en allemand. Mes notes Airbnb ont augmente depuis." },
+            { av: 'av3', initials: 'MC', name: 'Marie C.', role: '5 logements · Paris', quote: "L'alerte Telegram m'a sauve la mise : un voyageur a signale une fuite, j'ai reçu le message instantanement et j'ai pu envoyer un plombier avant que ça empire." },
           ].map((t, i) => (
             <div key={i} className="testi-card">
-              <span className="testi-verified">✓ Hôte vérifié</span>
+              <span className="testi-verified">✓ Hote verifie</span>
               <div className="testi-stars">★★★★★</div>
               <p className="testi-quote">{t.quote}</p>
               <div className="testi-author">
@@ -707,17 +708,17 @@ export default function Home() {
       <section className="pricing" id="tarifs">
         <div className="eyebrow">Tarifs</div>
         <h2 className="s-h2" style={{marginBottom:'12px'}}>Simple. Transparent.<br/><strong>Sans surprise.</strong></h2>
-        <p className="s-sub" style={{margin:'0 auto 64px', color:'rgba(255,255,255,0.45)', maxWidth:'440px'}}>Boostez votre productivité et passez à une étape supérieure avec Alfred Major.</p>
+        <p className="s-sub" style={{margin:'0 auto 64px', color:'rgba(255,255,255,0.45)', maxWidth:'440px'}}>Boostez votre productivite et passez a une etape superieure avec Alfred Major.</p>
         <div className="price-card">
           <div className="price-promo">🎁 1er mois 100% offert</div>
           <div className="plan-label">Licence par logement</div>
           <div className="price-amount"><sup>€</sup>9,90<span>/mois</span></div>
-          <div className="price-note">Sans engagement · Résiliable en 1 clic</div>
+          <div className="price-note">Sans engagement · Resiliable en 1 clic</div>
           <hr className="price-divider" />
           <div className="price-feats">
             {[
               'Majordome IA 24h/24 · 30+ langues',
-              'Gestion ménage automatisée',
+              'Gestion menage automatisee',
               'Upsells 0% commission (Stripe Connect)',
               'Sync calendrier iCal Airbnb & Booking',
               'Alertes urgences Telegram + Push mobile',
@@ -733,7 +734,7 @@ export default function Home() {
           <Link href="/register" passHref legacyBehavior>
             <a className="price-cta">Commencer gratuitement — 1er mois offert</a>
           </Link>
-          <div className="price-security">🔒 Paiement sécurisé via Stripe · 0% commission sur vos réservations</div>
+          <div className="price-security">🔒 Paiement securise via Stripe · 0% commission sur vos reservations</div>
         </div>
       </section>
 
@@ -741,8 +742,8 @@ export default function Home() {
       <section className="referral">
         <div className="referral-inner">
           <div className="eyebrow">Parrainage</div>
-          <h2>Parrainez. Économisez.<br/><strong>Réduisez votre abonnement à zéro.</strong></h2>
-          <p>Partagez votre lien unique à d'autres hôtes. Dès qu'un filleul active son premier logement, vous êtes tous les deux récompensés automatiquement.</p>
+          <h2>Parrainez. Economisez.<br/><strong>Reduisez votre abonnement a zero.</strong></h2>
+          <p>Partagez votre lien unique a d'autres hotes. Des qu'un filleul active son premier logement, vous êtes tous les deux recompenses automatiquement.</p>
           <div className="referral-cards">
             <div className="referral-card">
               <div className="referral-number">2</div>
@@ -754,7 +755,7 @@ export default function Home() {
             </div>
           </div>
           <Link href="/register" passHref legacyBehavior>
-            <a className="cta-primary" style={{display:'inline-flex'}}>Créer mon compte et obtenir mon lien →</a>
+            <a className="cta-primary" style={{display:'inline-flex'}}>Creer mon compte et obtenir mon lien →</a>
           </Link>
         </div>
       </section>
@@ -764,23 +765,23 @@ export default function Home() {
         <div className="footer-inner">
           <div className="footer-brand-col">
             <span className="footer-logo">Alfred<span>Major</span></span>
-            <p>La plateforme tout-en-un pour gérer vos locations courte durée en mode autopilote.</p>
+            <p>La plateforme tout-en-un pour gerer vos locations courte duree en mode autopilote.</p>
           </div>
           <div className="footer-col">
             <h4>Produit</h4>
             <ul>
-              <li><Link href="/login" passHref legacyBehavior><a>Espace Hôte</a></Link></li>
-              <li><Link href="/register" passHref legacyBehavior><a>Créer un compte</a></Link></li>
+              <li><Link href="/login" passHref legacyBehavior><a>Espace Hote</a></Link></li>
+              <li><Link href="/register" passHref legacyBehavior><a>Creer un compte</a></Link></li>
               <li><a href="#tarifs">Tarifs</a></li>
-              <li><a href="#fonctionnement">Fonctionnalités</a></li>
+              <li><a href="#fonctionnement">Fonctionnalites</a></li>
             </ul>
           </div>
           <div className="footer-col">
-            <h4>Légal</h4>
+            <h4>Legal</h4>
             <ul>
-              <li><Link href="/conditions-generales" passHref legacyBehavior><a>Conditions Générales</a></Link></li>
-              <li><Link href="/confidentialite" passHref legacyBehavior><a>Confidentialité (RGPD)</a></Link></li>
-              <li><Link href="/mentions-legales" passHref legacyBehavior><a>Mentions légales</a></Link></li>
+              <li><Link href="/conditions-generales" passHref legacyBehavior><a>Conditions Generales</a></Link></li>
+              <li><Link href="/confidentialite" passHref legacyBehavior><a>Confidentialite (RGPD)</a></Link></li>
+              <li><Link href="/mentions-legales" passHref legacyBehavior><a>Mentions legales</a></Link></li>
             </ul>
           </div>
           <div className="footer-col">
@@ -791,9 +792,27 @@ export default function Home() {
           </div>
         </div>
         <div className="footer-bottom">
-          <p>© 2026 Alfred Major — Tous droits réservés · Alfred Major · SIRET 531 965 044 00039</p>
+          <p>© 2026 Alfred Major — Tous droits reserves · Alfred Major · SIRET 531 965 044 00039</p>
         </div>
       </footer>
+
+      {/* ── 2. PIXEL TIKTOK INITIALISÉ DE MANIÈRE OPTIMISÉE ── */}
+      <Script
+        id="tiktok-pixel"
+        strategy="afterInteractive"
+        dangerouslySetInnerHTML={{
+          __html: `
+            !function (w, d, t) {
+              w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie","holdConsent","revokeConsent","grantConsent"],ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(
+            var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e},ttq.load=function(e,n){var r="https://analytics.tiktok.com/i18n/pixel/events.js",o=n&&n.partner;ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=r,ttq._t=ttq._t||{},ttq._t[e]=+new Date,ttq._o=ttq._o||{},ttq._o[e]=n||{};n=document.createElement("script")
+            ;n.type="text/javascript",n.async=!0,n.src=r+"?sdkid="+e+"&lib="+t;e=document.getElementsByTagName("script")[0];e.parentNode.insertBefore(n,e)};
+
+              ttq.load('D8I61URC77UB4KU2EVFG');
+              ttq.page();
+            }(window, document, 'ttq');
+          `,
+        }}
+      />
     </div>
   );
 }
