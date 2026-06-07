@@ -10,12 +10,13 @@ const nextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              // Ajout de 'unsafe-eval' et des domaines Google pour GTM et GA4
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://www.googletagmanager.com https://www.google-analytics.com https://www.google.com https://www.gstatic.com",
+              // 1. AJOUT de https://analytics.tiktok.com pour autoriser le script du Pixel
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://www.googletagmanager.com https://www.google-analytics.com https://www.google.com https://www.gstatic.com https://analytics.tiktok.com",
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com",
               "img-src 'self' data: https: blob:",
-              "connect-src 'self' https://*.supabase.co https://api.groq.com https://places.googleapis.com https://maps.googleapis.com https://exp.host https://api.telegram.org https://region1.google-analytics.com https://www.google-analytics.com https://www.google-analytics.com https://stats.g.doubleclick.net https://www.google.com",
+              // 2. AJOUT des serveurs TikTok pour lui permettre de recevoir les événements
+              "connect-src 'self' https://*.supabase.co https://api.groq.com https://places.googleapis.com https://maps.googleapis.com https://exp.host https://api.telegram.org https://region1.google-analytics.com https://www.google-analytics.com https://stats.g.doubleclick.net https://www.google.com https://analytics.tiktok.com https://s16.tiktokcdn.com",
               "frame-src https://js.stripe.com https://hooks.stripe.com",
               "object-src 'none'",
               "base-uri 'self'",
