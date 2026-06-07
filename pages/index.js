@@ -472,6 +472,7 @@ export default function Home() {
             <button className="lang-btn active">🇫🇷</button>
             <button className="lang-btn" onClick={() => router.push('/en')}>🇬🇧</button>
             <button className="lang-btn" onClick={() => router.push('/es')}>🇪🇸</button>
+             <button className="lang-btn" onClick={() => router.push('/it')}>🇮🇹</button>
           </div>
           <Link href="/login" passHref legacyBehavior>
             <a className="nav-cta">Espace Hôte</a>
