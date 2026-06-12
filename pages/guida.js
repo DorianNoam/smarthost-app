@@ -10,7 +10,7 @@ export default function Guida() {
       justifyContent: 'center',
       padding: '40px',
       // Remplace par l'URL de ton image de fond (ex: une photo de la côte amalfitaine)
-      background: 'url("https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?q=80&w=2070") no-repeat center center fixed',
+     background: 'url("https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=2073") no-repeat center center fixed',
       backgroundSize: 'cover',
       fontFamily: 'sans-serif'
     }}>
