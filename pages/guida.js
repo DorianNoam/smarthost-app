@@ -63,11 +63,13 @@ export default function Guida() {
       alignItems: 'center',
       justifyContent: 'center',
       padding: '40px',
-      // Réactive cette ligne et remplace par TON image (hébergée sur ton
-      // propre domaine ou /public) une fois prête :
-      // background: 'url("/images/costa-amalfitana.jpg") no-repeat center center fixed',
-      background: 'linear-gradient(135deg, #fdf6e9 0%, #f3e9d2 100%)',
+      // Image hébergée localement : place le fichier dans
+      // smarthost-app/public/images/costa-amalfitana.png
+      backgroundImage: 'linear-gradient(rgba(255,255,255,0.55), rgba(255,255,255,0.55)), url("/images/costa-amalfitana.png")',
+      backgroundRepeat: 'no-repeat',
+      backgroundPosition: 'center center',
       backgroundSize: 'cover',
+      backgroundAttachment: 'fixed',
       fontFamily: 'sans-serif',
     }}>
 
