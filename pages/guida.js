@@ -35,9 +35,26 @@ export default function Guida() {
       }}>
         
         {/* Visuel du Livre (à gauche) */}
-        <div style={{ transform: 'rotate(-5deg)' }}>
-          <img src="/cover-guida.png" alt="Guida Estiva" style={{ width: '300px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.2)' }} />
-        </div>
+       {/* Visuel du Livre généré en CSS */}
+<div style={{ 
+  width: '280px', 
+  height: '380px', 
+  background: 'linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%)', 
+  borderRadius: '4px 10px 10px 4px', 
+  boxShadow: '20px 20px 60px rgba(0,0,0,0.3)', 
+  display: 'flex', 
+  flexDirection: 'column', 
+  justifyContent: 'center', 
+  alignItems: 'center', 
+  padding: '20px', 
+  textAlign: 'center', 
+  borderLeft: '10px solid #2d3748', 
+  transform: 'rotate(-3deg)' 
+}}>
+  <h2 style={{ fontSize: '20px', color: '#2d3748', fontWeight: 'bold' }}>GUIDA ESTIVA 2026</h2>
+  <div style={{ width: '50px', height: '2px', background: '#b59a63', margin: '15px 0' }}></div>
+  <p style={{ fontSize: '16px', color: '#4a5568' }}>L'Automazione Inteligente</p>
+</div>
 
         {/* Formulaire (à droite avec effet Glass) */}
         <div style={{
