@@ -56,7 +56,26 @@ export default function Register() {
           const { data: referrer } = await supabase.from('profiles').select('id').eq('referral_code', referralCode).maybeSingle();
           referrerId = referrer?.id || null;
         }
-        await supabase.from('profiles').upsert([{ id: authData.user.id, full_name: firstName, email, active_licenses: 0, referral_code: newReferralCode, referred_by: referrerId, referral_credits: referralValid && referrerId ? 1 : 0 }], { onConflict: 'email' });
+
+        // ── TRIAL 30 JOURS ─────────────────────────────────────────────
+        const now = new Date();
+        const trialExpiresAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+        await supabase.from('profiles').upsert([{
+          id: authData.user.id,
+          full_name: firstName,
+          email,
+          active_licenses: 0,
+          referral_code: newReferralCode,
+          referred_by: referrerId,
+          referral_credits: referralValid && referrerId ? 1 : 0,
+          // Trial initialisation
+          subscription_status: 'trial',
+          trial_started_at: now.toISOString(),
+          trial_expires_at: trialExpiresAt.toISOString(),
+        }], { onConflict: 'email' });
+        // ────────────────────────────────────────────────────────────────
+
         if (referrerId) {
           await supabase.from('referrals').insert({ referrer_id: referrerId, referee_id: authData.user.id, status: 'pending', referrer_months: 2, referee_months: 1 });
         }
@@ -105,9 +124,9 @@ export default function Register() {
         {/* Card */}
         <div style={{ background: '#fff', borderRadius: '20px', padding: '40px 36px', width: '100%', maxWidth: '420px', boxShadow: '0 2px 20px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04)' }}>
 
-          {/* Badge offre */}
+          {/* Badge offre TRIAL 30 JOURS */}
           <div style={{ background: '#faf6e8', border: '1px solid #e8d88a', borderRadius: '980px', padding: '7px 14px', fontSize: '13px', fontWeight: '500', color: '#92710a', display: 'inline-flex', alignItems: 'center', gap: '6px', marginBottom: '20px' }}>
-            🎁 1er mois 100% offert
+            🎁 30 jours gratuits · Sans carte bancaire
           </div>
 
           <h1 style={{ fontSize: '24px', fontWeight: '600', color: '#1d1d1f', letterSpacing: '-0.5px', marginBottom: '6px' }}>{r.title}</h1>
@@ -118,8 +137,8 @@ export default function Register() {
             <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '12px', padding: '14px 16px', marginBottom: '20px', display: 'flex', gap: '12px', alignItems: 'center' }}>
               <span style={{ fontSize: '24px' }}>🎁</span>
               <div>
-                <p style={{ fontSize: '13px', fontWeight: '600', color: '#15803d', margin: '0 0 2px' }}>1 mois offert !</p>
-                <p style={{ fontSize: '12px', color: '#15803d', margin: 0, fontWeight: '300', opacity: 0.8 }}>Code parrainage appliqué — votre premier mois est gratuit.</p>
+                <p style={{ fontSize: '13px', fontWeight: '600', color: '#15803d', margin: '0 0 2px' }}>1 mois supplémentaire offert !</p>
+                <p style={{ fontSize: '12px', color: '#15803d', margin: 0, fontWeight: '300', opacity: 0.8 }}>Code parrainage appliqué — en plus de vos 30 jours d'essai.</p>
               </div>
             </div>
           )}
@@ -161,8 +180,13 @@ export default function Register() {
             </div>
 
             <button type="submit" disabled={loading} style={{ width: '100%', background: loading ? '#aeaeb2' : '#1d1d1f', color: '#fff', border: 'none', borderRadius: '12px', padding: '16px', fontSize: '16px', fontWeight: '500', cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'inherit', letterSpacing: '-0.2px', transition: 'background 0.2s' }}>
-              {loading ? r.loading : r.cta}
+              {loading ? r.loading : 'Commencer mon essai gratuit de 30 jours →'}
             </button>
+
+            {/* Réassurance sous le bouton */}
+            <p style={{ marginTop: '14px', textAlign: 'center', fontSize: '12px', color: '#86868b', fontWeight: '400', lineHeight: 1.5 }}>
+              ✓ Aucune carte bancaire demandée &nbsp;·&nbsp; ✓ Résiliable en 1 clic
+            </p>
           </form>
 
           <p style={{ marginTop: '24px', textAlign: 'center', fontSize: '14px', color: '#86868b', fontWeight: '300' }}>
