@@ -208,5 +208,106 @@ export default async function handler(req, res) {
     }
   }
 
+  // ── EVENT : abonnement annulé (résiliation par le user via portail Stripe) ──
+  if (event.type === 'customer.subscription.deleted') {
+    const subscription = event.data.object;
+    const stripeCustomerId = subscription.customer;
+    try {
+      const { data: profile } = await supabaseAdmin
+        .from('profiles')
+        .select('id, email, full_name')
+        .eq('stripe_customer_id', stripeCustomerId)
+        .single();
+
+      if (profile) {
+        // Passer le compte en cancelled + désactiver tous les logements
+        await supabaseAdmin.from('profiles').update({
+          subscription_status: 'cancelled',
+          paused_at: new Date().toISOString(),
+        }).eq('id', profile.id);
+
+        await supabaseAdmin.from('properties').update({ is_active: false }).eq('owner_id', profile.id);
+
+        // Email de confirmation de résiliation
+        if (profile.email) {
+          const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.alfredmajor.com';
+          await resend.emails.send({
+            from: 'Alfred Major <noreply@alfredmajor.com>',
+            to: profile.email,
+            subject: 'Votre abonnement Alfred Major a été résilié',
+            html: `
+              <!DOCTYPE html><html><head><meta charset="utf-8"></head>
+              <body style="margin:0;padding:0;background:#f5f5f7;font-family:'Inter',Arial,sans-serif;">
+                <div style="max-width:560px;margin:40px auto;padding:0 20px;">
+                  <div style="text-align:center;margin-bottom:32px;">
+                    <div style="font-size:48px;margin-bottom:8px;">🎩</div>
+                    <div style="font-size:22px;font-weight:600;color:#1d1d1f;">Alfred<span style="color:#c9a227;">Major</span></div>
+                  </div>
+                  <div style="background:white;border-radius:20px;padding:36px;border:1px solid #e8e8ed;">
+                    <h1 style="margin:0 0 12px;font-size:22px;font-weight:600;color:#1d1d1f;">Abonnement résilié</h1>
+                    <p style="margin:0 0 20px;font-size:15px;color:#86868b;line-height:1.6;">
+                      Bonjour ${profile.full_name || ''},<br><br>
+                      Votre abonnement Alfred Major a bien été résilié. Vos données restent conservées pendant 90 jours au cas où vous souhaiteriez revenir.
+                    </p>
+                    <a href="${siteUrl}/dashboard" style="display:inline-block;background:#1d1d1f;color:white;text-decoration:none;padding:13px 22px;border-radius:980px;font-weight:500;font-size:15px;">
+                      Réactiver mon compte
+                    </a>
+                  </div>
+                </div>
+              </body></html>
+            `,
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Erreur subscription.deleted:", error);
+    }
+  }
+
+  // ── EVENT : échec de paiement ──
+  if (event.type === 'invoice.payment_failed') {
+    const invoice = event.data.object;
+    const stripeCustomerId = invoice.customer;
+    try {
+      const { data: profile } = await supabaseAdmin
+        .from('profiles')
+        .select('id, email, full_name')
+        .eq('stripe_customer_id', stripeCustomerId)
+        .single();
+
+      if (profile?.email) {
+        const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.alfredmajor.com';
+        await resend.emails.send({
+          from: 'Alfred Major <noreply@alfredmajor.com>',
+          to: profile.email,
+          subject: '⚠️ Échec du paiement de votre abonnement',
+          html: `
+            <!DOCTYPE html><html><head><meta charset="utf-8"></head>
+            <body style="margin:0;padding:0;background:#f5f5f7;font-family:'Inter',Arial,sans-serif;">
+              <div style="max-width:560px;margin:40px auto;padding:0 20px;">
+                <div style="text-align:center;margin-bottom:32px;">
+                  <div style="font-size:48px;margin-bottom:8px;">🎩</div>
+                  <div style="font-size:22px;font-weight:600;color:#1d1d1f;">Alfred<span style="color:#c9a227;">Major</span></div>
+                </div>
+                <div style="background:white;border-radius:20px;padding:36px;border:1px solid #e8e8ed;">
+                  <h1 style="margin:0 0 12px;font-size:22px;font-weight:600;color:#1d1d1f;">Paiement échoué</h1>
+                  <p style="margin:0 0 20px;font-size:15px;color:#86868b;line-height:1.6;">
+                    Bonjour ${profile.full_name || ''},<br><br>
+                    Le paiement de votre abonnement Alfred Major a échoué. Stripe va retenter automatiquement dans les prochains jours. Pour éviter toute interruption, vérifiez votre moyen de paiement.
+                  </p>
+                  <a href="${siteUrl}/dashboard" style="display:inline-block;background:#c9a227;color:#1d1d1f;text-decoration:none;padding:13px 22px;border-radius:980px;font-weight:600;font-size:15px;">
+                    Mettre à jour ma carte
+                  </a>
+                </div>
+              </div>
+            </body></html>
+          `,
+        });
+      }
+    } catch (error) {
+      console.error("Erreur invoice.payment_failed:", error);
+    }
+  }
+
   res.status(200).json({ received: true });
 }
