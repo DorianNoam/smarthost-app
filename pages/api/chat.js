@@ -644,6 +644,21 @@ export default async function handler(req, res) {
       return res.status(404).json({ answer: "Logement introuvable ou inactif." });
     }
 
+    // ── GUARD : vérifier que le propriétaire n'est pas en pause ──
+    const { data: ownerProfile } = await supabase
+      .from('profiles')
+      .select('subscription_status')
+      .eq('id', propertyData.owner_id)
+      .single();
+
+    if (ownerProfile && (ownerProfile.subscription_status === 'paused' || ownerProfile.subscription_status === 'cancelled')) {
+      // L'IA refuse silencieusement de répondre — message neutre côté voyageur
+      return res.status(200).json({
+        answer: "Le service de conciergerie est momentanément indisponible. Merci de contacter directement votre hôte."
+      });
+    }
+    // ────────────────────────────────────────────────────────────────
+
     const targetPropertyId = propertyData.id;
     const city = propertyData.city || '';
     const fullAddress = `${propertyData.street_number || ''} ${propertyData.address || ''}, ${city}`.trim();
