@@ -538,6 +538,17 @@ export default function Dashboard() {
                       </button>
                     </div>
                   </div>
+                ) : isPaused ? (
+                  <div style={{ padding: '16px' }}>
+                    <div style={{ background: '#fef2f2', padding: '16px', borderRadius: '12px', border: '1px solid #fecaca', textAlign: 'center' }}>
+                      <p style={{ fontSize: '14px', color: '#991b1b', margin: '0 0 12px', fontWeight: '500' }}>
+                        ⏸️ Service en pause — Alfred ne répond plus
+                      </p>
+                      <button onClick={handlePayment} disabled={paymentLoading} style={{ background: '#c9a227', border: 'none', padding: '14px', width: '100%', borderRadius: '980px', fontWeight: '600', color: '#1d1d1f', cursor: 'pointer', fontSize: '15px', fontFamily: 'inherit' }}>
+                        {paymentLoading ? 'Connexion...' : 'Réactiver ce logement →'}
+                      </button>
+                    </div>
+                  </div>
                 ) : (
                   <>
                     {/* Tabs */}
