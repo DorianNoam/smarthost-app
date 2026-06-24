@@ -19,19 +19,17 @@ export default async function handler(req, res) {
       client_reference_id: userId,
       line_items: [
         {
-          price: process.env.STRIPE_PRICE_ID, 
+          price: process.env.STRIPE_PRICE_ID,
           quantity: 1,
         },
       ],
       mode: 'subscription',
-      
-      // AJOUT DE LA RÉDUCTION ICI
-      discounts: [{
-        coupon: 'promo_990', 
-      }],
+
+      // ⚠️ Le 1er mois gratuit est maintenant géré côté trial (30 jours sans CB),
+      // donc PAS de coupon Stripe ici — sinon le user aurait 60 jours gratuits.
 
       success_url: `${origin}/dashboard?success=true`,
-      cancel_url: `${origin}/dashboard?canceled=true`, 
+      cancel_url: `${origin}/dashboard?canceled=true`,
     });
 
     res.status(200).json({ url: session.url });
