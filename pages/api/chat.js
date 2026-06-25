@@ -1034,8 +1034,13 @@ EXEMPLES DE RÉPONSES INTERDITES :
         { onConflict: 'property_id' }
       );
 
-    const triggerPhrase = "je préviens immédiatement votre hôte";
-    const shouldAlert = responseText.toLowerCase().includes(triggerPhrase) || isEmergency(lastUserMsg);
+    // DÉTECTION ROBUSTE : on vérifie si l'une de ces phrases est présente
+    const triggerPhrases = [
+      "je préviens immédiatement votre hôte",
+      "je transmets immédiatement à votre hôte",
+      "j'alerte votre hôte"
+    ];
+    const shouldAlert = triggerPhrases.some(phrase => responseText.toLowerCase().includes(phrase)) || isEmergency(lastUserMsg);
 
     if (shouldAlert) {
       if (targetPropertyId) {
