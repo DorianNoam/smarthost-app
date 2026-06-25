@@ -385,16 +385,13 @@ Page complète des services : ${upsellsUrl}`;
 // ─────────────────────────────────────────────
 // 3C. DÉTECTION DE LA POSITION DU VOYAGEUR
 // ─────────────────────────────────────────────
-// Détecte quand le voyageur indique où il se trouve actuellement
-// pour pouvoir lui donner une distance réelle vers le logement.
 function detectGuestLocation(msg) {
+  if (!msg) return null;
   const m = msg.toLowerCase();
 
-  // Verbes/expressions de position en plusieurs langues
   const hasPositionVerb = /(je suis|nous sommes|on est|on se trouve|je me trouve|nous nous trouvons|depuis|à partir de|en partant de|je pars de|on part de|nous partons de|i'?m at|i am at|we'?re at|we are at|we'?re in|i'?m in|from |starting from|leaving from|estoy en|estamos en|desde |sono a|siamo a|da |partendo da|ich bin in|wir sind in|von |ab )/i.test(m);
   if (!hasPositionVerb) return null;
 
-  // Mots-clés indiquant qu'il s'agit bien d'un lieu/adresse (anti faux-positifs)
   const placeKeywords = [
     'rue', 'avenue', 'boulevard', 'bd', 'place', 'square', 'street', 'st.', 'st ', 'road', 'rd ', 'plaza',
     'calle', 'via', 'piazza', 'straße', 'strasse', 'platz', 'allée', 'allee', 'chemin',
@@ -409,22 +406,16 @@ function detectGuestLocation(msg) {
 
   if (!hasPlaceKeyword && !hasStreetNumber) return null;
 
-  // Patterns d'extraction
   const patterns = [
-    // FR
     /(?:je suis|nous sommes|on est|on se trouve|je me trouve|nous nous trouvons)\s+(?:à|au|aux|devant|près de|proche de|en face de|sur|dans|chez|vers)\s+(?:le |la |les |l'|du |de la |des )?(.+?)(?:[.,?!\n]|$)/i,
     /(?:depuis|à partir de|en partant de)\s+(?:le |la |les |l'|du |de la |des )?(.+?)(?:[.,?!\n]|$)/i,
     /(?:on part|nous partons|je pars)\s+(?:de|du|de la|des|de l')\s+(.+?)(?:[.,?!\n]|$)/i,
-    // EN
     /(?:i'?m|i am|we'?re|we are)\s+(?:at|in|near|in front of|by|on)\s+(.+?)(?:[.,?!\n]|$)/i,
     /(?:from|starting from|leaving from)\s+(.+?)(?:[.,?!\n]|$)/i,
-    // ES
     /(?:estoy|estamos)\s+(?:en|delante de|cerca de|frente a)\s+(.+?)(?:[.,?!\n]|$)/i,
     /(?:desde)\s+(.+?)(?:[.,?!\n]|$)/i,
-    // IT
     /(?:sono|siamo)\s+(?:a|in|davanti a|vicino a|presso)\s+(.+?)(?:[.,?!\n]|$)/i,
     /(?:da|partendo da)\s+(.+?)(?:[.,?!\n]|$)/i,
-    // DE
     /(?:ich bin|wir sind)\s+(?:in|am|an der|vor|bei|nahe)\s+(.+?)(?:[.,?!\n]|$)/i,
     /(?:von|ab)\s+(.+?)(?:[.,?!\n]|$)/i,
   ];
@@ -433,7 +424,6 @@ function detectGuestLocation(msg) {
     const match = msg.match(pattern);
     if (match && match[1]) {
       const extracted = match[1].trim().replace(/[.,?!]+$/, '').trim();
-      // Filtre : pas trop court, pas trop long, et doit contenir au moins un mot de lieu OU un chiffre
       if (extracted.length >= 4 && extracted.length <= 150) {
         const extractedLower = extracted.toLowerCase();
         const isPlace = placeKeywords.some(k => extractedLower.includes(k)) || /\d/.test(extracted);
@@ -452,7 +442,6 @@ async function getWalkingDistance(originText, destinationAddress, city, langCode
   const apiKey = process.env.MAPS_API_KEY;
   if (!apiKey || !originText || !destinationAddress) return null;
 
-  // Biais avec la ville pour éviter géocodage ambigu ("4 rue Fourcy" sans ville)
   const biasedOrigin = city && !originText.toLowerCase().includes(city.toLowerCase())
     ? `${originText}, ${city}`
     : originText;
@@ -475,14 +464,13 @@ async function getWalkingDistance(originText, destinationAddress, city, langCode
     const distanceMeters = element.distance.value;
     const durationSeconds = element.duration.value;
 
-    // Mode recommandé selon la distance
     let modeAdvice;
     if (distanceMeters <= 1500) {
-      modeAdvice = 'walk_only';   // < 1.5 km → marche obligatoire
+      modeAdvice = 'walk_only';
     } else if (distanceMeters <= 3000) {
-      modeAdvice = 'walk_or_transit'; // 1.5–3 km → marche ou transports
+      modeAdvice = 'walk_or_transit';
     } else {
-      modeAdvice = 'transit_or_taxi'; // > 3 km → transports/taxi
+      modeAdvice = 'transit_or_taxi';
     }
 
     const directionsUrl = `https://www.google.com/maps/dir/?api=1` +
@@ -528,7 +516,7 @@ Lien itinéraire Google Maps : ${walkingInfo.directionsUrl}
 
 ${advice}
 
-RÈGLE ABSOLUE : Utilise EXACTEMENT ces données. N'invente JAMAIS une distance ou un temps de trajet. Ne dis pas "environ 10-15 minutes" si la donnée dit ${walkingInfo.durationText}. Donne la valeur exacte. Tu peux proposer le lien d'itinéraire au voyageur si pertinent.`;
+RÈGLE ABSOLUE : Utilise EXACTEMENT ces données. N'invente JAMAIS une distance ou un temps de trajet. Ne dis pas "environ 10-15 minutes" si la donnée dit ${walkingInfo.durationText}. Donne la valeur exacte. Si le voyageur demande un lien, une carte, un itinéraire ou des directions précises, fournis le lien Google Maps ci-dessus tel quel (formate-le en markdown : [Itinéraire à pied](${walkingInfo.directionsUrl})).`;
 }
 
 // ─────────────────────────────────────────────
@@ -823,14 +811,27 @@ export default async function handler(req, res) {
       googleData = await getGoogleLocalData(localCategory, fullAddress, propertyType);
     }
 
-    // ── NOUVEAU : Détection de la position du voyageur + calcul distance ──
-    const guestOrigin = detectGuestLocation(lastUserMsg);
+    // ── Détection position voyageur : message courant OU récent (3 messages en arrière)
+    let guestOrigin = detectGuestLocation(lastUserMsg);
+    if (!guestOrigin) {
+      // Suivi de conversation : "le lien", "c'est loin ?", "combien de temps"
+      const followUpPattern = /(lien|itinéraire|itineraire|chemin|route|direction|link|map|carte|loin|combien|distance|temps|minute|à pied|a pied|walk|walking|maps)/i;
+      if (followUpPattern.test(lastUserMsg)) {
+        const userMessages = messagesHistory
+          .filter(m => m.role !== 'alfred' && m.role !== 'marc' && m.role !== 'assistant')
+          .slice(-4, -1)
+          .reverse();
+        for (const prev of userMessages) {
+          const found = detectGuestLocation(prev.text || '');
+          if (found) { guestOrigin = found; break; }
+        }
+      }
+    }
     let walkingInfo = null;
     if (guestOrigin && fullAddress) {
       walkingInfo = await getWalkingDistance(guestOrigin, fullAddress, city, langCode);
     }
     const walkingSection = buildWalkingSection(walkingInfo);
-    // ──────────────────────────────────────────────────────────────────────
 
     const upsellIntent = detectUpsellIntent(lastUserMsg);
     const matchingUpsells = upsellIntent
@@ -886,10 +887,10 @@ POUR UNE SALUTATION SIMPLE ("bonjour", "hi", "hello") :
 FORMAT GÉNÉRAL :
 - N'utilise PAS de titres markdown avec #.
 - Reste fluide et conversationnel.
-- Seuls éléments de mise en forme autorisés : emojis, gras avec **texte**, retours à la ligne.
+- Seuls éléments de mise en forme autorisés : emojis, gras avec **texte**, retours à la ligne, et liens markdown [texte](url) UNIQUEMENT pour les itinéraires Google Maps fournis dans la section POSITION ACTUELLE DU VOYAGEUR.
 
 ━━━ INFORMATIONS DU LOGEMENT ━━━
-(Donner uniquement si le voyageur le demande explicitement)
+(Ces informations sont CONFIDENTIELLES. Voir RÈGLE 1 ci-dessous pour les conditions de divulgation.)
 
 Localisation :
 - Adresse : ${propertyData.street_number || ""} ${propertyData.address || ""}
@@ -945,13 +946,30 @@ ${localSection || "Aucune information disponible pour le moment."}
 
 ━━━ RÈGLES CRITIQUES ━━━
 
-1. INFO TECHNIQUE MANQUANTE : Si une info (wifi, code, parking...) est "Non renseigné", dis exactement : "Je n'ai pas cette information pour le moment, je contacte votre hôte." Ne demande jamais de numéro de réservation.
+1. DIVULGATION D'INFOS SENSIBLES — RÈGLE STRICTE DE SÉCURITÉ :
+Ne divulgue JAMAIS spontanément les informations suivantes si le voyageur ne les demande PAS explicitement dans son message courant :
+- Code de boîte à clés / code d'accès / code porte / code immeuble
+- Mot de passe WiFi
+- Adresse précise et complète du logement (numéro de rue)
+- Code du portail, du parking, du garage, du tableau électrique
+- Localisation de la vanne d'eau ou du disjoncteur (sauf urgence avérée)
+- Tout numéro, code, mot de passe ou information d'accès
 
-2. QUARTIER & LOCAL : Pour toute question sur transports, restaurants, commerces, pharmacies — utilise la section QUARTIER & ENVIRONS et réponds en suivant le FORMAT TYPE défini plus haut (nom en gras avec **, adresse sur ligne séparée précédée de 📍). Si tu as des résultats, utilise-les sans hésiter.
+EXEMPLES :
+- Voyageur demande "où est le restaurant le plus proche ?" → NE MENTIONNE PAS le code de boîte à clés.
+- Voyageur demande "donne-moi le lien d'itinéraire" → NE MENTIONNE PAS les codes d'accès.
+- Voyageur demande "quel est le code pour entrer ?" → Tu peux donner le code (demande explicite).
+- Voyageur demande "comment je récupère les clés ?" → Tu peux donner les instructions et le code.
 
-3. INVENTION INTERDITE : Ne jamais inventer une information. Si tu n'as pas l'adresse d'un lieu dans tes données, OMETS la ligne 📍 pour ce lieu plutôt que d'inventer. De même, ne JAMAIS inventer une distance ou un temps de trajet — utilise uniquement les données factuelles fournies.
+RÈGLE : Le voyageur DOIT formuler une question EXPLICITE sur l'accès / les codes / le wifi pour que tu divulgues. Sinon, silence radio sur ces données, peu importe le contexte.
 
-4. URGENCE — RÈGLE LA PLUS IMPORTANTE :
+2. INFO TECHNIQUE MANQUANTE : Si une info demandée (wifi, code, parking...) est "Non renseigné", dis exactement : "Je n'ai pas cette information pour le moment, je contacte votre hôte." Ne demande jamais de numéro de réservation.
+
+3. QUARTIER & LOCAL : Pour toute question sur transports, restaurants, commerces, pharmacies — utilise la section QUARTIER & ENVIRONS et réponds en suivant le FORMAT TYPE défini plus haut (nom en gras avec **, adresse sur ligne séparée précédée de 📍). Si tu as des résultats, utilise-les sans hésiter.
+
+4. INVENTION INTERDITE : Ne jamais inventer une information. Si tu n'as pas l'adresse d'un lieu dans tes données, OMETS la ligne 📍 pour ce lieu plutôt que d'inventer. De même, ne JAMAIS inventer une distance ou un temps de trajet — utilise uniquement les données factuelles fournies.
+
+5. URGENCE — RÈGLE LA PLUS IMPORTANTE :
 Si le voyageur signale une urgence réelle (fuite d'eau, panne électrique, incendie, gaz, porte bloquée, accident) :
    a) Rassure-le en 1 phrase.
    b) Donne l'info technique si disponible (vanne, disjoncteur...).
