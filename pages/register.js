@@ -57,7 +57,7 @@ export default function Register() {
           referrerId = referrer?.id || null;
         }
 
-        // ── TRIAL 30 JOURS ─────────────────────────────────────────────
+        // ── TRIAL 30 JOURS ──────────────────────────────────────────────
         const now = new Date();
         const trialExpiresAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
 
@@ -69,16 +69,24 @@ export default function Register() {
           referral_code: newReferralCode,
           referred_by: referrerId,
           referral_credits: referralValid && referrerId ? 1 : 0,
-          // Trial initialisation
           subscription_status: 'trial',
           trial_started_at: now.toISOString(),
           trial_expires_at: trialExpiresAt.toISOString(),
         }], { onConflict: 'email' });
         // ────────────────────────────────────────────────────────────────
 
+        // ── EMAIL DE BIENVENUE (non bloquant) ───────────────────────────
+        fetch('/api/send-welcome', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ firstName, email }),
+        }).catch(() => {});
+        // ────────────────────────────────────────────────────────────────
+
         if (referrerId) {
           await supabase.from('referrals').insert({ referrer_id: referrerId, referee_id: authData.user.id, status: 'pending', referrer_months: 2, referee_months: 1 });
         }
+
         router.push('/add-property?first=true');
       }
     } catch (err) { setError(err.message); }
