@@ -70,7 +70,7 @@ export default async function handler(req, res) {
               <!-- Message perso -->
               <div style="border-top:1px solid #e8e8ed;padding-top:20px;">
                 <p style="margin:0 0 12px;font-size:15px;color:#6e6e73;line-height:1.7;font-weight:400;">
-                  Si vous avez la moindre question sur la configuration ou le fonctionnement d'Alfred, <strong style="color:#1d1d1f;">répondez simplement à cet email</strong> — je vous réponds personnellement.
+                 Si vous avez la moindre question sur la configuration ou le fonctionnement d'Alfred, <strong style="color:#1d1d1f;">répondez simplement à cet email</strong> — notre équipe vous répondra dans les meilleurs délais.
                 </p>
                 <p style="margin:0;font-size:15px;color:#1d1d1f;font-weight:500;">
                   À très vite,<br>
