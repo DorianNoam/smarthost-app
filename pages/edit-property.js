@@ -628,6 +628,25 @@ export default function EditProperty() {
           </div>
         )}
 
+       {/* ── ICAL SYNC ── */}
+        <div className="section-card">
+          <p className="section-title">📅 Synchronisation iCal</p>
+          <div className="grid">
+            <div className="full">
+              <label>Lien iCal Airbnb / Booking</label>
+              <input
+                name="ical_url"
+                value={formData.ical_url || ''}
+                onChange={handleChange}
+                placeholder="https://www.airbnb.fr/calendar/ical/XXXXXXX.ics"
+              />
+              <p style={{ fontSize: '12px', color: '#86868b', marginTop: '6px', fontWeight: '300' }}>
+                Airbnb : Calendrier → Exporter → Copier le lien · Booking : Extranet → Disponibilités → iCal
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* ── FOOTER STICKY ── */}
         <div className="footer-actions">
           <Link href="/dashboard" legacyBehavior><a><button className="btn-cancel">Annuler</button></a></Link>
