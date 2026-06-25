@@ -159,14 +159,12 @@ async function sendTelegramAlert(originalMsg, translatedMsg, propertyData) {
   const token = process.env.TELEGRAM_BOT_TOKEN;
   if (!token) return;
 
-  // Récupérer le propriétaire principal avec sa langue préférée
   const { data: profile } = await supabase
     .from('profiles')
     .select('telegram_chat_id, preferred_language')
     .eq('id', propertyData.owner_id)
     .single();
 
-  // Récupérer les membres de l'équipe avec leur propre langue
   const { data: teamMembers } = await supabase
     .from('team_members')
     .select('telegram_chat_id, role, property_ids, preferred_language')
@@ -176,7 +174,6 @@ async function sendTelegramAlert(originalMsg, translatedMsg, propertyData) {
 
   if (!profile?.telegram_chat_id && (!teamMembers || teamMembers.length === 0)) return;
 
-  // Envoi individualisé : chaque destinataire reçoit dans SA langue
   const sendToRecipient = async (chatId, lang) => {
     const t = getAlertTexts(lang || 'fr');
     let text = `${t.header}\n\n🏠 *${t.property} :* ${propertyData.name}`;
@@ -230,7 +227,6 @@ async function sendPushAlert(originalMsg, translatedMsg, propertyData, targetPro
       .eq('status', 'active')
       .not('expo_push_token', 'is', null);
 
-    // Corps du message : message traduit dans la langue de l'hôte si dispo, sinon original
     const bodyText = translatedMsg
       ? `${propertyData.name} : "${translatedMsg}"`
       : `${propertyData.name} : "${originalMsg}"`;
@@ -324,38 +320,31 @@ function detectLocalCategory(msg) {
 function detectUpsellIntent(msg) {
   const m = msg.toLowerCase();
 
-  // Late check-out
   if (['partir plus tard', 'départ tardif', 'check-out tardif', 'late check',
        'rester plus longtemps', 'prolonger', 'midi', 'après 11', 'apres 11',
        'quitter plus tard', 'sortir plus tard'].some(k => m.includes(k))) return 'late_checkout';
 
-  // Early check-in
   if (['arriver tôt', 'arriver tot', 'arriver plus tôt', 'arriver plus tot',
        'early check', 'check-in tôt', 'avant 15', 'avant 14', 'avant 13',
        'tôt le matin', 'tot le matin', 'entrée anticipée'].some(k => m.includes(k))) return 'early_checkin';
 
-  // Pack romantique / anniversaire / célébration
   if (['anniversaire', 'romantique', 'surprise', 'champagne', 'bouteille',
        'bouquet', 'fleurs', 'saint-valentin', 'lune de miel', 'honeymoon',
        'fête', 'célébration', 'celebration', 'mariage', 'pétales'].some(k => m.includes(k))) return 'romantic';
 
-  // Ménage mi-séjour
   if (['ménage pendant', 'nettoyage pendant', 'femme de ménage', 'nettoyage mi',
        'ménage supplémentaire', 'chambre propre', 'draps changés',
        'linge changé', 'repassage', 'aspirateur'].some(k => m.includes(k))) return 'mid_stay_cleaning';
 
-  // Transfert / taxi
   if (['navette', 'transfer', 'aéroport', 'airport', 'gare', 'taxi privé',
        'voiture avec chauffeur', 'vtc', 'aller chercher'].some(k => m.includes(k))) return 'transfer';
 
-  // Pack bébé
   if (['lit bébé', 'lit parapluie', 'chaise haute', 'baby', 'bébé',
        'nourrisson', 'poussette', 'équipement enfant'].some(k => m.includes(k))) return 'baby';
 
   return null;
 }
 
-// Trouve les upsells actifs correspondant à une intention
 function findMatchingUpsells(upsells, intent) {
   if (!upsells || upsells.length === 0) return [];
 
@@ -376,7 +365,6 @@ function findMatchingUpsells(upsells, intent) {
   });
 }
 
-// Construit le bloc upsells pour le prompt système
 function buildUpsellsSection(upsells, siteUrl, propertySlug) {
   if (!upsells || upsells.length === 0) return '';
 
@@ -392,6 +380,155 @@ RÈGLE ABSOLUE : Ne propose JAMAIS un service qui n'est pas dans cette liste. Si
 ${lines}
 
 Page complète des services : ${upsellsUrl}`;
+}
+
+// ─────────────────────────────────────────────
+// 3C. DÉTECTION DE LA POSITION DU VOYAGEUR
+// ─────────────────────────────────────────────
+// Détecte quand le voyageur indique où il se trouve actuellement
+// pour pouvoir lui donner une distance réelle vers le logement.
+function detectGuestLocation(msg) {
+  const m = msg.toLowerCase();
+
+  // Verbes/expressions de position en plusieurs langues
+  const hasPositionVerb = /(je suis|nous sommes|on est|on se trouve|je me trouve|nous nous trouvons|depuis|à partir de|en partant de|je pars de|on part de|nous partons de|i'?m at|i am at|we'?re at|we are at|we'?re in|i'?m in|from |starting from|leaving from|estoy en|estamos en|desde |sono a|siamo a|da |partendo da|ich bin in|wir sind in|von |ab )/i.test(m);
+  if (!hasPositionVerb) return null;
+
+  // Mots-clés indiquant qu'il s'agit bien d'un lieu/adresse (anti faux-positifs)
+  const placeKeywords = [
+    'rue', 'avenue', 'boulevard', 'bd', 'place', 'square', 'street', 'st.', 'st ', 'road', 'rd ', 'plaza',
+    'calle', 'via', 'piazza', 'straße', 'strasse', 'platz', 'allée', 'allee', 'chemin',
+    'impasse', 'quai', 'cours', 'route', 'gare', 'station', 'aéroport', 'airport',
+    'métro', 'metro', 'arrêt', 'arret', 'devant le', 'devant la', 'devant l',
+    'parc', 'park', 'jardin', 'church', 'église', 'eglise', 'hotel', 'hôtel',
+    'mairie', 'cathédrale', 'cathedral', 'museum', 'musée', 'musee',
+    'tour ', 'tower', 'palais', 'palace', 'pont ', 'bridge'
+  ];
+  const hasPlaceKeyword = placeKeywords.some(k => m.includes(k));
+  const hasStreetNumber = /\b\d{1,4}\s+(?:rue|avenue|boulevard|bd|place|calle|via|street|road)\b/i.test(m);
+
+  if (!hasPlaceKeyword && !hasStreetNumber) return null;
+
+  // Patterns d'extraction
+  const patterns = [
+    // FR
+    /(?:je suis|nous sommes|on est|on se trouve|je me trouve|nous nous trouvons)\s+(?:à|au|aux|devant|près de|proche de|en face de|sur|dans|chez|vers)\s+(?:le |la |les |l'|du |de la |des )?(.+?)(?:[.,?!\n]|$)/i,
+    /(?:depuis|à partir de|en partant de)\s+(?:le |la |les |l'|du |de la |des )?(.+?)(?:[.,?!\n]|$)/i,
+    /(?:on part|nous partons|je pars)\s+(?:de|du|de la|des|de l')\s+(.+?)(?:[.,?!\n]|$)/i,
+    // EN
+    /(?:i'?m|i am|we'?re|we are)\s+(?:at|in|near|in front of|by|on)\s+(.+?)(?:[.,?!\n]|$)/i,
+    /(?:from|starting from|leaving from)\s+(.+?)(?:[.,?!\n]|$)/i,
+    // ES
+    /(?:estoy|estamos)\s+(?:en|delante de|cerca de|frente a)\s+(.+?)(?:[.,?!\n]|$)/i,
+    /(?:desde)\s+(.+?)(?:[.,?!\n]|$)/i,
+    // IT
+    /(?:sono|siamo)\s+(?:a|in|davanti a|vicino a|presso)\s+(.+?)(?:[.,?!\n]|$)/i,
+    /(?:da|partendo da)\s+(.+?)(?:[.,?!\n]|$)/i,
+    // DE
+    /(?:ich bin|wir sind)\s+(?:in|am|an der|vor|bei|nahe)\s+(.+?)(?:[.,?!\n]|$)/i,
+    /(?:von|ab)\s+(.+?)(?:[.,?!\n]|$)/i,
+  ];
+
+  for (const pattern of patterns) {
+    const match = msg.match(pattern);
+    if (match && match[1]) {
+      const extracted = match[1].trim().replace(/[.,?!]+$/, '').trim();
+      // Filtre : pas trop court, pas trop long, et doit contenir au moins un mot de lieu OU un chiffre
+      if (extracted.length >= 4 && extracted.length <= 150) {
+        const extractedLower = extracted.toLowerCase();
+        const isPlace = placeKeywords.some(k => extractedLower.includes(k)) || /\d/.test(extracted);
+        if (isPlace) return extracted;
+      }
+    }
+  }
+
+  return null;
+}
+
+// ─────────────────────────────────────────────
+// 3D. CALCUL DE DISTANCE À PIED VERS LE LOGEMENT
+// ─────────────────────────────────────────────
+async function getWalkingDistance(originText, destinationAddress, city, langCode = 'fr') {
+  const apiKey = process.env.MAPS_API_KEY;
+  if (!apiKey || !originText || !destinationAddress) return null;
+
+  // Biais avec la ville pour éviter géocodage ambigu ("4 rue Fourcy" sans ville)
+  const biasedOrigin = city && !originText.toLowerCase().includes(city.toLowerCase())
+    ? `${originText}, ${city}`
+    : originText;
+
+  try {
+    const url = `https://maps.googleapis.com/maps/api/distancematrix/json?` +
+      `origins=${encodeURIComponent(biasedOrigin)}` +
+      `&destinations=${encodeURIComponent(destinationAddress)}` +
+      `&mode=walking` +
+      `&language=${langCode}` +
+      `&key=${apiKey}`;
+
+    const res = await fetch(url);
+    const data = await res.json();
+
+    if (data.status !== 'OK' || !data.rows?.[0]?.elements?.[0]) return null;
+    const element = data.rows[0].elements[0];
+    if (element.status !== 'OK') return null;
+
+    const distanceMeters = element.distance.value;
+    const durationSeconds = element.duration.value;
+
+    // Mode recommandé selon la distance
+    let modeAdvice;
+    if (distanceMeters <= 1500) {
+      modeAdvice = 'walk_only';   // < 1.5 km → marche obligatoire
+    } else if (distanceMeters <= 3000) {
+      modeAdvice = 'walk_or_transit'; // 1.5–3 km → marche ou transports
+    } else {
+      modeAdvice = 'transit_or_taxi'; // > 3 km → transports/taxi
+    }
+
+    const directionsUrl = `https://www.google.com/maps/dir/?api=1` +
+      `&origin=${encodeURIComponent(biasedOrigin)}` +
+      `&destination=${encodeURIComponent(destinationAddress)}` +
+      `&travelmode=walking`;
+
+    return {
+      origin: biasedOrigin,
+      distanceMeters,
+      durationSeconds,
+      distanceText: element.distance.text,
+      durationText: element.duration.text,
+      modeAdvice,
+      directionsUrl,
+    };
+  } catch (e) {
+    console.error('Distance Matrix error:', e);
+    return null;
+  }
+}
+
+function buildWalkingSection(walkingInfo) {
+  if (!walkingInfo) return '';
+
+  let advice;
+  switch (walkingInfo.modeAdvice) {
+    case 'walk_only':
+      advice = `RECOMMANDATION OBLIGATOIRE : La distance est courte (${walkingInfo.distanceText}). Recommande UNIQUEMENT la marche à pied. NE SUGGÈRE JAMAIS métro, bus, taxi ou VTC pour cette distance — ce serait absurde et nuirait à la crédibilité.`;
+      break;
+    case 'walk_or_transit':
+      advice = `RECOMMANDATION : Distance modérée (${walkingInfo.distanceText}). La marche reste agréable, tu peux mentionner les transports en commun en option si le voyageur semble pressé ou fatigué.`;
+      break;
+    default:
+      advice = `RECOMMANDATION : Distance importante (${walkingInfo.distanceText}). Suggère les transports en commun, un taxi ou un VTC. La marche est possible mais longue.`;
+  }
+
+  return `━━━ POSITION ACTUELLE DU VOYAGEUR — DONNÉES FACTUELLES ━━━
+Le voyageur a indiqué se trouver à : ${walkingInfo.origin}
+Distance jusqu'au logement : ${walkingInfo.distanceText} (${walkingInfo.distanceMeters} m exactement)
+Temps à pied : ${walkingInfo.durationText}
+Lien itinéraire Google Maps : ${walkingInfo.directionsUrl}
+
+${advice}
+
+RÈGLE ABSOLUE : Utilise EXACTEMENT ces données. N'invente JAMAIS une distance ou un temps de trajet. Ne dis pas "environ 10-15 minutes" si la donnée dit ${walkingInfo.durationText}. Donne la valeur exacte. Tu peux proposer le lien d'itinéraire au voyageur si pertinent.`;
 }
 
 // ─────────────────────────────────────────────
@@ -629,7 +766,6 @@ export default async function handler(req, res) {
   }
 
   const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
-  // langCode = langue du VOYAGEUR (pour lui répondre dans sa langue)
   const langCode = userLanguage ? userLanguage.split('-')[0] : 'fr';
 
   try {
@@ -644,7 +780,6 @@ export default async function handler(req, res) {
       return res.status(404).json({ answer: "Logement introuvable ou inactif." });
     }
 
-    // ── GUARD : vérifier que le propriétaire n'est pas en pause ──
     const { data: ownerProfile } = await supabase
       .from('profiles')
       .select('subscription_status')
@@ -652,19 +787,16 @@ export default async function handler(req, res) {
       .single();
 
     if (ownerProfile && (ownerProfile.subscription_status === 'paused' || ownerProfile.subscription_status === 'cancelled')) {
-      // L'IA refuse silencieusement de répondre — message neutre côté voyageur
       return res.status(200).json({
         answer: "Le service de conciergerie est momentanément indisponible. Merci de contacter directement votre hôte."
       });
     }
-    // ────────────────────────────────────────────────────────────────
 
     const targetPropertyId = propertyData.id;
     const city = propertyData.city || '';
     const fullAddress = `${propertyData.street_number || ''} ${propertyData.address || ''}, ${city}`.trim();
     const propertyType = propertyData.property_type || 'apartment';
 
-    // Charger les upsells actifs du logement
     const { data: activeUpsells } = await supabase
       .from('upsells')
       .select('id, name, description, emoji, price, category')
@@ -691,12 +823,19 @@ export default async function handler(req, res) {
       googleData = await getGoogleLocalData(localCategory, fullAddress, propertyType);
     }
 
-    // Détecter l'intention upsell et trouver les services correspondants
+    // ── NOUVEAU : Détection de la position du voyageur + calcul distance ──
+    const guestOrigin = detectGuestLocation(lastUserMsg);
+    let walkingInfo = null;
+    if (guestOrigin && fullAddress) {
+      walkingInfo = await getWalkingDistance(guestOrigin, fullAddress, city, langCode);
+    }
+    const walkingSection = buildWalkingSection(walkingInfo);
+    // ──────────────────────────────────────────────────────────────────────
+
     const upsellIntent = detectUpsellIntent(lastUserMsg);
     const matchingUpsells = upsellIntent
       ? findMatchingUpsells(activeUpsells, upsellIntent)
       : [];
-    // Si pas d'intention spécifique mais des upsells existent → les inclure tous dans le prompt
     const upsellsToShow = matchingUpsells.length > 0 ? matchingUpsells : [];
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.alfredmajor.com';
     const propertySlug = propertyData.slug || propertyData.id;
@@ -798,7 +937,7 @@ Départ :
 - Lien avis : ${propertyData.review_link || "Non renseigné"}
 
 ${conditionalBlocks ? conditionalBlocks + '\n' : ''}
-${upsellsSection ? upsellsSection + '\n\n' : ''}━━━ CONSIGNES SPÉCIALES DE L'HÔTE ━━━
+${walkingSection ? walkingSection + '\n\n' : ''}${upsellsSection ? upsellsSection + '\n\n' : ''}━━━ CONSIGNES SPÉCIALES DE L'HÔTE ━━━
 ${formattedKB || "Aucune consigne particulière."}
 
 ━━━ QUARTIER & ENVIRONS ━━━
@@ -810,7 +949,7 @@ ${localSection || "Aucune information disponible pour le moment."}
 
 2. QUARTIER & LOCAL : Pour toute question sur transports, restaurants, commerces, pharmacies — utilise la section QUARTIER & ENVIRONS et réponds en suivant le FORMAT TYPE défini plus haut (nom en gras avec **, adresse sur ligne séparée précédée de 📍). Si tu as des résultats, utilise-les sans hésiter.
 
-3. INVENTION INTERDITE : Ne jamais inventer une information. Si tu n'as pas l'adresse d'un lieu dans tes données, OMETS la ligne 📍 pour ce lieu plutôt que d'inventer.
+3. INVENTION INTERDITE : Ne jamais inventer une information. Si tu n'as pas l'adresse d'un lieu dans tes données, OMETS la ligne 📍 pour ce lieu plutôt que d'inventer. De même, ne JAMAIS inventer une distance ou un temps de trajet — utilise uniquement les données factuelles fournies.
 
 4. URGENCE — RÈGLE LA PLUS IMPORTANTE :
 Si le voyageur signale une urgence réelle (fuite d'eau, panne électrique, incendie, gaz, porte bloquée, accident) :
@@ -856,7 +995,6 @@ ${emergencyInstructions}
           .eq('id', targetPropertyId);
       }
 
-      // ── Récupérer la langue de l'hôte pour traduire dans SA langue ──
       const { data: ownerProfile } = await supabase
         .from('profiles')
         .select('preferred_language')
@@ -866,8 +1004,6 @@ ${emergencyInstructions}
       const hostLang = ownerProfile?.preferred_language || 'fr';
       const hostAlertTexts = getAlertTexts(hostLang);
 
-      // Traduire dans la langue de l'HÔTE (pas en français)
-      // Si le voyageur écrit déjà dans la langue de l'hôte, pas besoin de traduire
       let translatedMsg = null;
       if (langCode !== hostLang) {
         try {
@@ -886,7 +1022,6 @@ ${emergencyInstructions}
         } catch (_) {}
       }
 
-      // ── Envoi des alertes dans la langue de chaque hôte/membre d'équipe ──
       await Promise.allSettled([
         sendTelegramAlert(lastUserMsg, translatedMsg, propertyData),
         sendPushAlert(lastUserMsg, translatedMsg, propertyData, targetPropertyId),
