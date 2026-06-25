@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../../lib/supabase';
+import { supabase } from '../lib/supabase';
 import { useRouter } from 'next/router';
 
 const PRICE = 9.90;
@@ -52,108 +52,18 @@ export default function SuperAdminDashboard() {
   const fetchAll = async () => {
     setLoading(true);
     try {
-      const now = new Date();
-      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-      const in7days = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString();
-      const startOfWeek = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
-
-      // Tous les profils
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select('id, email, full_name, subscription_status, active_licenses, trial_started_at, trial_expires_at, paused_at, created_at, referred_by');
-
-      const actifs = profiles?.filter(p => p.subscription_status === 'active') || [];
-      const trials = profiles?.filter(p => p.subscription_status === 'trial') || [];
-      const pauses = profiles?.filter(p => p.subscription_status === 'paused') || [];
-      const annules = profiles?.filter(p => p.subscription_status === 'cancelled') || [];
-      const total = profiles?.length || 0;
-
-      const totalLicenses = actifs.reduce((sum, p) => sum + (p.active_licenses || 0), 0);
-      const mrr = totalLicenses * PRICE;
-      const newThisWeek = profiles?.filter(p => p.created_at >= startOfWeek).length || 0;
-      const churnThisMonth = pauses.filter(p => p.paused_at && p.paused_at >= startOfMonth).length;
-      const trialsExpiredThisMonth = pauses.filter(p => p.paused_at && p.paused_at >= startOfMonth).length;
-      const conversionRate = total > 0 ? Math.round((actifs.length / total) * 100) : 0;
-
-      const expiringSoon = trials.filter(p =>
-        p.trial_expires_at && p.trial_expires_at <= in7days && p.trial_expires_at >= now.toISOString()
-      );
-      setExpiringTrials(expiringSoon);
-
-      // Nouveaux payants ce mois
-      const { data: eventsMonth } = await supabase
-        .from('license_events')
-        .select('user_id')
-        .gte('created_at', startOfMonth);
-      const newPayingThisMonth = new Set(eventsMonth?.map(e => e.user_id) || []).size;
-
-      // Logements
-      const { count: totalProps } = await supabase
-        .from('properties')
-        .select('*', { count: 'exact', head: true });
-      const { count: activeProps } = await supabase
-        .from('properties')
-        .select('*', { count: 'exact', head: true })
-        .eq('is_active', true);
-
-      // Parrainage
-      const { count: referralsPending } = await supabase
-        .from('referrals')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'pending');
-      const { count: referralsCompleted } = await supabase
-        .from('referrals')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'completed');
-
-      // Prospects (table optionnelle)
-      let prospectsCount = 0;
-      let convertedCount = 0;
-      try {
-        const { count: pc } = await supabase
-          .from('prospects')
-          .select('*', { count: 'exact', head: true })
-          .eq('status', 'contacted');
-        const { count: cc } = await supabase
-          .from('prospects')
-          .select('*', { count: 'exact', head: true })
-          .eq('status', 'converted');
-        prospectsCount = pc || 0;
-        convertedCount = cc || 0;
-      } catch (_) {}
-
-      // 10 derniers inscrits
-      const recent = [...(profiles || [])]
-        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-        .slice(0, 10);
-      setRecentUsers(recent);
-
-      setStats({
-        mrr,
-        arr: mrr * 12,
-        totalLicenses,
-        newPayingThisMonth,
-        churnThisMonth,
-        conversionRate,
-        total,
-        actifs: actifs.length,
-        trials: trials.length,
-        pauses: pauses.length,
-        annules: annules.length,
-        newThisWeek,
-        trialsExpiredThisMonth,
-        expiringSoon: expiringSoon.length,
-        totalProps: totalProps || 0,
-        activeProps: activeProps || 0,
-        referralsPending: referralsPending || 0,
-        referralsCompleted: referralsCompleted || 0,
-        prospectsCount,
-        convertedCount,
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch('/api/admin/stats', {
+        headers: { 'Authorization': `Bearer ${session.access_token}` },
       });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      setStats(data.stats);
+      setExpiringTrials(data.expiringTrials || []);
+      setRecentUsers(data.recentUsers || []);
       setLastUpdated(new Date());
     } catch (err) {
       console.error('Erreur dashboard admin:', err);
-      // Même en cas d'erreur, on met un état vide pour éviter le crash
       setStats({
         mrr: 0, arr: 0, totalLicenses: 0, newPayingThisMonth: 0,
         churnThisMonth: 0, conversionRate: 0, total: 0, actifs: 0,
@@ -196,34 +106,24 @@ export default function SuperAdminDashboard() {
     <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#0f172a', color: 'white', fontFamily: 'Inter, sans-serif', gap: '12px' }}>
       <div style={{ fontSize: '36px' }}>⚠️</div>
       <div style={{ color: '#ef4444', fontSize: '14px' }}>Erreur de chargement</div>
-      <button onClick={fetchAll} style={{ background: '#1e293b', border: '1px solid #334155', color: '#94a3b8', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontFamily: 'inherit', marginTop: '8px' }}>
-        🔄 Réessayer
-      </button>
+      <button onClick={fetchAll} style={{ background: '#1e293b', border: '1px solid #334155', color: '#94a3b8', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontFamily: 'inherit', marginTop: '8px' }}>🔄 Réessayer</button>
     </div>
   );
 
   return (
     <div style={{ padding: '32px 40px', background: '#0f172a', minHeight: '100vh', fontFamily: 'Inter, -apple-system, sans-serif', color: 'white' }}>
 
-      {/* HEADER */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '32px', flexWrap: 'wrap', gap: '12px' }}>
         <div>
           <h1 style={{ margin: 0, fontSize: '26px', fontWeight: '800', letterSpacing: '-0.5px' }}>🎩 Tour de Contrôle</h1>
-          <p style={{ margin: '4px 0 0', color: '#475569', fontSize: '13px' }}>
-            Alfred Major · Mis à jour {lastUpdated ? lastUpdated.toLocaleTimeString('fr-FR') : '—'}
-          </p>
+          <p style={{ margin: '4px 0 0', color: '#475569', fontSize: '13px' }}>Alfred Major · Mis à jour {lastUpdated ? lastUpdated.toLocaleTimeString('fr-FR') : '—'}</p>
         </div>
         <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-          <button onClick={fetchAll} style={{ background: '#1e293b', border: '1px solid #334155', color: '#94a3b8', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontFamily: 'inherit' }}>
-            🔄 Rafraîchir
-          </button>
-          <a href="/dashboard" style={{ background: '#1e293b', border: '1px solid #334155', color: '#94a3b8', padding: '8px 16px', borderRadius: '8px', fontSize: '13px', textDecoration: 'none' }}>
-            ← Dashboard
-          </a>
+          <button onClick={fetchAll} style={{ background: '#1e293b', border: '1px solid #334155', color: '#94a3b8', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontFamily: 'inherit' }}>🔄 Rafraîchir</button>
+          <a href="/dashboard" style={{ background: '#1e293b', border: '1px solid #334155', color: '#94a3b8', padding: '8px 16px', borderRadius: '8px', fontSize: '13px', textDecoration: 'none' }}>← Dashboard</a>
         </div>
       </div>
 
-      {/* REVENUS */}
       <SectionLabel>💰 Revenus</SectionLabel>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '14px' }}>
         <StatCard title="MRR Réel" value={`${stats.mrr.toFixed(2)} €`} sub={`${stats.totalLicenses} licence${stats.totalLicenses > 1 ? 's' : ''} × 9,90 €`} color="#10b981" accent="#10b981" big />
@@ -232,7 +132,6 @@ export default function SuperAdminDashboard() {
         <StatCard title="Churn" value={stats.churnThisMonth} sub="Comptes mis en pause ce mois" color="#f87171" accent="#ef4444" badge="mois" />
       </div>
 
-      {/* FUNNEL TRIAL */}
       <SectionLabel>🔬 Funnel Trial</SectionLabel>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '14px' }}>
         <StatCard title="Trials actifs" value={stats.trials} sub="En cours d'essai" color="#c9a227" accent="#c9a227" />
@@ -241,7 +140,6 @@ export default function SuperAdminDashboard() {
         <StatCard title="Taux de conversion" value={`${stats.conversionRate} %`} sub="Trial → Payant (all time)" color={stats.conversionRate >= 20 ? '#10b981' : stats.conversionRate >= 10 ? '#c9a227' : '#f87171'} accent="#6366f1" />
       </div>
 
-      {/* UTILISATEURS */}
       <SectionLabel>👥 Utilisateurs</SectionLabel>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '14px' }}>
         <StatCard title="Total inscrits" value={stats.total} sub="Tous statuts confondus" color="#e2e8f0" accent="#475569" big />
@@ -252,7 +150,6 @@ export default function SuperAdminDashboard() {
         <StatCard title="Nouveaux" value={stats.newThisWeek} sub="Ces 7 derniers jours" color="#a78bfa" accent="#7c3aed" badge="7j" />
       </div>
 
-      {/* LOGEMENTS */}
       <SectionLabel>🏠 Logements</SectionLabel>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '14px' }}>
         <StatCard title="Total logements" value={stats.totalProps} color="#e2e8f0" accent="#475569" />
@@ -261,7 +158,6 @@ export default function SuperAdminDashboard() {
         <StatCard title="Moy. logements/hôte" value={stats.actifs > 0 ? (stats.activeProps / stats.actifs).toFixed(1) : '0'} sub="Parmi les payants" color="#60a5fa" accent="#3b82f6" />
       </div>
 
-      {/* PARRAINAGE */}
       <SectionLabel>🤝 Parrainage</SectionLabel>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '14px' }}>
         <StatCard title="Parrainages en cours" value={stats.referralsPending} sub="Filleul inscrit, pas encore payant" color="#c9a227" accent="#c9a227" />
@@ -269,7 +165,6 @@ export default function SuperAdminDashboard() {
         <StatCard title="Taux parrainage" value={stats.total > 0 ? `${Math.round(((stats.referralsPending + stats.referralsCompleted) / stats.total) * 100)} %` : '0 %'} sub="Inscrits via parrainage" color="#a78bfa" accent="#7c3aed" />
       </div>
 
-      {/* PROSPECTS */}
       <SectionLabel>📋 Prospection</SectionLabel>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '14px' }}>
         <StatCard title="Prospects contactés" value={stats.prospectsCount} color="#60a5fa" accent="#3b82f6" />
@@ -277,7 +172,6 @@ export default function SuperAdminDashboard() {
         <StatCard title="Taux de closing" value={stats.prospectsCount > 0 ? `${Math.round((stats.convertedCount / stats.prospectsCount) * 100)} %` : '0 %'} color="#a78bfa" accent="#7c3aed" />
       </div>
 
-      {/* PROJECTIONS */}
       <SectionLabel>🚀 Projections MRR</SectionLabel>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '14px' }}>
         {[50, 100, 250, 500, 1000].map(n => (
@@ -285,7 +179,6 @@ export default function SuperAdminDashboard() {
         ))}
       </div>
 
-      {/* TRIALS QUI EXPIRENT BIENTÔT */}
       {expiringTrials.length > 0 && (
         <>
           <SectionLabel>⚠️ Trials expirant dans 7 jours</SectionLabel>
@@ -305,9 +198,7 @@ export default function SuperAdminDashboard() {
                     <td style={{ padding: '12px 16px', color: '#94a3b8' }}>{u.email}</td>
                     <td style={{ padding: '12px 16px', color: '#fb923c' }}>{fmtDate(u.trial_expires_at)}</td>
                     <td style={{ padding: '12px 16px' }}>
-                      <span style={{ background: '#f9731622', color: '#fb923c', padding: '3px 10px', borderRadius: '6px', fontWeight: '700' }}>
-                        {daysLeft(u.trial_expires_at)}j
-                      </span>
+                      <span style={{ background: '#f9731622', color: '#fb923c', padding: '3px 10px', borderRadius: '6px', fontWeight: '700' }}>{daysLeft(u.trial_expires_at)}j</span>
                     </td>
                   </tr>
                 ))}
@@ -317,7 +208,6 @@ export default function SuperAdminDashboard() {
         </>
       )}
 
-      {/* DERNIERS INSCRITS */}
       <SectionLabel>🆕 Derniers inscrits</SectionLabel>
       <div style={{ background: '#1e293b', borderRadius: '16px', border: '1px solid #334155', overflow: 'hidden', marginBottom: '40px' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
