@@ -222,59 +222,11 @@ export default function Dashboard() {
   };
 
   const handleAddClick = (e) => { e.preventDefault(); const hasInactive = properties.some(p => !p.is_active); if (hasInactive) setShowLimitModal(true); else router.push('/add-property'); };
-
-  // Calcule les jours restants du trial
-  const trialDaysLeft = profile?.trial_expires_at
-    ? Math.max(0, Math.ceil((new Date(profile.trial_expires_at) - new Date()) / (1000 * 60 * 60 * 24)))
-    : 0;
-  const isInTrial = profile?.subscription_status === 'trial' && trialDaysLeft > 0;
-  const isPaused = profile?.subscription_status === 'paused' || profile?.subscription_status === 'cancelled';
-  const activeCount = properties.filter(p => p.is_active).length;
-
   const handlePayment = async (e) => {
     e.preventDefault(); setPaymentLoading(true);
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const { data: { user } } = await supabase.auth.getUser();
-
-      // CAS 1 : trial actif + 0 logement actif → activation gratuite directe
-      if (isInTrial && activeCount === 0) {
-        const res = await fetch('/api/activate-trial-property', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
-        });
-        const data = await res.json();
-        if (data.success) {
-          await fetchData();
-          alert(`✅ ${data.propertyName} activé gratuitement pendant votre essai !`);
-        } else if (data.requiresPayment) {
-          // Trial expiré ou limite atteinte → on bascule sur Stripe
-          await goToStripeCheckout(user);
-        } else {
-          alert(data.error || "Erreur d'activation.");
-        }
-        return;
-      }
-
-      // CAS 2 : tout le reste (trial avec 1+ logements actifs, active, paused, cancelled) → Stripe
-      await goToStripeCheckout(user);
-    } catch (err) {
-      console.error(err);
-      alert("Erreur de connexion.");
-    } finally {
-      setPaymentLoading(false);
-    }
-  };
-
-  const goToStripeCheckout = async (user) => {
-    const res = await fetch('/api/create-checkout-session', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId: user.id, userEmail: user.email }),
-    });
-    const data = await res.json();
-    if (data.url) window.location.href = data.url;
-    else alert("Erreur de connexion à Stripe.");
+    try { const { data: { user } } = await supabase.auth.getUser(); const res = await fetch('/api/create-checkout-session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: user.id, userEmail: user.email }) }); const data = await res.json(); if (data.url) window.location.href = data.url; }
+    catch { alert("Erreur de connexion à Stripe."); }
+    finally { setPaymentLoading(false); }
   };
   const handleManageSubscription = async () => {
     try { const res = await fetch('/api/create-portal-session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: profile?.id }) }); const data = await res.json(); if (data.url) window.location.href = data.url; }
@@ -390,6 +342,7 @@ export default function Dashboard() {
         {[
           { href: '/dashboard', label: 'Logements', icon: '🏠', active: true },
           { href: '/settings', label: 'Paramètres', icon: '⚙️', active: false },
+          { href: '/support', label: 'Support', icon: '💬', active: false },
         ].map(({ href, label, icon, active }) => (
           <Link key={href} href={href} onClick={() => setMenuOpen(false)} style={{ padding: '13px 14px', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '10px', fontWeight: active ? '500' : '400', fontSize: '15px', opacity: active ? 1 : 0.6, marginBottom: '4px', color: active ? '#c9a227' : '#fff', background: active ? 'rgba(255,255,255,0.08)' : 'transparent', transition: '0.2s' }}>
             <span>{icon}</span> <span>{label}</span>
@@ -415,62 +368,6 @@ export default function Dashboard() {
             + Ajouter
           </button>
         </div>
-
-        {/* ── BANDEAU TRIAL / PAUSED ── */}
-        {isInTrial && (
-          <div style={{
-            background: trialDaysLeft > 15 ? '#f0fdf4' : trialDaysLeft > 5 ? '#fff7ed' : '#fef2f2',
-            border: `1px solid ${trialDaysLeft > 15 ? '#bbf7d0' : trialDaysLeft > 5 ? '#fed7aa' : '#fecaca'}`,
-            borderRadius: '14px', padding: '16px', marginBottom: '16px',
-            display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap',
-          }}>
-            <span style={{ fontSize: '22px' }}>🎁</span>
-            <div style={{ flex: 1, minWidth: '180px' }}>
-              <p style={{ fontWeight: '600', fontSize: '15px', margin: '0 0 3px',
-                color: trialDaysLeft > 15 ? '#15803d' : trialDaysLeft > 5 ? '#9a3412' : '#991b1b' }}>
-                Essai gratuit — il vous reste {trialDaysLeft} jour{trialDaysLeft > 1 ? 's' : ''}
-              </p>
-              <p style={{ fontSize: '13px', margin: 0, fontWeight: '300',
-                color: trialDaysLeft > 15 ? '#15803d' : trialDaysLeft > 5 ? '#9a3412' : '#991b1b', opacity: 0.85 }}>
-                {trialDaysLeft > 5
-                  ? 'Ajoutez votre carte pour continuer après l\'essai (sans engagement).'
-                  : '⚠️ Ajoutez votre carte avant la fin pour éviter la mise en pause.'}
-              </p>
-            </div>
-            <button onClick={handlePayment} disabled={paymentLoading} style={{
-              background: '#1d1d1f', color: '#fff', padding: '11px 18px',
-              borderRadius: '980px', fontSize: '14px', fontWeight: '500',
-              border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: 'inherit',
-            }}>
-              {paymentLoading ? '⏳' : 'Ajouter ma carte →'}
-            </button>
-          </div>
-        )}
-
-        {isPaused && (
-          <div style={{
-            background: '#fef2f2', border: '1px solid #fecaca',
-            borderRadius: '14px', padding: '16px', marginBottom: '16px',
-            display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap',
-          }}>
-            <span style={{ fontSize: '22px' }}>⏸️</span>
-            <div style={{ flex: 1, minWidth: '180px' }}>
-              <p style={{ fontWeight: '600', fontSize: '15px', color: '#991b1b', margin: '0 0 3px' }}>
-                Votre compte est en pause
-              </p>
-              <p style={{ fontSize: '13px', color: '#991b1b', margin: 0, fontWeight: '300', opacity: 0.85 }}>
-                Votre essai gratuit est terminé. Alfred ne répond plus à vos voyageurs. Réactivez en 1 clic.
-              </p>
-            </div>
-            <button onClick={handlePayment} disabled={paymentLoading} style={{
-              background: '#c9a227', color: '#1d1d1f', padding: '11px 18px',
-              borderRadius: '980px', fontSize: '14px', fontWeight: '600',
-              border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: 'inherit',
-            }}>
-              {paymentLoading ? '⏳' : 'Réactiver mon compte →'}
-            </button>
-          </div>
-        )}
 
         {/* Telegram banner */}
         {!telegramLinked && (
@@ -524,28 +421,9 @@ export default function Dashboard() {
                 {!prop.is_active ? (
                   <div style={{ padding: '16px' }}>
                     <div style={{ background: '#fff8e8', padding: '16px', borderRadius: '12px', border: '1px solid #f5d58a', textAlign: 'center' }}>
-                      <p style={{ fontSize: '14px', color: '#92400e', margin: '0 0 12px', fontWeight: '500' }}>
-                        {isInTrial && activeCount === 0
-                          ? '🎁 Activez gratuitement pendant votre essai'
-                          : 'Prêt à entrer en service.'}
-                      </p>
+                      <p style={{ fontSize: '14px', color: '#92400e', margin: '0 0 12px', fontWeight: '500' }}>Prêt à entrer en service.</p>
                       <button onClick={handlePayment} style={{ background: '#c9a227', border: 'none', padding: '14px', width: '100%', borderRadius: '980px', fontWeight: '600', color: '#1d1d1f', cursor: 'pointer', fontSize: '15px', fontFamily: 'inherit' }}>
-                        {paymentLoading
-                          ? 'Connexion...'
-                          : (isInTrial && activeCount === 0
-                              ? 'Activer gratuitement →'
-                              : 'Activer ce logement')}
-                      </button>
-                    </div>
-                  </div>
-                ) : isPaused ? (
-                  <div style={{ padding: '16px' }}>
-                    <div style={{ background: '#fef2f2', padding: '16px', borderRadius: '12px', border: '1px solid #fecaca', textAlign: 'center' }}>
-                      <p style={{ fontSize: '14px', color: '#991b1b', margin: '0 0 12px', fontWeight: '500' }}>
-                        ⏸️ Service en pause — Alfred ne répond plus
-                      </p>
-                      <button onClick={handlePayment} disabled={paymentLoading} style={{ background: '#c9a227', border: 'none', padding: '14px', width: '100%', borderRadius: '980px', fontWeight: '600', color: '#1d1d1f', cursor: 'pointer', fontSize: '15px', fontFamily: 'inherit' }}>
-                        {paymentLoading ? 'Connexion...' : 'Réactiver ce logement →'}
+                        {paymentLoading ? 'Connexion...' : 'Activer ce logement'}
                       </button>
                     </div>
                   </div>
