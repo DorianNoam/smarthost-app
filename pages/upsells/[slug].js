@@ -80,7 +80,7 @@ export default function UpsellsPage() {
     setError(null);
 
     try {
-      const res = await fetch('/api/upsells/checkout', {
+      const res = await fetch('/api/connect/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
