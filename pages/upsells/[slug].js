@@ -1,6 +1,8 @@
 // pages/upsells/[slug].js
 // Page publique premium des upsells — accessible par le voyageur via lien partagé par l'hôte.
 // Design premium style hôtel 5 étoiles.
+// MODIF : ajout d'un champ optionnel "dates de séjour" pour permettre le rattachement
+// automatique de la commande à la bonne réservation (utile pour la coordination ménage).
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
@@ -26,6 +28,8 @@ export default function UpsellsPage() {
   const [guestName, setGuestName] = useState('');
   const [guestEmail, setGuestEmail] = useState('');
   const [notes, setNotes] = useState('');
+  const [checkIn, setCheckIn] = useState('');
+  const [checkOut, setCheckOut] = useState('');
   const [paying, setPaying] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState(null);
@@ -85,6 +89,8 @@ export default function UpsellsPage() {
           guestName:   guestName.trim(),
           guestEmail:  guestEmail.trim() || null,
           notes:       notes.trim() || null,
+          checkIn:     checkIn || null,
+          checkOut:    checkOut || null,
         }),
       });
 
@@ -258,6 +264,32 @@ export default function UpsellsPage() {
               placeholder="votre@email.com"
               style={{ width: '100%', padding: '13px', border: '1px solid #e2e8f0', borderRadius: '10px', fontSize: '15px', marginBottom: '14px', fontFamily: 'inherit', outline: 'none', background: '#f8fafc' }}
             />
+
+            {/* ── NOUVEAU : dates de séjour (optionnel) ── */}
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>
+              Dates de votre séjour (optionnel)
+            </label>
+            <p style={{ margin: '0 0 8px', fontSize: '12px', color: '#94a3b8', lineHeight: 1.4 }}>
+              Aide votre hôte à transmettre cette info à l'équipe de ménage si besoin.
+            </p>
+            <div style={{ display: 'flex', gap: '10px', marginBottom: '14px' }}>
+              <div style={{ flex: 1 }}>
+                <input
+                  type="date"
+                  value={checkIn}
+                  onChange={e => setCheckIn(e.target.value)}
+                  style={{ width: '100%', padding: '13px', border: '1px solid #e2e8f0', borderRadius: '10px', fontSize: '14px', fontFamily: 'inherit', outline: 'none', background: '#f8fafc', boxSizing: 'border-box' }}
+                />
+              </div>
+              <div style={{ flex: 1 }}>
+                <input
+                  type="date"
+                  value={checkOut}
+                  onChange={e => setCheckOut(e.target.value)}
+                  style={{ width: '100%', padding: '13px', border: '1px solid #e2e8f0', borderRadius: '10px', fontSize: '14px', fontFamily: 'inherit', outline: 'none', background: '#f8fafc', boxSizing: 'border-box' }}
+                />
+              </div>
+            </div>
 
             <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>
               Note pour l'hôte (optionnel)
