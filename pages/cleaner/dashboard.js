@@ -1,6 +1,7 @@
 // pages/cleaner/dashboard.js
 // Dashboard dédié au prestataire de ménage.
 // Affiche le planning complet de ses missions, triées par date.
+// Étape 5 : affichage des instructions spéciales (upsells affects_cleaning).
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
@@ -20,6 +21,7 @@ export default function CleanerDashboard() {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('upcoming'); // 'upcoming' | 'completed' | 'all'
+  const [upsellNotes, setUpsellNotes] = useState({});
 
   useEffect(() => {
     checkAuthAndLoad();
@@ -70,7 +72,40 @@ export default function CleanerDashboard() {
       .eq('provider_id', provider.id)
       .order('checkout_time', { ascending: true });
 
-    setJobs(jobsData || []);
+    const loadedJobs = jobsData || [];
+    setJobs(loadedJobs);
+
+    // Charger les notes upsells pour les propriétés concernées
+    if (loadedJobs.length > 0) {
+      await fetchUpsellNotes(loadedJobs);
+    }
+  };
+
+  const fetchUpsellNotes = async (jobsList) => {
+    try {
+      const propertyIds = [...new Set(jobsList.map(j => j.property_id).filter(Boolean))];
+      if (propertyIds.length === 0) return;
+
+      const res = await fetch('/api/cleaning/upsell-notes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ propertyIds }),
+      });
+
+      if (!res.ok) return;
+      const data = await res.json();
+      setUpsellNotes(data.notes || {});
+    } catch (err) {
+      console.error('Erreur chargement upsell notes:', err);
+    }
+  };
+
+  // Construire la clé de matching entre un job et les upsell notes
+  const getUpsellNotesForJob = (job) => {
+    if (!job.property_id || !job.checkout_time) return [];
+    const checkoutDate = new Date(job.checkout_time).toISOString().split('T')[0];
+    const key = `${job.property_id}_${checkoutDate}`;
+    return upsellNotes[key] || [];
   };
 
   const formatDate = (iso) => {
@@ -185,6 +220,7 @@ export default function CleanerDashboard() {
             const prop = job.properties;
             const isToday = job.checkout_time && new Date(job.checkout_time).toDateString() === new Date().toDateString();
             const isTomorrow = job.checkout_time && new Date(job.checkout_time).toDateString() === new Date(Date.now() + 86400000).toDateString();
+            const jobUpsellNotes = getUpsellNotesForJob(job);
 
             return (
               <div
@@ -236,6 +272,46 @@ export default function CleanerDashboard() {
                       <p style={{ margin: 0, fontSize: '13px', fontWeight: 800, color: '#15803d' }}>{formatDate(job.next_checkin)}</p>
                     </div>
                   </div>
+
+                  {/* INSTRUCTIONS SPÉCIALES (upsells ménage) */}
+                  {jobUpsellNotes.length > 0 && (
+                    <div style={{
+                      background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '12px',
+                      padding: '14px', marginBottom: '16px',
+                    }}>
+                      <p style={{
+                        margin: '0 0 10px', fontSize: '11px', fontWeight: 800,
+                        color: '#92400e', textTransform: 'uppercase', letterSpacing: '0.5px',
+                        display: 'flex', alignItems: 'center', gap: '6px',
+                      }}>
+                        <span style={{ fontSize: '14px' }}>⚠️</span> Instructions spéciales
+                      </p>
+                      {jobUpsellNotes.map((note, i) => (
+                        <div
+                          key={i}
+                          style={{
+                            display: 'flex', alignItems: 'flex-start', gap: '8px',
+                            padding: '8px 10px', background: 'rgba(255,255,255,0.7)',
+                            borderRadius: '8px', marginBottom: i < jobUpsellNotes.length - 1 ? '6px' : 0,
+                          }}
+                        >
+                          <span style={{ fontSize: '18px', flexShrink: 0, lineHeight: '1.2' }}>
+                            {note.emoji || '✨'}
+                          </span>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <p style={{ margin: 0, fontSize: '14px', fontWeight: 700, color: '#92400e' }}>
+                              {note.name}
+                            </p>
+                            {note.notes && (
+                              <p style={{ margin: '3px 0 0', fontSize: '13px', color: '#a16207', fontWeight: 400, fontStyle: 'italic' }}>
+                                « {note.notes} »
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
 
                   {/* CONFIRMATION */}
                   {job.status === 'completed' ? (
