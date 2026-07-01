@@ -44,13 +44,17 @@ export default function UpsellsPage() {
 
   const fetchData = async () => {
     try {
-      // Chercher le logement par slug ou id
-      const { data: prop } = await supabase
+      // Chercher le logement par slug ou id (détection UUID pour éviter les conflits)
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
+      const query = supabase
         .from('properties')
         .select('id, name, city, slug, owner_id')
-        .or(`slug.eq.${slug},id.eq.${slug}`)
-        .eq('is_active', true)
-        .single();
+        .eq('is_active', true);
+
+      const { data: prop } = await (isUUID
+        ? query.eq('id', slug)
+        : query.eq('slug', slug)
+      ).maybeSingle();
 
       if (!prop) { setLoading(false); return; }
       setProperty(prop);
