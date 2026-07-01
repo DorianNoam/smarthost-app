@@ -5,6 +5,7 @@
 // (Developers → Webhooks → Connect → events on connected accounts).
 // MODIF : confirme/complète le rattachement reservation_id si celui-ci n'a pas
 // pu être déterminé au moment du checkout (ex: réservation créée après coup).
+// MODIF : alerte Telegram spécifique "nuit supplémentaire" avec rappel de bloquer les dates.
 
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
@@ -25,6 +26,12 @@ async function buffer(readable) {
     chunks.push(typeof chunk === 'string' ? Buffer.from(chunk) : chunk);
   }
   return Buffer.concat(chunks);
+}
+
+// Détecte si un upsell est une nuit supplémentaire (par le nom)
+function isExtraNightUpsell(name) {
+  if (!name) return false;
+  return /nuit\s*(supplémentaire|extra|additionnelle)|extra\s*night|additional\s*night|nuit\s*en\s*plus/i.test(name);
 }
 
 // Filet de sécurité : si reservation_id n'a pas pu être déterminé au checkout,
@@ -111,7 +118,6 @@ export default async function handler(req, res) {
         .eq('id', order_id);
 
       // 1bis. S'assurer que la commande est bien rattachée à une réservation
-      // (utile pour la coordination avec l'équipe ménage — voir cleaning/notify.js)
       const linkedReservationId = await ensureReservationLink(
         order_id,
         property_id,
@@ -137,6 +143,7 @@ export default async function handler(req, res) {
       const upsellName = order.upsells?.name || 'Service';
       const upsellEmoji = order.upsells?.emoji || '✨';
       const affectsCleaning = order.upsells?.affects_cleaning || false;
+      const extraNight = isExtraNightUpsell(upsellName);
       const amount = order.amount?.toFixed(2);
       const propertyName = order.properties?.name || 'Logement';
       const guestName = order.guest_name || 'Un voyageur';
@@ -146,10 +153,19 @@ export default async function handler(req, res) {
 
       // 4. Email à l'hôte via Resend
       if (ownerProfile?.email) {
+        const extraNightEmailBlock = extraNight
+          ? `<div style="margin-top:12px;padding:14px;background:#fef3c7;border-radius:8px;border:1px solid #f59e0b;">
+              <p style="margin:0;font-size:13px;color:#92400e;font-weight:700;">🚨 ACTION REQUISE</p>
+              <p style="margin:6px 0 0;font-size:13px;color:#92400e;">Pensez à bloquer les dates supplémentaires sur Airbnb et/ou Booking pour éviter un double-booking.</p>
+            </div>`
+          : '';
+
         await resend.emails.send({
           from: 'Alfred Major <noreply@alfredmajor.com>',
           to: ownerProfile.email,
-          subject: `💰 Nouvel upsell acheté — ${upsellName}`,
+          subject: extraNight
+            ? `🚨 Nuit supplémentaire achetée — ${propertyName} — Bloquez vos dates !`
+            : `💰 Nouvel upsell acheté — ${upsellName}`,
           html: `
             <!DOCTYPE html>
             <html>
@@ -185,6 +201,7 @@ export default async function handler(req, res) {
                     ${affectsCleaning ? `<div style="margin-top:12px;padding:10px;background:#fffbeb;border-radius:8px;border:1px solid #fde68a;">
                       <p style="margin:0;font-size:12px;color:#92400e;">🧹 Cette commande a été transmise à votre équipe ménage si un prestataire est assigné.</p>
                     </div>` : ''}
+                    ${extraNightEmailBlock}
                   </div>
 
                   <p style="margin:0;font-size:13px;color:#64748b;text-align:center;">
@@ -207,6 +224,8 @@ export default async function handler(req, res) {
         const cleaningNote = affectsCleaning
           ? `\n\n🧹 _Transmis à l'équipe ménage si un prestataire est assigné._`
           : '';
+
+        // Message standard upsell
         await fetch(`https://api.telegram.org/bot${telegramToken}/sendMessage`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -216,6 +235,19 @@ export default async function handler(req, res) {
             parse_mode: 'Markdown',
           }),
         });
+
+        // Alerte supplémentaire si nuit supplémentaire → rappel de bloquer les dates
+        if (extraNight) {
+          await fetch(`https://api.telegram.org/bot${telegramToken}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              chat_id: ownerProfile.telegram_chat_id,
+              text: `🚨 *ACTION REQUISE — NUIT SUPPLÉMENTAIRE*\n\n🌙 ${guestName} a acheté une nuit supplémentaire pour *${propertyName}*.\n\n⚠️ *Pensez à bloquer les dates* sur Airbnb et/ou Booking pour éviter un double-booking !\n\n📱 Ouvrez votre calendrier Airbnb/Booking dès maintenant et bloquez la ou les nuits ajoutées.\n\n🎩 _Alfred Major veille sur vos logements._`,
+              parse_mode: 'Markdown',
+            }),
+          });
+        }
       }
 
       // 6. Push Expo à l'hôte
@@ -226,17 +258,18 @@ export default async function handler(req, res) {
           body: JSON.stringify({
             to: ownerProfile.expo_push_token,
             sound: 'default',
-            title: `💰 Nouvel upsell — ${amount} €`,
-            body: `${upsellEmoji} ${upsellName} acheté pour ${propertyName}`,
+            title: extraNight
+              ? `🚨 Nuit supplémentaire — ${propertyName}`
+              : `💰 Nouvel upsell — ${amount} €`,
+            body: extraNight
+              ? `${guestName} a prolongé son séjour. Bloquez les dates sur Airbnb/Booking !`
+              : `${upsellEmoji} ${upsellName} acheté pour ${propertyName}`,
             priority: 'high',
           }),
         });
       }
 
-      // 7. Si cet upsell affecte le ménage ET qu'un prestataire est déjà assigné
-      // pour une mission en cours liée à cette réservation, on lui envoie une
-      // notification de mise à jour immédiate (plutôt que d'attendre la prochaine
-      // notification de ménage classique).
+      // 7. Si cet upsell affecte le ménage ET qu'un prestataire est assigné
       if (affectsCleaning && linkedReservationId) {
         try {
           const { data: cleaningConfig } = await supabaseAdmin
