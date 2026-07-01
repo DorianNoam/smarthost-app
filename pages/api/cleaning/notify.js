@@ -1,6 +1,7 @@
 // pages/api/cleaning/notify.js
 // Envoie une notification email au prestataire de ménage via Resend.
-// Remplace l'ancienne version Telegram.
+// MODIF : inclut les notes upsells (affects_cleaning = true) liées à la réservation
+// pour que le prestataire sache ce qu'il doit préparer en plus (ex: lit bébé, départ tardif).
 
 import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
@@ -15,7 +16,6 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Méthode non autorisée' });
 
-  // Sécurité : appelé depuis le cron ou depuis le dashboard hôte
   const cronSecret = req.headers['x-cron-secret'];
   const authToken = req.headers.authorization?.replace('Bearer ', '');
 
@@ -69,11 +69,65 @@ export default async function handler(req, res) {
       currentJobId = job?.id;
     }
 
-    // 4. Lien de confirmation pour le prestataire
+    // 4. Récupérer les notes upsells liées à la réservation en cours
+    // On cherche la réservation active ou la plus proche pour ce logement
+    let cleaningUpsellNotes = [];
+    try {
+      const today = new Date().toISOString().split('T')[0];
+
+      // Réservation en cours ou prochaine
+      let reservation = null;
+      const { data: activeRes } = await supabaseAdmin
+        .from('reservations')
+        .select('id')
+        .eq('property_id', propertyId)
+        .eq('status', 'confirmed')
+        .lte('check_in', today)
+        .gte('check_out', today)
+        .limit(1)
+        .maybeSingle();
+
+      if (activeRes) {
+        reservation = activeRes;
+      } else {
+        const { data: upcomingRes } = await supabaseAdmin
+          .from('reservations')
+          .select('id')
+          .eq('property_id', propertyId)
+          .eq('status', 'confirmed')
+          .gte('check_out', today)
+          .order('check_in', { ascending: true })
+          .limit(1)
+          .maybeSingle();
+        reservation = upcomingRes;
+      }
+
+      if (reservation?.id) {
+        const { data: orders } = await supabaseAdmin
+          .from('upsell_orders')
+          .select('*, upsells(name, emoji, affects_cleaning)')
+          .eq('reservation_id', reservation.id)
+          .eq('status', 'paid');
+
+        cleaningUpsellNotes = (orders || [])
+          .filter(o => o.upsells?.affects_cleaning === true)
+          .map(o => ({
+            name: o.upsells.name,
+            emoji: o.upsells.emoji || '⚠️',
+            notes: o.notes || null,
+            guestName: o.guest_name || null,
+          }));
+      }
+    } catch (err) {
+      console.error('Erreur récupération upsells ménage:', err);
+      // On continue sans les notes upsells — pas bloquant
+    }
+
+    // 5. Lien de confirmation pour le prestataire
     const confirmLink = `${siteUrl}/cleaning/${currentJobId}`;
     const cleanerDashboardLink = `${siteUrl}/cleaner/dashboard`;
 
-    // 5. Formater les horaires
+    // 6. Formater les horaires
     const formatDateTime = (iso) => {
       if (!iso) return 'Non précisé';
       return new Date(iso).toLocaleString('fr-FR', {
@@ -82,7 +136,7 @@ export default async function handler(req, res) {
       });
     };
 
-    // 6. Checklist
+    // 7. Checklist HTML
     const checklist = cleaningConfig.checklist || [];
     const checklistHtml = checklist.length > 0
       ? `<div style="margin-bottom:20px;">
@@ -91,12 +145,33 @@ export default async function handler(req, res) {
         </div>`
       : '';
 
-    // 7. Envoyer l'email au prestataire
+    // 8. Notes upsells HTML — affiché seulement si des upsells concernent le ménage
+    const upsellNotesHtml = cleaningUpsellNotes.length > 0
+      ? `<div style="margin-bottom:20px;background:#fffbeb;border:2px solid #f59e0b;border-radius:16px;padding:20px;">
+          <p style="margin:0 0 12px;font-size:13px;font-weight:800;color:#92400e;text-transform:uppercase;letter-spacing:0.5px;">
+            ⚠️ Instructions spéciales pour ce séjour
+          </p>
+          <p style="margin:0 0 12px;font-size:13px;color:#92400e;">
+            Le voyageur a commandé des services qui nécessitent votre attention :
+          </p>
+          ${cleaningUpsellNotes.map(note => `
+            <div style="background:white;border:1px solid #fde68a;border-radius:10px;padding:12px 14px;margin-bottom:8px;">
+              <p style="margin:0 0 4px;font-size:15px;font-weight:800;color:#1e293b;">
+                ${note.emoji} ${note.name}
+              </p>
+              ${note.guestName ? `<p style="margin:0 0 4px;font-size:12px;color:#64748b;">👤 ${note.guestName}</p>` : ''}
+              ${note.notes ? `<p style="margin:0;font-size:13px;color:#92400e;font-style:italic;">"${note.notes}"</p>` : ''}
+            </div>
+          `).join('')}
+        </div>`
+      : '';
+
+    // 9. Envoyer l'email au prestataire
     if (provider.email) {
       await resend.emails.send({
         from: 'Alfred Major <noreply@alfredmajor.com>',
         to: provider.email,
-        subject: `🧹 Ménage à effectuer — ${property.name}`,
+        subject: `🧹 Ménage à effectuer — ${property.name}${cleaningUpsellNotes.length > 0 ? ' ⚠️ Instructions spéciales' : ''}`,
         html: `
           <!DOCTYPE html>
           <html>
@@ -127,6 +202,8 @@ export default async function handler(req, res) {
 
                 ${guestName ? `<p style="margin:0 0 20px;font-size:14px;color:#64748b;">👤 Voyageur sortant : <strong style="color:#1e293b;">${guestName}</strong></p>` : ''}
 
+                ${upsellNotesHtml}
+
                 ${checklistHtml}
 
                 <a href="${confirmLink}" style="display:block;background:#1a2a6c;color:white;text-decoration:none;text-align:center;padding:16px;border-radius:14px;font-size:16px;font-weight:800;margin-bottom:12px;">
@@ -155,7 +232,25 @@ export default async function handler(req, res) {
       }
     }
 
-    return res.status(200).json({ success: true, jobId: currentJobId });
+    // 10. Notification Telegram au prestataire si configuré
+    const telegramToken = process.env.TELEGRAM_BOT_TOKEN;
+    if (telegramToken && provider.telegram_chat_id) {
+      const upsellTelegramNotes = cleaningUpsellNotes.length > 0
+        ? `\n\n⚠️ *Instructions spéciales :*\n${cleaningUpsellNotes.map(n => `${n.emoji} ${n.name}${n.notes ? ` — "${n.notes}"` : ''}`).join('\n')}`
+        : '';
+
+      await fetch(`https://api.telegram.org/bot${telegramToken}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: provider.telegram_chat_id,
+          text: `🧹 *MISSION MÉNAGE*\n\n🏠 *Logement :* ${property.name}\n🚪 *Départ :* ${formatDateTime(checkoutTime)}\n✅ *Prochain voyageur :* ${formatDateTime(nextCheckinTime)}${guestName ? `\n👤 *Voyageur sortant :* ${guestName}` : ''}${upsellTelegramNotes}\n\n👉 Confirmez via l'email reçu ou votre dashboard. 🎩`,
+          parse_mode: 'Markdown',
+        }),
+      });
+    }
+
+    return res.status(200).json({ success: true, jobId: currentJobId, upsellNotesCount: cleaningUpsellNotes.length });
 
   } catch (error) {
     console.error('Erreur notify cleaning:', error);
