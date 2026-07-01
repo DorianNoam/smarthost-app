@@ -1,8 +1,9 @@
 // pages/upsells/[slug].js
 // Page publique premium des upsells — accessible par le voyageur via lien partagé par l'hôte.
 // Design premium style hôtel 5 étoiles.
-// MODIF : ajout d'un champ optionnel "dates de séjour" pour permettre le rattachement
-// automatique de la commande à la bonne réservation (utile pour la coordination ménage).
+// AUTO-DÉTECTION : récupère automatiquement la réservation active/prochaine via iCal.
+// Si trouvée → pré-remplit le nom du voyageur, masque les dates.
+// Si non trouvée → formulaire complet en fallback.
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
@@ -33,6 +34,7 @@ export default function UpsellsPage() {
   const [paying, setPaying] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState(null);
+  const [activeStay, setActiveStay] = useState(null); // réservation détectée automatiquement
 
   useEffect(() => {
     if (slug) fetchData();
@@ -44,7 +46,7 @@ export default function UpsellsPage() {
 
   const fetchData = async () => {
     try {
-      // Chercher le logement par slug ou id (détection UUID pour éviter les conflits)
+      // Chercher le logement par slug ou id
       const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
       const query = supabase
         .from('properties')
@@ -69,6 +71,28 @@ export default function UpsellsPage() {
         .order('price');
 
       setUpsells(ups || []);
+
+      // Auto-détection de la réservation active ou prochaine
+      try {
+        const stayRes = await fetch(`/api/upsells/active-stay?propertyId=${prop.id}`);
+        if (stayRes.ok) {
+          const stayData = await stayRes.json();
+          if (stayData.reservation) {
+            setActiveStay(stayData.reservation);
+            // Pré-remplir le nom du voyageur si disponible
+            if (stayData.reservation.guest_name) {
+              setGuestName(stayData.reservation.guest_name);
+            }
+            // Stocker les dates pour envoi automatique au checkout
+            if (stayData.reservation.check_in) setCheckIn(stayData.reservation.check_in);
+            if (stayData.reservation.check_out) setCheckOut(stayData.reservation.check_out);
+          }
+        }
+      } catch (stayErr) {
+        // Pas critique — le formulaire reste fonctionnel sans pré-remplissage
+        console.error('Active stay detection failed:', stayErr);
+      }
+
     } catch (err) {
       console.error(err);
     } finally {
@@ -88,13 +112,14 @@ export default function UpsellsPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          upsellId:    selected.id,
-          propertySlug: slug,
-          guestName:   guestName.trim(),
-          guestEmail:  guestEmail.trim() || null,
-          notes:       notes.trim() || null,
-          checkIn:     checkIn || null,
-          checkOut:    checkOut || null,
+          upsellId:       selected.id,
+          propertySlug:   slug,
+          guestName:      guestName.trim(),
+          guestEmail:     guestEmail.trim() || null,
+          notes:          notes.trim() || null,
+          checkIn:        checkIn || null,
+          checkOut:       checkOut || null,
+          reservationId:  activeStay?.id || null, // matching direct si détecté
         }),
       });
 
@@ -247,6 +272,26 @@ export default function UpsellsPage() {
             </h3>
             <p style={{ margin: '0 0 20px', color: '#64748b', fontSize: '14px' }}>Complétez votre commande</p>
 
+            {/* Bandeau séjour détecté */}
+            {activeStay && (
+              <div style={{
+                background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '10px',
+                padding: '12px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '10px',
+              }}>
+                <span style={{ fontSize: '18px' }}>✅</span>
+                <div>
+                  <p style={{ margin: 0, fontSize: '13px', fontWeight: 700, color: '#15803d' }}>
+                    Séjour détecté automatiquement
+                  </p>
+                  <p style={{ margin: '2px 0 0', fontSize: '12px', color: '#64748b' }}>
+                    {new Date(activeStay.check_in).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}
+                    {' → '}
+                    {new Date(activeStay.check_out).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}
+                  </p>
+                </div>
+              </div>
+            )}
+
             <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>
               Votre prénom *
             </label>
@@ -269,31 +314,35 @@ export default function UpsellsPage() {
               style={{ width: '100%', padding: '13px', border: '1px solid #e2e8f0', borderRadius: '10px', fontSize: '15px', marginBottom: '14px', fontFamily: 'inherit', outline: 'none', background: '#f8fafc' }}
             />
 
-            {/* ── NOUVEAU : dates de séjour (optionnel) ── */}
-            <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>
-              Dates de votre séjour (optionnel)
-            </label>
-            <p style={{ margin: '0 0 8px', fontSize: '12px', color: '#94a3b8', lineHeight: 1.4 }}>
-              Aide votre hôte à transmettre cette info à l'équipe de ménage si besoin.
-            </p>
-            <div style={{ display: 'flex', gap: '10px', marginBottom: '14px' }}>
-              <div style={{ flex: 1 }}>
-                <input
-                  type="date"
-                  value={checkIn}
-                  onChange={e => setCheckIn(e.target.value)}
-                  style={{ width: '100%', padding: '13px', border: '1px solid #e2e8f0', borderRadius: '10px', fontSize: '14px', fontFamily: 'inherit', outline: 'none', background: '#f8fafc', boxSizing: 'border-box' }}
-                />
-              </div>
-              <div style={{ flex: 1 }}>
-                <input
-                  type="date"
-                  value={checkOut}
-                  onChange={e => setCheckOut(e.target.value)}
-                  style={{ width: '100%', padding: '13px', border: '1px solid #e2e8f0', borderRadius: '10px', fontSize: '14px', fontFamily: 'inherit', outline: 'none', background: '#f8fafc', boxSizing: 'border-box' }}
-                />
-              </div>
-            </div>
+            {/* Dates de séjour — UNIQUEMENT si pas de réservation détectée automatiquement */}
+            {!activeStay && (
+              <>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>
+                  Dates de votre séjour (optionnel)
+                </label>
+                <p style={{ margin: '0 0 8px', fontSize: '12px', color: '#94a3b8', lineHeight: 1.4 }}>
+                  Aide votre hôte à transmettre cette info à l'équipe de ménage si besoin.
+                </p>
+                <div style={{ display: 'flex', gap: '10px', marginBottom: '14px' }}>
+                  <div style={{ flex: 1 }}>
+                    <input
+                      type="date"
+                      value={checkIn}
+                      onChange={e => setCheckIn(e.target.value)}
+                      style={{ width: '100%', padding: '13px', border: '1px solid #e2e8f0', borderRadius: '10px', fontSize: '14px', fontFamily: 'inherit', outline: 'none', background: '#f8fafc', boxSizing: 'border-box' }}
+                    />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <input
+                      type="date"
+                      value={checkOut}
+                      onChange={e => setCheckOut(e.target.value)}
+                      style={{ width: '100%', padding: '13px', border: '1px solid #e2e8f0', borderRadius: '10px', fontSize: '14px', fontFamily: 'inherit', outline: 'none', background: '#f8fafc', boxSizing: 'border-box' }}
+                    />
+                  </div>
+                </div>
+              </>
+            )}
 
             <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>
               Note pour l'hôte (optionnel)
