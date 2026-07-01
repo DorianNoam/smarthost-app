@@ -522,7 +522,7 @@ export default function Dashboard() {
                         );
                         if (!ud || ud.loading) return <p style={{ color: '#86868b', fontSize: '14px', textAlign: 'center', padding: '20px 0', fontWeight: '300' }}>Chargement...</p>;
                         const siteUrl = typeof window !== 'undefined' ? window.location.origin : 'https://www.alfredmajor.com';
-                        const upsellsUrl = `${siteUrl}/upsells/${prop.slug || prop.id}`;
+                        const upsellsUrl = `${siteUrl}/services/${prop.slug || prop.id}`;
                         return (
                           <div>
                             {ud.orders.length > 0 && (
