@@ -359,6 +359,67 @@ export default async function handler(req, res) {
         }
       }
 
+      // 9. Mise a jour automatique des horaires dans cleaning_jobs
+      // Late check-out → checkout a 14h / Extra night → +24h / Early check-in → arrivee a 10h
+      if (affectsCleaning || extraNight) {
+        try {
+          // Trouver le cleaning_job correspondant (non termine)
+          let jobQuery = supabaseAdmin
+            .from('cleaning_jobs')
+            .select('id, checkout_time, next_checkin')
+            .eq('property_id', property_id)
+            .neq('status', 'completed');
+
+          if (linkedReservationId) {
+            jobQuery = jobQuery.eq('reservation_id', linkedReservationId);
+          }
+
+          const { data: cleaningJob } = await jobQuery
+            .order('checkout_time', { ascending: true })
+            .limit(1)
+            .maybeSingle();
+
+          if (cleaningJob && cleaningJob.checkout_time) {
+            const updates = {};
+            const isLateCheckout = /late\s*check[-\s]?out|depart\s*tardif|checkout\s*tardif/i.test(upsellName);
+            const isEarlyCheckin = /early\s*check[-\s]?in|arrivee\s*(anticipee|early)|checkin\s*anticipe/i.test(upsellName);
+
+            if (extraNight) {
+              // Nuit supplementaire → decaler checkout de 24h
+              const newCheckout = new Date(cleaningJob.checkout_time);
+              newCheckout.setTime(newCheckout.getTime() + 24 * 60 * 60 * 1000);
+              updates.checkout_time = newCheckout.toISOString();
+            } else if (isLateCheckout) {
+              // Late check-out → mettre checkout a 14h le meme jour
+              const newCheckout = new Date(cleaningJob.checkout_time);
+              newCheckout.setHours(14, 0, 0, 0);
+              // Ne decaler que si 14h est plus tard que l'heure actuelle
+              if (newCheckout > new Date(cleaningJob.checkout_time)) {
+                updates.checkout_time = newCheckout.toISOString();
+              }
+            } else if (isEarlyCheckin && cleaningJob.next_checkin) {
+              // Early check-in → mettre arrivee prochain voyageur a 10h
+              const newCheckin = new Date(cleaningJob.next_checkin);
+              newCheckin.setHours(10, 0, 0, 0);
+              // Ne decaler que si 10h est plus tot que l'heure actuelle
+              if (newCheckin < new Date(cleaningJob.next_checkin)) {
+                updates.next_checkin = newCheckin.toISOString();
+              }
+            }
+
+            if (Object.keys(updates).length > 0) {
+              await supabaseAdmin
+                .from('cleaning_jobs')
+                .update(updates)
+                .eq('id', cleaningJob.id);
+              console.log('Horaire menage mis a jour:', cleaningJob.id, updates);
+            }
+          }
+        } catch (err) {
+          console.error('Erreur mise a jour horaire menage:', err);
+        }
+      }
+
     } catch (error) {
       console.error('Erreur traitement webhook upsell:', error);
     }
