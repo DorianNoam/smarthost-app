@@ -1,6 +1,7 @@
 // pages/cleaner/register.js
 // Page de création de compte pour les prestataires de ménage.
 // Accessible uniquement via le lien d'invitation envoyé par email.
+// CORRECTIF : validation du token via API server-side (RLS bloque la lecture anon).
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
@@ -26,21 +27,26 @@ export default function CleanerRegister() {
   const validateToken = async () => {
     setValidating(true);
     try {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('full_name, invitation_accepted_at')
-        .eq('invitation_token', token)
-        .eq('email', decodeURIComponent(email))
-        .maybeSingle();
+      const res = await fetch('/api/cleaning/validate-invite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          token,
+          email: decodeURIComponent(email),
+        }),
+      });
 
-      if (!profile) {
-        setError('Lien d\'invitation invalide ou expiré.');
+      const data = await res.json();
+
+      if (!res.ok || !data.valid) {
+        if (data.reason === 'already_accepted') {
+          router.push('/cleaner/login');
+          return;
+        }
+        setError("Lien d'invitation invalide ou expiré.");
         setValid(false);
-      } else if (profile.invitation_accepted_at) {
-        // Compte déjà créé → rediriger vers login
-        router.push('/cleaner/login');
       } else {
-        setCleanerName(profile.full_name || '');
+        setCleanerName(data.cleanerName || '');
         setValid(true);
       }
     } catch (err) {
@@ -59,15 +65,7 @@ export default function CleanerRegister() {
     setError(null);
 
     try {
-      // 1. Connexion avec l'email (le compte a été créé par l'hôte via invite-cleaner)
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: decodeURIComponent(email),
-        password: 'TEMP_PLACEHOLDER', // mot de passe temporaire
-      });
-
-      // Si la connexion échoue c'est normal (pas encore de mdp défini)
-      // On utilise updateUser pour définir le mot de passe via le token de session admin
-      // → On passe par l'API Next.js pour mettre à jour le mot de passe
+      // 1. Définir le mot de passe via l'API server-side
       const res = await fetch('/api/cleaning/set-cleaner-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -137,7 +135,7 @@ export default function CleanerRegister() {
         ) : !valid ? (
           <>
             <div className="card-title">Lien invalide</div>
-            <div className="error">{error || 'Ce lien d\'invitation est invalide ou a expiré.'}</div>
+            <div className="error">{error || "Ce lien d'invitation est invalide ou a expiré."}</div>
           </>
         ) : (
           <>
