@@ -7,15 +7,14 @@ const supabaseAdmin = createClient(
 );
 
 export default async function handler(req, res) {
-  if (req.method !== 'GET') return res.status(405).json({ error: 'Méthode non autorisée' });
+  if (req.method !== 'GET') return res.status(405).json({ error: 'Methode non autorisee' });
 
-  // Vérifier que c'est bien l'admin
   const token = (req.headers.authorization || '').replace('Bearer ', '');
-  if (!token) return res.status(401).json({ error: 'Non authentifié' });
+  if (!token) return res.status(401).json({ error: 'Non authentifie' });
 
   const { data: userData } = await supabaseAdmin.auth.getUser(token);
   if (!userData?.user || userData.user.email !== 'contact@alfredmajor.com') {
-    return res.status(403).json({ error: 'Accès refusé' });
+    return res.status(403).json({ error: 'Acces refuse' });
   }
 
   try {
@@ -25,19 +24,22 @@ export default async function handler(req, res) {
     const startOfWeek = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
     // Tous les profils via service_role (bypass RLS)
-    const { data: profiles } = await supabaseAdmin
+    // Exclure les prestataires de menage (role = 'cleaner') des stats
+    const { data: allProfiles } = await supabaseAdmin
       .from('profiles')
-      .select('id, email, full_name, subscription_status, active_licenses, trial_started_at, trial_expires_at, paused_at, created_at, referred_by');
+      .select('id, email, full_name, subscription_status, active_licenses, trial_started_at, trial_expires_at, paused_at, created_at, referred_by, role');
 
-    const actifs = profiles?.filter(p => p.subscription_status === 'active') || [];
-    const trials = profiles?.filter(p => p.subscription_status === 'trial') || [];
-    const pauses = profiles?.filter(p => p.subscription_status === 'paused') || [];
-    const annules = profiles?.filter(p => p.subscription_status === 'cancelled') || [];
-    const total = profiles?.length || 0;
+    const profiles = (allProfiles || []).filter(p => p.role !== 'cleaner');
+
+    const actifs = profiles.filter(p => p.subscription_status === 'active');
+    const trials = profiles.filter(p => p.subscription_status === 'trial');
+    const pauses = profiles.filter(p => p.subscription_status === 'paused');
+    const annules = profiles.filter(p => p.subscription_status === 'cancelled');
+    const total = profiles.length;
 
     const totalLicenses = actifs.reduce((sum, p) => sum + (p.active_licenses || 0), 0);
     const mrr = totalLicenses * 9.90;
-    const newThisWeek = profiles?.filter(p => p.created_at >= startOfWeek).length || 0;
+    const newThisWeek = profiles.filter(p => p.created_at >= startOfWeek).length;
     const churnThisMonth = pauses.filter(p => p.paused_at && p.paused_at >= startOfMonth).length;
     const conversionRate = total > 0 ? Math.round((actifs.length / total) * 100) : 0;
 
@@ -88,8 +90,8 @@ export default async function handler(req, res) {
       convertedCount = cc || 0;
     } catch (_) {}
 
-    // 10 derniers inscrits
-    const recentUsers = [...(profiles || [])]
+    // 10 derniers inscrits (hotes uniquement, pas les cleaners)
+    const recentUsers = [...profiles]
       .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
       .slice(0, 10);
 
