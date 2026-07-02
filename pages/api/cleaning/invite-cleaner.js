@@ -1,10 +1,11 @@
 // pages/api/cleaning/invite-cleaner.js
 // L'hôte invite un prestataire de ménage.
 // Crée le profil cleaner dans Supabase + envoie email d'invitation via Resend.
+// CORRECTIF : gestion du provider existant sans email + vérification profil avant FK.
 
 import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
-import crypto from 'crypto'; // Ajouté par sécurité pour la génération du token
+import crypto from 'crypto';
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -16,7 +17,6 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Méthode non autorisée' });
 
-  // Vérifier la session de l'hôte
   const token = req.headers.authorization?.replace('Bearer ', '');
   if (!token) return res.status(401).json({ error: 'Non authentifié' });
 
@@ -28,10 +28,11 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'cleanerName, cleanerEmail et propertyId sont requis' });
   }
 
+  const emailNormalized = cleanerEmail.toLowerCase().trim();
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.alfredmajor.com';
 
   try {
-    // 1. Récupérer le logement pour l'afficher dans l'email
+    // 1. Récupérer le logement
     const { data: property, error: propertyError } = await supabaseAdmin
       .from('properties')
       .select('name, city')
@@ -51,109 +52,170 @@ export default async function handler(req, res) {
     // 3. Générer un token d'invitation unique
     const invitationToken = crypto.randomUUID();
 
-    // 4. Vérifier si un compte cleaner existe déjà avec cet email
-    const { data: existingUser } = await supabaseAdmin
+    // 4. Créer ou récupérer le compte cleaner (Auth + Profile)
+    let cleanerProfileId = null;
+
+    // Vérifier si un profil existe déjà avec cet email
+    const { data: existingProfile } = await supabaseAdmin
       .from('profiles')
       .select('id, role')
-      .eq('email', cleanerEmail.toLowerCase())
+      .eq('email', emailNormalized)
       .maybeSingle();
 
-    let cleanerProfileId;
-
-    if (existingUser) {
-      // Le compte existe déjà — mettre à jour le token et le rôle
-      cleanerProfileId = existingUser.id;
-      const { error: updateProfileError } = await supabaseAdmin
+    if (existingProfile) {
+      // Le profil existe — mettre à jour en rôle cleaner
+      cleanerProfileId = existingProfile.id;
+      await supabaseAdmin
         .from('profiles')
         .update({
           role: 'cleaner',
+          full_name: cleanerName,
           invited_by: host.id,
           invitation_token: invitationToken,
         })
-        .eq('id', existingUser.id);
-      
-      if (updateProfileError) throw updateProfileError;
+        .eq('id', existingProfile.id);
     } else {
-      // Créer un compte Supabase Auth pour le cleaner
-      const { data: newAuthUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
-        email: cleanerEmail.toLowerCase(),
-        email_confirm: true,
-        user_metadata: { full_name: cleanerName, role: 'cleaner' },
-      });
+      // Pas de profil → vérifier si un Auth user existe déjà
+      const { data: authList } = await supabaseAdmin.auth.admin.listUsers();
+      const existingAuth = authList?.users?.find(u => u.email === emailNormalized);
 
-      if (createError) throw createError;
-      if (!newAuthUser?.user) throw new Error("Impossible de créer l'utilisateur Auth");
+      if (existingAuth) {
+        cleanerProfileId = existingAuth.id;
+      } else {
+        // Créer le user Auth
+        const { data: newAuthUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
+          email: emailNormalized,
+          email_confirm: true,
+          user_metadata: { full_name: cleanerName, role: 'cleaner' },
+        });
 
-      cleanerProfileId = newAuthUser.user.id;
+        if (createError) throw createError;
+        if (!newAuthUser?.user) throw new Error("Impossible de créer le compte");
+        cleanerProfileId = newAuthUser.user.id;
+      }
 
-      // Créer le profil cleaner
-      const { error: upsertProfileError } = await supabaseAdmin.from('profiles').upsert({
-        id: cleanerProfileId,
-        full_name: cleanerName,
-        email: cleanerEmail.toLowerCase(),
-        role: 'cleaner',
-        invited_by: host.id,
-        invitation_token: invitationToken,
-        active_licenses: 0,
-      }, { onConflict: 'id' });
+      // Attendre un court instant pour laisser le trigger éventuel s'exécuter
+      await new Promise(resolve => setTimeout(resolve, 500));
 
-      if (upsertProfileError) throw upsertProfileError;
+      // Vérifier si le profil a été créé par un trigger
+      const { data: autoProfile } = await supabaseAdmin
+        .from('profiles')
+        .select('id')
+        .eq('id', cleanerProfileId)
+        .maybeSingle();
+
+      if (autoProfile) {
+        // Le trigger a créé le profil — on met à jour
+        await supabaseAdmin
+          .from('profiles')
+          .update({
+            role: 'cleaner',
+            full_name: cleanerName,
+            email: emailNormalized,
+            invited_by: host.id,
+            invitation_token: invitationToken,
+          })
+          .eq('id', cleanerProfileId);
+      } else {
+        // Pas de trigger — créer le profil manuellement
+        const { error: insertProfileError } = await supabaseAdmin
+          .from('profiles')
+          .insert({
+            id: cleanerProfileId,
+            full_name: cleanerName,
+            email: emailNormalized,
+            role: 'cleaner',
+            invited_by: host.id,
+            invitation_token: invitationToken,
+            active_licenses: 0,
+          });
+
+        if (insertProfileError) throw insertProfileError;
+      }
     }
 
-    // 5. Créer ou mettre à jour le prestataire dans cleaning_providers
-    const { data: existingProvider } = await supabaseAdmin
+    // 5. Vérification finale : le profil DOIT exister avant de toucher cleaning_providers
+    const { data: profileCheck } = await supabaseAdmin
+      .from('profiles')
+      .select('id')
+      .eq('id', cleanerProfileId)
+      .maybeSingle();
+
+    if (!profileCheck) {
+      throw new Error('Le profil prestataire n\'a pas pu être créé. Veuillez réessayer.');
+    }
+
+    // 6. Créer ou mettre à jour le prestataire dans cleaning_providers
+    // Chercher d'abord par email, puis par owner_id + logement (provider existant sans email)
+    let providerId = null;
+
+    const { data: providerByEmail } = await supabaseAdmin
       .from('cleaning_providers')
       .select('id')
-      .eq('email', cleanerEmail.toLowerCase())
+      .eq('email', emailNormalized)
       .eq('owner_id', host.id)
       .maybeSingle();
 
-    let providerId;
-
-    if (existingProvider) {
-      providerId = existingProvider.id;
-      const { error: updateProviderError } = await supabaseAdmin
+    if (providerByEmail) {
+      providerId = providerByEmail.id;
+      await supabaseAdmin
         .from('cleaning_providers')
         .update({ name: cleanerName, profile_id: cleanerProfileId })
         .eq('id', providerId);
-      
-      if (updateProviderError) throw updateProviderError;
     } else {
-      const { data: newProvider, error: newProviderError } = await supabaseAdmin
-        .from('cleaning_providers')
-        .insert({
-          owner_id: host.id,
-          name: cleanerName,
-          email: cleanerEmail.toLowerCase(),
-          profile_id: cleanerProfileId,
-        })
-        .select()
-        .single();
-      
-      // ✅ VRAIE GESTION D'ERREUR ICI
-      if (newProviderError) throw newProviderError;
-      if (!newProvider) throw new Error("Le prestataire n'a pas pu être créé.");
+      // Chercher un provider existant sans email (créé manuellement via le dashboard)
+      const { data: existingAssignment } = await supabaseAdmin
+        .from('property_cleaning')
+        .select('provider_id')
+        .eq('property_id', propertyId)
+        .maybeSingle();
 
-      providerId = newProvider.id;
+      if (existingAssignment?.provider_id) {
+        // Il y a déjà un provider assigné à ce logement — le mettre à jour
+        providerId = existingAssignment.provider_id;
+        await supabaseAdmin
+          .from('cleaning_providers')
+          .update({
+            name: cleanerName,
+            email: emailNormalized,
+            profile_id: cleanerProfileId,
+          })
+          .eq('id', providerId);
+      } else {
+        // Aucun provider existant — en créer un nouveau
+        const { data: newProvider, error: newProviderError } = await supabaseAdmin
+          .from('cleaning_providers')
+          .insert({
+            owner_id: host.id,
+            name: cleanerName,
+            email: emailNormalized,
+            profile_id: cleanerProfileId,
+          })
+          .select()
+          .single();
+
+        if (newProviderError) throw newProviderError;
+        providerId = newProvider.id;
+      }
     }
 
-    // 6. Assigner le prestataire au logement
+    // 7. Assigner le prestataire au logement
     const { error: assignError } = await supabaseAdmin
       .from('property_cleaning')
       .upsert({
         property_id: propertyId,
         provider_id: providerId,
       }, { onConflict: 'property_id' });
-    
+
     if (assignError) throw assignError;
 
-    // 7. Générer le lien d'invitation
-    const inviteLink = `${siteUrl}/cleaner/register?token=${invitationToken}&email=${encodeURIComponent(cleanerEmail)}`;
+    // 8. Générer le lien d'invitation
+    const inviteLink = `${siteUrl}/cleaner/register?token=${invitationToken}&email=${encodeURIComponent(emailNormalized)}`;
 
-    // 8. Envoyer l'email d'invitation via Resend
+    // 9. Envoyer l'email d'invitation via Resend
     await resend.emails.send({
       from: 'Alfred Major <noreply@alfredmajor.com>',
-      to: cleanerEmail,
+      to: emailNormalized,
       subject: `🎩 ${hostProfile?.full_name || 'Un hôte'} vous invite sur Alfred Major`,
       html: `
         <!DOCTYPE html>
@@ -170,21 +232,21 @@ export default async function handler(req, res) {
             <div style="background:white;border-radius:24px;padding:36px;border:1px solid #e2e8f0;">
               <h1 style="margin:0 0 8px;font-size:22px;font-weight:800;color:#1a2a6c;">Bonjour ${cleanerName} 👋</h1>
               <p style="margin:0 0 24px;font-size:15px;color:#64748b;line-height:1.6;">
-                <strong style="color:#1e293b;">${hostProfile?.full_name || 'Un propriétaire'}</strong> vous invite à gérer les ménages de son logement <strong style="color:#1e293b;">${property.name}${property.city ? ` — ${property.city}` : ''}</strong> via Alfred Major.
+                <strong style="color:#1e293b;">${hostProfile?.full_name || 'Un propriétaire'}</strong> vous invite a gerer les menages de son logement <strong style="color:#1e293b;">${property.name}${property.city ? ` — ${property.city}` : ''}</strong> via Alfred Major.
               </p>
 
               <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:14px;padding:18px;margin-bottom:24px;">
                 <p style="margin:0 0 6px;font-size:13px;font-weight:700;color:#15803d;text-transform:uppercase;letter-spacing:0.5px;">Ce que vous pourrez faire</p>
                 <p style="margin:0;font-size:14px;color:#166534;line-height:1.7;">
-                  ✅ Consulter votre planning de ménages<br>
+                  ✅ Consulter votre planning de menages<br>
                   📋 Suivre les checklists par logement<br>
-                  📸 Confirmer les ménages avec photos<br>
+                  📸 Confirmer les menages avec photos<br>
                   🔔 Recevoir des rappels par email
                 </p>
               </div>
 
               <a href="${inviteLink}" style="display:block;background:#1a2a6c;color:white;text-decoration:none;text-align:center;padding:16px;border-radius:14px;font-size:16px;font-weight:800;margin-bottom:16px;">
-                Créer mon compte prestataire →
+                Creer mon compte prestataire →
               </a>
 
               <p style="margin:0;font-size:12px;color:#94a3b8;text-align:center;">
@@ -193,7 +255,7 @@ export default async function handler(req, res) {
             </div>
 
             <p style="text-align:center;font-size:12px;color:#cbd5e1;margin-top:24px;">
-              🎩 Alfred Major — L'excellence du service, à portée de clic
+              🎩 Alfred Major — L'excellence du service, a portee de clic
             </p>
           </div>
         </body>
@@ -205,7 +267,6 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error('Erreur invite-cleaner:', error);
-    // On renvoie la vraie erreur au dashboard !
     return res.status(500).json({ error: error.message || 'Erreur serveur' });
   }
 }
