@@ -295,6 +295,70 @@ export default async function handler(req, res) {
         }
       }
 
+      // 8. Si nuit supplementaire, notifier le prestataire du decalage menage
+      if (extraNight) {
+        try {
+          const { data: cleaningConfig } = await supabaseAdmin
+            .from('property_cleaning')
+            .select('provider_id, cleaning_providers(telegram_chat_id, name, email)')
+            .eq('property_id', property_id)
+            .maybeSingle();
+
+          const providerInfo = cleaningConfig?.cleaning_providers;
+
+          if (providerInfo) {
+            // Telegram au prestataire
+            if (telegramToken && providerInfo.telegram_chat_id) {
+              await fetch(`https://api.telegram.org/bot${telegramToken}/sendMessage`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  chat_id: providerInfo.telegram_chat_id,
+                  text: `🌙 *MENAGE REPORTE* — ${propertyName}\n\n${guestName} a prolonge son sejour d'une nuit supplementaire.\n\n⚠️ *Votre intervention est decalee en consequence.*\n\nVotre hote vous reconfirmera le nouveau creneau.\n\n🎩 _Alfred Major_`,
+                  parse_mode: 'Markdown',
+                }),
+              });
+            }
+
+            // Email au prestataire
+            if (providerInfo.email) {
+              await resend.emails.send({
+                from: 'Alfred Major <noreply@alfredmajor.com>',
+                to: providerInfo.email,
+                subject: `🌙 Menage reporte — ${propertyName}`,
+                html: `
+                  <!DOCTYPE html>
+                  <html>
+                  <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>
+                  <body style="margin:0;padding:0;background:#f8fafc;font-family:'Inter',Arial,sans-serif;">
+                    <div style="max-width:560px;margin:40px auto;padding:0 20px;">
+                      <div style="text-align:center;margin-bottom:32px;">
+                        <div style="font-size:48px;margin-bottom:8px;">🎩</div>
+                        <div style="font-size:22px;font-weight:900;color:#1a2a6c;">Alfred<span style="color:#d4af37;">Major</span></div>
+                      </div>
+                      <div style="background:white;border-radius:24px;padding:36px;border:1px solid #e2e8f0;">
+                        <div style="display:inline-block;background:#fef3c7;border:1px solid #f59e0b;color:#92400e;padding:6px 12px;border-radius:8px;font-size:12px;font-weight:800;margin-bottom:16px;">🌙 MENAGE REPORTE</div>
+                        <h1 style="margin:0 0 6px;font-size:22px;font-weight:800;color:#1a2a6c;">${propertyName}</h1>
+                        <p style="margin:0 0 20px;font-size:14px;color:#64748b;">Bonjour ${providerInfo.name || 'cher prestataire'},</p>
+                        <div style="background:#fef3c7;border:1px solid #fde68a;border-radius:14px;padding:18px;margin-bottom:20px;">
+                          <p style="margin:0 0 8px;font-size:15px;color:#92400e;font-weight:700;">Le voyageur ${guestName} a prolonge son sejour d'une nuit supplementaire.</p>
+                          <p style="margin:0;font-size:14px;color:#a16207;">Votre intervention de menage est decalee en consequence. Votre hote vous reconfirmera le nouveau creneau prochainement.</p>
+                        </div>
+                        <p style="margin:0;font-size:13px;color:#64748b;">Aucune action requise de votre part pour le moment.</p>
+                      </div>
+                      <p style="text-align:center;font-size:12px;color:#cbd5e1;margin-top:24px;">🎩 Alfred Major — L'excellence du service</p>
+                    </div>
+                  </body>
+                  </html>
+                `,
+              });
+            }
+          }
+        } catch (err) {
+          console.error('Erreur notif prestataire (nuit supp):', err);
+        }
+      }
+
     } catch (error) {
       console.error('Erreur traitement webhook upsell:', error);
     }
