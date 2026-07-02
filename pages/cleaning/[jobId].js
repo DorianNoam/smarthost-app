@@ -196,8 +196,18 @@ export default function CleaningJob() {
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#f0fdf4', padding: '20px', textAlign: 'center' }}>
       <p style={{ fontSize: '72px', margin: '0 0 20px' }}>✅</p>
       <h1 style={{ color: '#15803d', fontWeight: 900, fontSize: '24px', margin: '0 0 10px' }}>Menage confirme !</h1>
-      <p style={{ color: '#166534', fontSize: '15px' }}>Le proprietaire a ete notifie. Merci !</p>
-      <p style={{ color: '#64748b', fontSize: '13px', marginTop: '8px' }}>🎩 Alfred Major</p>
+      <p style={{ color: '#166534', fontSize: '15px', margin: '0 0 24px' }}>Le proprietaire a ete notifie. Merci !</p>
+      <button
+        onClick={() => router.push('/cleaner/dashboard')}
+        style={{
+          background: '#1a2a6c', color: 'white', border: 'none',
+          padding: '14px 28px', borderRadius: '12px', fontSize: '15px',
+          fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit',
+        }}
+      >
+        ← Retour au planning
+      </button>
+      <p style={{ color: '#64748b', fontSize: '13px', marginTop: '16px' }}>🎩 Alfred Major</p>
     </div>
   );
 
