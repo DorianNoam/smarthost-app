@@ -15,6 +15,7 @@ function AddUpsellForm({ propId, onAdded, supabase }) {
     { name: 'Ménage mi-séjour', emoji: '🧹', category: 'comfort', price: '35', description: 'Nettoyage pendant le séjour' },
     { name: 'Transfert aéroport', emoji: '🚗', category: 'practical', price: '50', description: 'Navette privée' },
     { name: 'Pack bébé', emoji: '👶', category: 'comfort', price: '20', description: 'Lit parapluie + chaise haute' },
+    { name: 'Nuit supplémentaire', emoji: '🌙', category: 'flexibility', price: '80', description: 'Prolongez votre séjour' },
   ];
   const handleSave = async () => {
     if (!form.name || !form.price) return;
