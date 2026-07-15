@@ -83,6 +83,18 @@ export default function Register() {
         }).catch(() => {});
         // ────────────────────────────────────────────────────────────────
 
+        // ── NOTIFICATION ADMIN (non bloquant) ───────────────────────────
+        fetch('/api/notify-admin-signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            firstName,
+            email,
+            referralCode: referralValid ? referralCode : null,
+          }),
+        }).catch(() => {});
+        // ────────────────────────────────────────────────────────────────
+
         if (referrerId) {
           await supabase.from('referrals').insert({ referrer_id: referrerId, referee_id: authData.user.id, status: 'pending', referrer_months: 2, referee_months: 1 });
         }
